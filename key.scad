@@ -9,34 +9,16 @@ key_wall_thickness_depth =  .8;
 //length in units of key
 key_length = 1;
 
-// dimensions of cross
-// horizontal cross bar width
-horizontal_cross_width = 1.4;
-// vertical cross bar width
-vertical_cross_width = 1.3;
-// cross length
-cross_length = 4.4;
-//extra vertical cross length - change if you dont want the cruciform to be in 2 parts
-extra_vertical_cross_length = 1.1;
-
-//dimensions of connector
-// outer cross extra length in x
-extra_outer_cross_width = 2.11;
-// outer cross extra length in y
-extra_outer_cross_height = 1.1;
-// cross depth, stem height is 3.4mm
-cross_depth = 4;
 
 //connector brim
 //enable brim for connector
-has_brim = 1;
+has_brim = 0;
 //brim radius. 11 ensconces normal keycap stem in normal keycap
 brim_radius = 11;
 //brim depth
 brim_depth = .3;
 
-//keycap type, [0..11]
-key_type = 0;
+
 
 //whether stabilizer connectors are enabled
 stabilizers = 0;
@@ -46,6 +28,8 @@ stabilizer_distance = 50;
 
 inverted_dish = 0;
 
+//keycap type, [0..11]
+key_profile = 1;
 
 //profile specific stuff
 
@@ -269,6 +253,8 @@ key_profiles = [
 	],
 ];
 
+stem_profile=1;
+
 //libraries. they generate geometry
 //that is used by other things to generate features
 
@@ -308,13 +294,80 @@ module inside(key_profile)
 	}
 }
 
-// inside of connector
-module cross(){
-    translate([0,0,(cross_depth)/2])
-    union(){
-        cube([vertical_cross_width,cross_length+extra_vertical_cross_length,cross_depth], center=true );//remove +2 to print with cross
-        cube([cross_length,horizontal_cross_width,cross_depth], center=true );
-    }
+module cherry_stem(){
+	// cross length
+	cross_length = 4.4;
+	//dimensions of connector
+	// outer cross extra length in x
+	extra_outer_cross_width = 2.11;
+	// outer cross extra length in y
+	extra_outer_cross_height = 1.1;
+	// dimensions of cross
+	// horizontal cross bar width
+	horizontal_cross_width = 1.4;
+	// vertical cross bar width
+	vertical_cross_width = 1.3;
+	//extra vertical cross length - the extra length of the up/down bar of the cross
+	extra_vertical_cross_length = 1.1;
+	// cross depth, stem height is 3.4mm
+	cross_depth = 4;
+
+	difference(){
+		union(){
+			translate(
+				[
+		 			-(cross_length+extra_outer_cross_width)/2,
+		 			-(cross_length+extra_outer_cross_height)/2,
+		 			0
+				]
+			)
+			cube( // the base of the stem, the part the cruciform digs into
+				[
+					cross_length+extra_outer_cross_width,
+					cross_length+extra_outer_cross_height,
+					50
+				]
+			);
+			if (has_brim == 1){ cylinder(r=brim_radius,h=brim_depth); }
+		}
+		//the cross part of the steam
+		translate([0,0,(cross_depth)/2]){
+	        cube([vertical_cross_width,cross_length+extra_vertical_cross_length,cross_depth], center=true );//remove +2 to print with cross
+	        cube([cross_length,horizontal_cross_width,cross_depth], center=true );
+	    }
+	}
+}
+
+module alps_stem(){
+	cross_depth = 40;
+	width = 4.45;
+	height = 2.25;
+
+	base_width = 12;
+	base_height = 15;
+
+	//translate([0,0,cross_depth + 50/2]) cube([base_width, base_height, 50], center=true);
+	translate([0,0,(cross_depth/2)]){
+		cube([width,height,cross_depth], center = true);
+	}
+
+
+}
+
+//whole connector
+module connector(key_profile,has_brim){
+	difference(){
+		//TODO can I really not do an array index here?
+		if(stem_profile==0) cherry_stem();
+		if(stem_profile==1) alps_stem();
+		inside(key_profile);
+	}
+}
+
+//stabilizer connectors 
+module stabilizer_connectors(key_profile,has_brim){
+	translate([stabilizer_distance,0,0]) connector(key_profile, has_brim);
+	translate([-stabilizer_distance,0,0]) connector(key_profile, has_brim);
 }
 
 //i h8 u scad
@@ -457,33 +510,6 @@ module dish(key_profile){ //this thing is a monster
 	}
 }
 
-//whole connector
-module connector(key_profile,has_brim){
-	difference(){
-		difference(){
-			union(){
-				translate(
-					[
-		 			-(cross_length+extra_outer_cross_width)/2,
-		 			-(cross_length+extra_outer_cross_height)/2,
-		 			0
-					]
-				)
-				cube([cross_length+extra_outer_cross_width,cross_length+extra_outer_cross_height,50]);
-				if (has_brim == 1){ cylinder(r=brim_radius,h=brim_depth); }
-			}
-			cross();
-		}
-		inside(key_profile);
-	}
-}
-
-//stabilizer connectors 
-module stabilizer_connectors(key_profile,has_brim){
-	translate([stabilizer_distance,0,0]) connector(key_profile, has_brim);
-	translate([-stabilizer_distance,0,0]) connector(key_profile, has_brim);
-}
-
 //actual full key with space carved out and keystem/stabilizer connectors
 module key(key_profile){
 	union(){
@@ -501,4 +527,4 @@ module key(key_profile){
 }
 
 
-key(key_profiles[key_type]);
+key(key_profiles[key_profile]);
