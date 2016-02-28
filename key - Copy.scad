@@ -26,11 +26,10 @@ stabilizers = 0;
 //stabilizer distance
 stabilizer_distance = 50;
 
-// invert dishing. mostly for spacebar
 inverted_dish = 0;
 
 //keycap type, [0..11]
-key_profile = 0;
+key_profile = 1;
 
 //profile specific stuff
 
@@ -54,7 +53,7 @@ key_profiles = [
 
 	//DCS Profile
 
-	[ //DCS ROW 5
+	[ //DCS ROW 5...erm...ish
 		18.16,  // Bottom Key Width
 		18.16,  // Bottom Key Height
 		6,   // Top Key Width Difference
@@ -162,13 +161,13 @@ key_profiles = [
 	  5.7, // Top Key Width Difference
 	  5.7, // Top Key Height Difference
 	  13.73, // total Depth, fudged
-	  -14,   // Top Tilt
+	  0,   // Top Tilt
 	  0,   // Top Skew
 
 	  //Dish Profile
 
 	  1,   // Dish Type
-	  1.2, // Dish Depth
+	  2, // Dish Depth
 	  0,   // Dish Skew X
 	  0    // DIsh Skew Y
 	],
@@ -178,13 +177,13 @@ key_profiles = [
 	  5.7, // Top Key Width Difference
 	  5.7, // Top Key Height Difference
 	  11.73, // total Depth
-	  -7,   // Top Tilt
+	  0,   // Top Tilt
 	  0,   // Top Skew
 
 	  //Dish Profile
 
 	  1,   // Dish Type
-	  1.2, // Dish Depth
+	  2, // Dish Depth
 	  0,   // Dish Skew X
 	  0    // DIsh Skew Y
 	],
@@ -200,7 +199,7 @@ key_profiles = [
 	  //Dish Profile
 
 	  1,   // Dish Type
-	  1.2, // Dish Depth
+	  1.6, // Dish Depth
 	  0,   // Dish Skew X
 	  0    // DIsh Skew Y
 	],
@@ -210,13 +209,13 @@ key_profiles = [
 	  5.7, // Top Key Width Difference
 	  5.7, // Top Key Height Difference
 	  11.73, // total Depth
-	  7,   // Top Tilt
+	  0,   // Top Tilt
 	  0,   // Top Skew
 
 	  //Dish Profile
 
 	  1,   // Dish Type
-	  1.2, // Dish Depth
+	  2, // Dish Depth
 	  0,   // Dish Skew X
 	  0    // DIsh Skew Y
 	],
@@ -254,11 +253,7 @@ key_profiles = [
 	],
 ];
 
-// cherry MX or Alps stem [0..1]
-stem_profile=0;
-
-// how inset the stem is from the bottom of the key. experimental
-stem_inset=0;
+stem_profile=1;
 
 //libraries. they generate geometry
 //that is used by other things to generate features
@@ -304,9 +299,9 @@ module cherry_stem(){
 	cross_length = 4.4;
 	//dimensions of connector
 	// outer cross extra length in x
-	extra_outer_cross_width = 2.10;
+	extra_outer_cross_width = 2.11;
 	// outer cross extra length in y
-	extra_outer_cross_height = 1.0;
+	extra_outer_cross_height = 1.1;
 	// dimensions of cross
 	// horizontal cross bar width
 	horizontal_cross_width = 1.4;
@@ -323,7 +318,7 @@ module cherry_stem(){
 				[
 		 			-(cross_length+extra_outer_cross_width)/2,
 		 			-(cross_length+extra_outer_cross_height)/2,
-		 			stem_inset
+		 			0
 				]
 			)
 			cube( // the base of the stem, the part the cruciform digs into
@@ -336,7 +331,7 @@ module cherry_stem(){
 			if (has_brim == 1){ cylinder(r=brim_radius,h=brim_depth); }
 		}
 		//the cross part of the steam
-		translate([0,0,(cross_depth)/2 + stem_inset]){
+		translate([0,0,(cross_depth)/2]){
 	        cube([vertical_cross_width,cross_length+extra_vertical_cross_length,cross_depth], center=true );//remove +2 to print with cross
 	        cube([cross_length,horizontal_cross_width,cross_depth], center=true );
 	    }
@@ -352,7 +347,7 @@ module alps_stem(){
 	base_height = 15;
 
 	//translate([0,0,cross_depth + 50/2]) cube([base_width, base_height, 50], center=true);
-	translate([0,0,cross_depth/2 + stem_inset]){
+	translate([0,0,(cross_depth/2)]){
 		cube([width,height,cross_depth], center = true);
 	}
 
@@ -486,13 +481,11 @@ module dish(key_profile){ //this thing is a monster
 
 		if (inverted_dish == 1){
 			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-            rotate([-top_tilt,0,0])
 			translate([0,0,-chord_length])
 			sphere(r=rad, $fn=256);
 		}
 		else{
 			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-            rotate([-top_tilt,0,0])
 			translate([0,0,chord_length])
 			sphere(r=rad, $fn=256);
 		}
