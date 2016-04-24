@@ -1,14 +1,26 @@
-// Row 5? Cherry MX key
+/* [Hidden] */
+
 //change to round things better
 $fn = 64;
+unit = 19.05;
 
 //scale of inner to outer shape
-key_wall_thickness_width =  .8;
+key_wall_thickness_width  = .8;
 key_wall_thickness_height = .8;
-key_wall_thickness_depth =  .8;
+key_wall_thickness_depth  = .8;
+
+/* [Key] */
+
 //length in units of key
 key_length = 1;
 
+
+//keycap type, [0:DCS Row 5, 1:DCS Row 1, 2:DCS Row 2, 3:DCS Row 3, 4:DCS Row 4, 5:DSA Row 3, 6:SA Row 1, 7:SA Row 2, 8:SA Row 3, 9:SA Row 4, 10:DCS Row 4 Spacebar]
+key_profile = 0;
+
+
+
+/* [Brim] */
 
 //connector brim
 //enable brim for connector
@@ -20,22 +32,35 @@ brim_depth = .3;
 
 
 
+/* [Stabilizers] */
+
 //whether stabilizer connectors are enabled
 stabilizers = 0;
 
-//stabilizer distance
+//stabilizer distance in mm
 stabilizer_distance = 50;
+
+
+/* [Dish] */
 
 // invert dishing. mostly for spacebar
 inverted_dish = 0;
 
-//keycap type, [0..11]
-key_profile = 0;
+/* [Stem] */
+
+// cherry MX or Alps stem, or totally broken circular cherry stem [0..2]
+stem_profile = 0;
+
+// how inset the stem is from the bottom of the key. experimental. requires support
+stem_inset = 0;
+
+// stem offset in units NOT MM. for stepped caps lock
+stem_offset = 0;
 
 //profile specific stuff
 
-/*god, I would love a class right here
- here we have, for lack of a better implementation, an array
+/*
+ Here we have, for lack of a better implementation, an array
  that defines the more intimate aspects of a key.
  order is thus:
  1. Bottom Key Width: width of the immediate bottom of the key
@@ -45,7 +70,7 @@ key_profile = 0;
  5. total Depth: how tall the total in the switch is before dishing
  6. Top Tilt: X rotation of the top. Top and dish obj are rotated
  7. Top Skew: Y skew of the top of the key relative to the bottom. DCS has some, DSA has none (its centered)
- 8. Dish Type: type of dishing. currently sphere and cylinder
+ 8. Dish Type: type of dishing. check out dish function for the options
  9. Dish Depth: how many mm to cut into the key with
  10. Dish Radius: radius of dish obj, the Sphere or Cylinder that cuts into the keycap
 */
@@ -220,23 +245,7 @@ key_profiles = [
 	  0,   // Dish Skew X
 	  0    // DIsh Skew Y
 	],
-	[ //DCS ROW 2 SPACEBAR
-		18.16,  // Bottom Key Width
-		18.16,  // Bottom Key Height
-		6.2,   // Top Key Width Difference
-		4,   // Top Key Height Difference
-		7.5, // total Depth
-		3,  // Top Tilt
-		1.75,// Top Skew
-
-		//Dish Profile
-
-		2,   // Dish Type
-		1,   // Dish Depth
-		0,   // Dish Skew X
-		0    // DIsh Skew Y
-	],
-	[ //DCS ROW 4 SPACEBAR (ORIGINAL)
+	[ //DCS ROW 4 SPACEBAR
 		18.16,  // Bottom Key Width
 		18.16,  // Bottom Key Height
 		6,   // Top Key Width Difference
@@ -253,15 +262,6 @@ key_profiles = [
 		0    // DIsh Skew Y
 	],
 ];
-
-// cherry MX or Alps stem [0..1]
-stem_profile=0;
-
-// how inset the stem is from the bottom of the key. experimental
-stem_inset=0;
-
-//libraries. they generate geometry
-//that is used by other things to generate features
 
 //centered
 module roundedRect(size, radius) {
@@ -286,7 +286,6 @@ module roundedRect(size, radius) {
 	}
 }
 
-
 //bottom we can use to anchor things
 module inside(key_profile)
 {
@@ -302,6 +301,8 @@ module inside(key_profile)
 module cherry_stem(){
 	// cross length
 	cross_length = 4.4;
+    //extra vertical cross length - the extra length of the up/down bar of the cross
+    extra_vertical_cross_length = 1.1;
 	//dimensions of connector
 	// outer cross extra length in x
 	extra_outer_cross_width = 2.10;
@@ -312,32 +313,33 @@ module cherry_stem(){
 	horizontal_cross_width = 1.4;
 	// vertical cross bar width
 	vertical_cross_width = 1.3;
-	//extra vertical cross length - the extra length of the up/down bar of the cross
-	extra_vertical_cross_length = 1.1;
 	// cross depth, stem height is 3.4mm
 	cross_depth = 4;
 
 	difference(){
 		union(){
-			translate(
-				[
-		 			-(cross_length+extra_outer_cross_width)/2,
-		 			-(cross_length+extra_outer_cross_height)/2,
-		 			stem_inset
-				]
-			)
-			cube( // the base of the stem, the part the cruciform digs into
-				[
+            if (stem_profile != 2){
+                translate([
+                    -(cross_length+extra_outer_cross_width)/2,
+                    -(cross_length+extra_outer_cross_height)/2,
+                    stem_inset
+                ])
+    			cube([ // the base of the stem, the part the cruciform digs into
 					cross_length+extra_outer_cross_width,
 					cross_length+extra_outer_cross_height,
 					50
-				]
-			);
+    			]);
+            } else {
+                cylinder(
+                    d = cross_length+extra_outer_cross_height,
+                    h = 50
+                );
+            }
 			if (has_brim == 1){ cylinder(r=brim_radius,h=brim_depth); }
 		}
 		//the cross part of the steam
 		translate([0,0,(cross_depth)/2 + stem_inset]){
-	        cube([vertical_cross_width,cross_length+extra_vertical_cross_length,cross_depth], center=true );//remove +2 to print with cross
+	        cube([vertical_cross_width,cross_length+extra_vertical_cross_length,cross_depth], center=true );
 	        cube([cross_length,horizontal_cross_width,cross_depth], center=true );
 	    }
 	}
@@ -355,16 +357,17 @@ module alps_stem(){
 	translate([0,0,cross_depth/2 + stem_inset]){
 		cube([width,height,cross_depth], center = true);
 	}
-
-
 }
 
 //whole connector
 module connector(key_profile,has_brim){
 	difference(){
 		//TODO can I really not do an array index here?
-		if(stem_profile==0) cherry_stem();
-		if(stem_profile==1) alps_stem();
+		translate([-unit * stem_offset, 0, 0])
+		union(){
+			if(stem_profile == 0 || stem_profile == 2) cherry_stem();
+			if(stem_profile == 1) alps_stem();
+		}
 		inside(key_profile);
 	}
 }
@@ -404,6 +407,7 @@ module shape(key_profile, thickness){
 }
 
 //conicalish clipping shape to trim things off the outside of the keycap
+// literally just a key with height of 2 to make sure nothing goes awry with dishing etc
 module outside(key_profile, thickness){
 	difference(){
 		cube([100000,100000,100000],center = true);
@@ -429,10 +433,26 @@ module shape_hull(key_profile, thickness, modifier){
 		roundedRect([bottom_key_width*key_length - thickness -top_key_width_difference * modifier,bottom_key_height - thickness -top_key_height_difference * modifier,.001],1.5);
 	}
 }
-//end libraries
 
 //dish selector
 module dish(key_profile){ //this thing is a monster
+	dish_type = key_profile[7];
+
+	if(dish_type == 0){ // cylindrical dish
+		cylindrical_dish(key_profile);
+	}
+	else if (dish_type == 1) { // spherical dish
+		spherical_dish(key_profile);
+	}
+	else if (dish_type == 2){ // SIDEWAYS cylindrical dish - used for spacebar
+		sideways_cylindrical_dish(key_profile);
+	}
+    else if (dish_type == 3){
+    	// no dish
+    }
+}
+
+module cylindrical_dish(key_profile){ 
 	// names, so I don't go crazy
 	total_key_width = key_profile[0];
 	total_key_height = key_profile[1];
@@ -450,70 +470,105 @@ module dish(key_profile){ //this thing is a monster
 	key_width = total_key_width * key_length - width_difference;
 	key_height = total_key_height - height_difference;
 
-	if(dish_type == 0){ // cylindrical dish
-		/* we do some funky math here
-		 * basically you want to have the dish "dig in" to the keycap x millimeters
-		 * in order to do that you have to solve a small (2d) system of equations
-		 * where the chord of the spherical cross section of the dish is
-		 * the width of the keycap.
-		 */
-		// the distance you have to move the dish up so it digs in dish_depth millimeters
-		chord_length = (pow(key_width, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
-		//the radius of the dish
-		rad = (pow(key_width, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+	/* we do some funky math here
+	 * basically you want to have the dish "dig in" to the keycap x millimeters
+	 * in order to do that you have to solve a small (2d) system of equations
+	 * where the chord of the spherical cross section of the dish is
+	 * the width of the keycap.
+	 */
+	// the distance you have to move the dish up so it digs in dish_depth millimeters
+	chord_length = (pow(key_width, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+	//the radius of the dish
+	rad = (pow(key_width, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
 
-		if (inverted_dish == 1){
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-			rotate([90-top_tilt,0,0])
-			translate([0,-chord_length,0])
-			cylinder(h=100,r=rad, $fn=1024, center=true);
-		}
-		else{
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-			rotate([90-top_tilt,0,0])
-			translate([0,chord_length,0])
-			cylinder(h=100,r=rad, $fn=1024, center=true);
-		}
+	if (inverted_dish == 1){
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+		rotate([90-top_tilt,0,0])
+		translate([0,-chord_length,0])
+		cylinder(h=100,r=rad, $fn=1024, center=true);
 	}
-	else if (dish_type == 1) { // spherical dish
-		//same thing here, but we need the corners to just touch - so we have to find the hypotenuse of the top
-		chord = pow((pow(key_width,2) + pow(key_height, 2)),0.5); //getting diagonal of the top
-
-		// the distance you have to move the dish up so it digs in dish_depth millimeters
-		chord_length = (pow(chord, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
-		//the radius of the dish
-		rad = (pow(chord, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
-
-		if (inverted_dish == 1){
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-            rotate([-top_tilt,0,0])
-			translate([0,0,-chord_length])
-			sphere(r=rad, $fn=256);
-		}
-		else{
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-            rotate([-top_tilt,0,0])
-			translate([0,0,chord_length])
-			sphere(r=rad, $fn=256);
-		}
+	else{
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+		rotate([90-top_tilt,0,0])
+		translate([0,chord_length,0])
+		cylinder(h=100,r=rad, $fn=1024, center=true);
 	}
-	else if (dish_type == 2){// SIDEWAYS cylindrical dish - used for spacebar
 
-		chord_length = (pow(key_height, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
-		rad = (pow(key_height, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+}
 
-		if (inverted_dish == 1){
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-			rotate([90,top_tilt,90])
-			translate([0,-chord_length,0])
-			cylinder(h=key_width + 20,r=rad, $fn=1024, center=true); // +20 just cuz
-		}
-		else{
-			translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
-			rotate([90,top_tilt,90])
-			translate([0,chord_length,0])
-			cylinder(h=key_width + 20,r=rad, $fn=1024, center=true);
-		}
+module spherical_dish(key_profile){ 
+	// names, so I don't go crazy
+	total_key_width = key_profile[0];
+	total_key_height = key_profile[1];
+	width_difference = key_profile[2];
+	height_difference = key_profile[3];
+	total_depth = key_profile[4];
+	top_tilt = key_profile[5];
+	top_skew = key_profile[6];
+	dish_type = key_profile[7];
+	dish_depth = key_profile[8];
+	dish_skew_x = key_profile[9];
+	dish_skew_y = key_profile[10];
+
+	//dependant variables
+	key_width = total_key_width * key_length - width_difference;
+	key_height = total_key_height - height_difference;
+
+	//same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
+	chord = pow((pow(key_width,2) + pow(key_height, 2)),0.5); //getting diagonal of the top
+
+	// the distance you have to move the dish up so it digs in dish_depth millimeters
+	chord_length = (pow(chord, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+	//the radius of the dish
+	rad = (pow(chord, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+
+	if (inverted_dish == 1){
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+        rotate([-top_tilt,0,0])
+		translate([0,0,-chord_length])
+		sphere(r=rad, $fn=256);
+	}
+	else{
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+        rotate([-top_tilt,0,0])
+		translate([0,0,chord_length])
+		sphere(r=rad, $fn=256);
+	}
+}
+
+module sideways_cylindrical_dish(key_profile){
+	// names, so I don't go crazy
+	total_key_width = key_profile[0];
+	total_key_height = key_profile[1];
+	width_difference = key_profile[2];
+	height_difference = key_profile[3];
+	total_depth = key_profile[4];
+	top_tilt = key_profile[5];
+	top_skew = key_profile[6];
+	dish_type = key_profile[7];
+	dish_depth = key_profile[8];
+	dish_skew_x = key_profile[9];
+	dish_skew_y = key_profile[10];
+
+	//dependant variables
+	key_width = total_key_width * key_length - width_difference;
+	key_height = total_key_height - height_difference;
+
+
+	chord_length = (pow(key_height, 2) - 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+	rad = (pow(key_height, 2) + 4 * pow(dish_depth, 2)) / (8 * dish_depth);
+
+	if (inverted_dish == 1){
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+		rotate([90,top_tilt,90])
+		translate([0,-chord_length,0])
+		cylinder(h=key_width + 20,r=rad, $fn=1024, center=true); // +20 just cuz
+	}
+	else{
+		translate([dish_skew_x, top_skew + dish_skew_y, total_depth])
+		rotate([90,top_tilt,90])
+		translate([0,chord_length,0])
+		cylinder(h=key_width + 20,r=rad, $fn=1024, center=true);
 	}
 }
 
@@ -534,4 +589,58 @@ module key(key_profile){
 }
 
 
+
+
+
+
+// ACTUAL OUTPUT
 key(key_profiles[key_profile]);
+
+
+
+
+
+
+// non-implemented ISO enter test stuff
+
+// NOT 3D, NOT CENTERED
+module fakeISOEnter(){
+    z = 0.001;
+    radius = 2;
+    unit = 18.16; // TODO probably not
+
+    pointArray = [
+        [0 + radius,0 + radius],
+        [unit*1.25 - radius, 0 + radius],
+        [unit*1.25  - radius, unit*2  - radius],
+        [unit*-.25 + radius, unit*2  - radius],
+        [unit*-.25 + radius, unit*1  + radius],
+        [0 + radius, unit*1  + radius]
+    ];
+
+    minkowski(){
+        circle(r=radius, $fn=24);
+        polygon(points=pointArray);
+    }
+}
+
+module ISOEnterShapeHull(key_profile, thickness, modifier){
+    unit = 18.16; // TODO probably not
+
+    bottom_key_width = key_profile[0] ;
+    bottom_key_height = key_profile[1];
+    top_key_width_difference = key_profile[2];
+    top_key_height_difference = key_profile[3];
+    total_depth = key_profile[4] - thickness;
+    top_tilt = key_profile[5];
+    top_skew = key_profile[6];
+
+    top_width_scale_difference = (bottom_key_width - top_key_width_difference) / (bottom_key_width);
+    top_height_scale_difference = (bottom_key_width - top_key_width_difference) / (bottom_key_width);
+
+    linear_extrude(height=total_depth*modifier, scale=[top_width_scale_difference, top_height_scale_difference]){
+        translate([-unit*.5, -unit*1.5]) minkowski(){
+            fakeISOEnter();
+        }
+    }
+}
