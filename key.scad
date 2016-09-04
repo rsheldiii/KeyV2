@@ -45,8 +45,8 @@ $fn = 32;
 //beginning to use unit instead of baked in 19.05
 unit = 19.05;
 
-//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function
-minkowski_radius = 1;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 default for faux G20
+minkowski_radius = 1.75;
 
 //profile specific stuff
 
@@ -255,11 +255,11 @@ key_profiles = [
 	[ //G20 AKA DCS Row 2 with no dish and shorter
 		18.16,  // Bottom Key Width
 		18.16,  // Bottom Key Height
-		4,   // Top Key Width Difference
-		4,   // Top Key Height Difference
+		2,   // Top Key Width Difference
+		2,   // Top Key Height Difference
 		6, // total Depth
-		3,  // Top Tilt
-		1.75,// Top Skew
+		2.5,  // Top Tilt
+		1,// Top Skew
 
 		//Dish Profile
 
@@ -592,12 +592,12 @@ module key(){
 
 // ACTUAL OUTPUT
 difference(){
-	//key();
+	key();
 	// preview cube, for seeing inside the keycap
 	//cube([100,100,100]);
 }
 
-minkowski_key();
+//minkowski_key();
 
 
 
