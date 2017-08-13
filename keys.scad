@@ -1,3 +1,12 @@
+/* TODO:
+ * can now measure keycaps very accurately. need to redo measurements
+ * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
+ * Add inset stem to all profiles that need it
+ * Pregenerated keysets
+ * Full experimental ISO enter
+* customizer version where everything is copy/pasted in
+ */
+
 use <key.scad>
 //TODO duplicate def to not make this a special var. maybe not worth it
 unit = 19.05;
@@ -22,46 +31,42 @@ $connectors = [[0,0]];
 $ISOEnter = false;
 $rounded_key = false;
 $stem_profile = 0;
-
+$stem_inset = 0;
+$stem_rotation = 0;
 
 // key profile definitions
 
 module dcs_row(n=1) {
-  echo(n);
 	// names, so I don't go crazy
 	$bottom_key_width = 18.16;
 	$bottom_key_height = 18.16;
 	$width_difference = 6;
 	$height_difference = 4;
-  $dish_type = 0;
+  $dish_type = 2;
   $dish_depth = 1;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
+  $top_skew = 1.75;
 
   if (n == 5) {
     $total_depth = 11.5;
     $top_tilt = -6;
-    $top_skew = 1.7;
     children();
   } else if (n == 1) {
     $total_depth = 8.5;
     $top_tilt = -1;
-    $top_skew = 1.75;
     children();
   } else if (n == 2) {
     $total_depth = 7.5;
     $top_tilt = 3;
-    $top_skew = 1.75;
     children();
   } else if (n == 3) {
     $total_depth = 6;
     $top_tilt = 7;
-    $top_skew = 1.75;
     children();
   } else if (n == 4) {
     $total_depth = 6;
     $top_tilt = 16;
-    $top_skew = 1.75;
     children();
   }
 }
@@ -72,7 +77,7 @@ module dsa_row(n=3) {
 	$width_difference = 5.7;
 	$height_difference = 5.7;
 	$total_depth = 7.4;
-	$top_tilt = 0;
+	$top_tilt = (n-1) * 7 - 14;
 	$top_skew = 0;
 	$dish_type = 1;
 	$dish_depth = 1.2;
@@ -88,29 +93,26 @@ module sa_row(n=1) {
 	$width_difference = 5.7;
 	$height_difference = 5.7;
   $dish_type = 1;
-  $dish_depth = 1.2;
+  $dish_depth = 0.85;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
+  $top_skew = 0;
 
   if (n == 1){
-    $total_depth = 13.73;
-    $top_tilt = -14;
-    $top_skew = 0;
+    $total_depth = 14.89;
+    $top_tilt = -13;
     children();
   } else if (n == 2) {
-    $total_depth = 11.73;
+    $total_depth = 12.925;
     $top_tilt = -7;
-    $top_skew = 0;
     children();
   } else if (n == 3) {
-    $total_depth = 11.73;
+    $total_depth = 12.5;
     $top_tilt = 0;
-    $top_skew = 0;
     children();
   } else if (n == 4){
-    $total_depth = 11.73;
+    $total_depth = 12.925;
     $top_tilt = 7;
-    $top_skew = 0;
     children();
   }
 }
@@ -149,7 +151,7 @@ module fake_iso_enter() {
 }
 
 module brimmed() {
-  brim();
+  $has_brim = true;
   children();
 }
 
@@ -163,93 +165,111 @@ module inverted() {
   children();
 }
 
-module spacebar() {
-  $inverted_dish = true;
-  $key_length = 6.25;
-  //TODO CONFIRM PLS
-  $connectors =  [[0,0],[-50,0],[50,0]];
+module stabilized(mm=12, vertical = false) {
+  if (vertical) {
+    $connectors = [
+    [0,   0],
+    [0,  mm],
+    [0, -mm]
+    ];
+
+    children();
+  } else {
+    $connectors = [
+      [0,   0],
+      [mm,  0],
+      [-mm, 0]
+    ];
+
+    children();
+  }
+}
+
+module dishless() {
+  $dish_type = 3;
   children();
 }
 
+module spacebar() {
+  $inverted_dish = true;
+  6_25u() stabilized(mm=50) children();
+}
+
 module lshift() {
-  //TODO
+  2_25u() stabilized() children();
 }
 
 module rshift() {
-  //TODO
+  2_75u() stabilized() children();
 }
 
 module backspace() {
-  //TODO
+  2u() stabilized() children();
 }
 
 module enter() {
-  //TODO
+  2_25u() stabilized() children();
 }
 
 module numpad_enter() {
-  //TODO
+  2uh() stabilized(vertical=true) children();
+}
+
+module numpad_plus() {
+  numpad_enter() children();
 }
 
 module numpad_0() {
-  //TODO
+  backspace() children();
 }
 
-module translate_u(x=0, y=0){
-  echo (x*unit);
-  translate([x * unit, y*unit, 0]) {
+module stepped_caps_lock() {
+  u(1.75) {
+    $connectors = [
+      [-5, 0]
+    ];
     children();
   }
+}
+
+module translate_u(x=0, y=0, z=0){
+  translate([x * unit, y*unit, z*unit]) children();
 }
 
 // key width functions
 
 module u(u=1) {
   $key_length = u;
-  echo ($key_length);
   children();
 }
 
 module 1u() {
-  u(1){
-    children();
-  }
+  u(1) children();
 }
 
-module 2u() {
-  u(2){
-    children();
-  }
-}
 
 module 1_25u() {
-  u(1.25){
-    children();
-  }
+  u(1.25) children();
 }
 
 module 1_5u() {
-  u(1.5){
-    children();
-  }
+  u(1.5) children();
+}
+
+module 2u() {
+  u(2) children();
 }
 
 module 2_25u() {
-  u(2.25){
-    children();
-  }
+  u(2.25) children();
 }
 
 module 2_75u() {
-  u(2.75){
-    children();
-  }
+  u(2.75) children();
 }
 
 module 6_25u() {
-  u(6.25){
-    children();
-  }
+  u(6.25) children();
 }
 
 // key height functions
@@ -260,76 +280,63 @@ module uh(u=1) {
 }
 
 module 1uh() {
-  uh(1){
-    children();
-  }
+  uh(1) children();
 }
 
 module 2uh() {
-  uh(2){
-    children();
-  }
+  uh(2) children();
 }
 
 module 1_25uh() {
-  uh(1.25){
-    children();
-  }
+  uh(1.25) children();
 }
 
 module 1_5uh() {
-  uh(1.5){
-    children();
-  }
+  uh(1.5) children();
 }
 
 module 2_25uh() {
-  uh(2.25){
-    children();
-  }
+  uh(2.25) children();
 }
 
 module 2_75uh() {
-  uh(2.75){
-    children();
-  }
+  uh(2.75) children();
 }
 
 module 6_25uh() {
-  uh(6.25){
-    children();
-  }
+  uh(6.25) children();
 }
 
-module cherry_key() {
-  difference() {
-    cherry_stem();
-    inside();
-  }
-
-  keytop();
+module blank() {
+  $stem_profile = "blank";
+  children();
 }
 
-module alps_key() {
-  difference(){
-    alps_stem();
-    inside();
-  }
-
-  keytop();
+module cherry() {
+  $stem_profile = "cherry";
+  children();
 }
 
-module rounded_cherry_key() {
-  difference(){
-    cherry_stem_rounded();
-    inside();
-  }
-
-  keytop();
+module alps() {
+  $stem_profile = "alps";
+  children();
 }
 
-for (row=[1:4]) {
-  for (column = [1:1]) {
-    translate_u(column - 1, 4 - row) dcs_row(row) alps_key();
+module rounded_cherry() {
+  $stem_profile = "cherry_rounded";
+  children();
+}
+
+module legend(text, inset=false) {
+  $text=text;
+  $inset_text = inset;
+}
+
+translate([0,0,0]){
+  for (x = [1:4]){
+    translate_u(0,(x-1)){
+      sa_row(5-x) blank() key();
+    }
   }
+  translate([-10,-10,-2]) cube([40,80,2]);
 }

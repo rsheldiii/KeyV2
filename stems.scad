@@ -1,6 +1,4 @@
-include <variables.scad>
-
-cross_height = 15;
+cross_height = 25;
 
 module cherry_stem() {
   cherry_stem_base();
@@ -85,4 +83,16 @@ module alps_stem(){
 	translate([0,0,cross_depth/2 + stem_inset]){
 		cube([width,height,cross_depth], center = true);
 	}
+}
+
+
+//whole connector, alps or cherry, trimmed to fit
+module connector(stem_profile){
+		if (stem_profile == "alps") {
+			alps_stem();
+		} else if (stem_profile == "cherry_rounded") {
+			cherry_stem_rounded();
+		} else if (stem_profile == "cherry") {
+			cherry_stem();
+		}
 }

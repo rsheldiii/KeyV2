@@ -1,4 +1,3 @@
-include <variables.scad>
 include <util.scad>
 include <stems.scad>
 include <dishes.scad>
@@ -15,12 +14,14 @@ brim_radius = 8;
 brim_depth = .3;
 //whether stabilizer connectors are enabled
 stabilizers = false;
-// how inset the stem is from the bottom of the key. experimental. requires support
-stem_inset = 0;
 // stem offset in units NOT MM. for stepped caps lock basically
 stem_offset = 0;
-
-
+// font used for text
+font="Arial";
+// font size used for text
+font_size = 8;
+// whether or not to render fake keyswitches to check clearances
+clearance_check = true;
 
 /* [Key profile] */
 
@@ -62,19 +63,31 @@ connectors = stabilizers ? [[0,0],[-50,0],[50,0]] : [[0,0]];
 ISOEnter = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 rounded_key = false;
-// cherry MX or Alps stem, or totally broken circular cherry stem [0..2]
-stem_profile = 0;
+// 'cherry', 'alps' or 'cherry_rounded'
+stem_profile = "cherry";
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+stem_rotation = 0;
+//text to be rendered in the center of the key, if any
+text = "";
+// is the text on the key inset? inset text is still experimental
+inset_text = false;
+
 
 /* [Hidden] */
-//change to round things better
-$fn = 32;
+$fs = .1;
 //beginning to use unit instead of baked in 19.05
 unit = 19.05;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 default for faux G20
 minkowski_radius = 1.75;
+//radius of corners of keycap
+corner_radius = 1.5;
 
 
-// derived variables
+
+// derived functions. can't be variables if we want them to change when the special variables do
 
 // actual mm key width and height
 function total_key_width() = $bottom_key_width + (unit * ($key_length - 1));
@@ -103,19 +116,23 @@ module outside(thickness_difference){
 	}
 }
 
-//key shape including dish. used as the ouside and inside shape in key()
+// key shape including dish. used as the ouside and inside shape in key()
 module shape(thickness_difference, depth_difference){
 	difference(){
 		union(){
 			shape_hull(thickness_difference, depth_difference, 1);
 			if ($inverted_dish) { dish(depth_difference); }
 		}
-		if (!$inverted_dish) { dish(depth_difference); }
-		outside(thickness_difference);
+		if (!$inverted_dish) {
+			dish(depth_difference);
+		} else {
+		  // needed to trim the edges of an inverted dish
+			inside();
+		}
 	}
 }
 
-// shape of the key but with soft, rounded edges. much more realistic, much more complex
+// shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
 	minkowski(){
 		shape(minkowski_radius*2, minkowski_radius);
@@ -139,7 +156,7 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 			// $bottom_key_width + ($key_length -1) * unit is the correct length of the
 			// key. only 1u of the key should be $bottom_key_width long; all others
 			// should be 1u
-			roundedRect([total_key_width() - thickness_difference, total_key_height() - thickness_difference, .001],1.5);
+			roundedRect([total_key_width() - thickness_difference, total_key_height() - thickness_difference, .001],corner_radius);
 
 			//depth_difference outside of modifier because that doesnt make sense
 			translate([0,$top_skew,$total_depth * modifier - depth_difference]){
@@ -148,7 +165,7 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 						total_key_width()  - thickness_difference - $width_difference  * modifier,
 						total_key_height() - thickness_difference - $height_difference * modifier,
 						.001
-					],1.5);
+					],corner_radius);
 				}
 			}
 		}
@@ -158,39 +175,65 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 //dish selector
 module dish(depth_difference){
 	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-		if($dish_type == 0){ // cylindrical dish
-			cylindrical_dish(top_total_key_width(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+		if($dish_type == 0){
+			cylindrical_dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
 		}
-		else if ($dish_type == 1) { // spherical dish
-			spherical_dish(top_total_key_width(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+		else if ($dish_type == 1) {
+			spherical_dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
 		}
-		else if ($dish_type == 2){ // SIDEWAYS cylindrical dish - used for spacebar
-			sideways_cylindrical_dish(top_total_key_width(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+		else if ($dish_type == 2){
+			sideways_cylindrical_dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
 		}
 		// else no dish
 	}
 }
 
-//whole connector, alps or cherry, trimmed to fit
-module connector(){
-	difference(){
-		if($stem_profile == 0) {
-			cherry_stem();
-		} else if ($stem_profile == 1) {
-			alps_stem();
-		} else if ($stem_profile == 2) {
-			cherry_stem_rounded();
+module keytext() {
+	extra_dish_depth = ($dish_type > 2) ? 0 : $dish_depth;
+	extra_inset_depth = ($inset_text) ? keytop_thickness/4 : 0;
+
+	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - extra_dish_depth - extra_inset_depth]){
+		rotate([-$top_tilt,0,0]){
+			linear_extrude(height=$dish_depth){
+				text(text=$text, font=font, size=font_size, halign="center", valign="center");
+			}
+		}
+	}
+}
+
+module connectors($stem_profile) {
+	difference() {
+		for (connector_pos = $connectors) {
+			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
+				rotate([0, 0, $stem_rotation]){
+					connector($stem_profile);
+					if ($has_brim) cylinder(r=brim_radius,h=brim_depth);
+				}
+			}
 		}
 		inside();
 	}
 }
 
-module brim() {
-	cylinder(r=brim_radius,h=brim_depth);
+//approximate (fully depressed) cherry key to check clearances
+module clearance_check() {
+	if(clearance_check == true && ($stem_profile == "cherry" || $stem_profile == "cherry_rounded")){
+		color([1,0,0, 0.5]){
+			translate([0,0,3.6 + $stem_inset - 5]) {
+				%hull() {
+					cube([15.6, 15.6, 0.01], center=true);
+					translate([0,1,5 - 0.01]) cube([10.5,9.5, 0.01], center=true);
+				}
+				%hull() {
+					cube([15.6, 15.6, 0.01], center=true);
+					translate([0,0,-5.5]) cube([13.5,13.5,0.01], center=true);
+				}
+			}
+		}
+	}
 }
 
 module keytop() {
-	echo($key_length);
 	difference(){
 		if ($rounded_key) {
 			rounded_shape();
@@ -201,9 +244,24 @@ module keytop() {
 	}
 }
 
-//actual full key with space carved out and keystem/stabilizer connectors
+
+// The final, penultimate key generation function.
+// takes all the bits and glues them together. requires configuration with special variables.
+module key() {
+	difference() {
+		union(){
+			keytop();
+			if($stem_profile != "blank") connectors($stem_profile);
+			if(!$inset_text) keytext();
+			clearance_check();
+		}
+		if ($inset_text) keytext();
+	}
+}
+
+// actual full key with space carved out and keystem/stabilizer connectors
 // this is an example key with all the fixins
-module key(){
+module example_key(){
 	$bottom_key_width = bottom_key_width;
 	$bottom_key_height = bottom_key_height;
 	$width_difference = width_difference;
@@ -223,30 +281,29 @@ module key(){
 	$ISOEnter = ISOEnter;
 	$rounded_key = rounded_key;
 	$stem_profile = stem_profile;
+	$stem_inset = stem_inset;
+  $stem_rotation = stem_rotation;
+	$text = text;
+	$inset_text = inset_text;
 
-
-	keytop();
-
-	//TODO this stem offset thing is weird here. find a better place for it. its for stepped caps lock
-	translate([-unit * stem_offset, 0, 0]){
-		for (x = $connectors) {
-			translate(x) connector();
-		}
-	}
-
-	if ($has_brim){
-		brim();
-	}
-}
-
-// ACTUAL OUTPUT
-difference(){
 	key();
-	// preview cube, for seeing inside the keycap
-	//cube([100,100,100]);
 }
 
+example_key();
 //minkowski_key();
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Experimental stuff
