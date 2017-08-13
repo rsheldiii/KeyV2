@@ -20,3 +20,29 @@ module roundedRect(size, radius) {
 		circle(r=radius);
 	}
 }
+
+module functional_scaled_extrude(height = 10, slices=[]) {
+	nominal_height = height / (len(slices) - 1);
+	for (index = [0 : len(slices)-2]){
+		slice1 = slices[index];
+		slice2 = slices[index+1];
+		echo(slice2);
+		hull(){
+			translate([0,0,nominal_height * index]) {
+				scale(slice1) children();
+			}
+			translate([0,0,nominal_height * (index + 1)]) {
+				scale(slice2) children();
+			}
+		}
+	}
+}
+
+module progressive_hull() {
+  for (i = [0 : $children-2]){
+		hull(){
+			children(i);
+			children(i+1);
+		}
+	}
+}

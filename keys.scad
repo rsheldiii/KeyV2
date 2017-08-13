@@ -1,10 +1,18 @@
+// the point of this file is to be a sort of DSL for constructing keycaps.
+// when you create a method chain you are just changing the parameters
+// key.scad uses, it doesn't generate anything itself until the end. This
+// makes it remain easy to use key.scad like before (except without key profiles)
+// without having to rely on this file. Unfortunately that means setting tons of
+// special variables, but that's a limitation of SCAD we'll have to work around
+
 /* TODO:
- * can now measure keycaps very accurately. need to redo measurements
+ * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
+ * bowed sides for SA? jebus
  * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
  * Add inset stem to all profiles that need it
- * Pregenerated keysets
+ * Pregenerated keysets for DCS (rounded tops too intense) [ ] 60% [ ] TKL [ ] full
  * Full experimental ISO enter
-* customizer version where everything is copy/pasted in
+ * customizer version where everything is copy/pasted in
  */
 
 use <key.scad>
