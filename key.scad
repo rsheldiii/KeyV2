@@ -1,3 +1,4 @@
+// files
 include <util.scad>
 include <stems.scad>
 include <dishes.scad>
@@ -74,6 +75,8 @@ stem_rotation = 0;
 text = "";
 // is the text on the key inset? inset text is still experimental
 inset_text = false;
+// radius of corners of keycap
+corner_radius = 1;
 
 
 /* [Hidden] */
@@ -81,9 +84,8 @@ $fs = .1;
 //beginning to use unit instead of baked in 19.05
 unit = 19.05;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 default for faux G20
-minkowski_radius = 1.75;
-//radius of corners of keycap
-corner_radius = 1.5;
+$minkowski_radius = .75;
+
 
 
 
@@ -135,11 +137,11 @@ module shape(thickness_difference, depth_difference){
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
 	minkowski(){
-		shape(minkowski_radius*2, minkowski_radius);
+		shape($minkowski_radius*2, $minkowski_radius);
 		difference(){
-			sphere(r=minkowski_radius, $fn=24);
-			translate([0,0,-minkowski_radius])
-				cube([2*minkowski_radius,2*minkowski_radius,2*minkowski_radius], center=true);
+			sphere(r=$minkowski_radius, $fn=24);
+			translate([0,0,-$minkowski_radius])
+				cube([2*$minkowski_radius,2*$minkowski_radius,2*$minkowski_radius], center=true);
 		}
 	}
 }
@@ -152,11 +154,40 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 	if ($ISOEnter) {
 		ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
 	} else {
+		slices = 10;
+		for (index = [0:slices-1]) {
+			color("red") hull() {
+				shape_slice(index, slices, thickness_difference, depth_difference, modifier);
+				shape_slice(index + 1, slices, thickness_difference, depth_difference, modifier);
+			}
+		}
+	}
+}
+
+module shape_slice(index, total, thickness_difference, depth_difference, modifier) {
+	progress = index / (total);
+	translate([
+		0,
+		$top_skew * progress,
+		($total_depth * modifier - depth_difference) * progress
+	]) rotate([-$top_tilt / $key_height * progress,0,0]){
+		roundedRect([
+			total_key_width()  - thickness_difference - (($width_difference - abs(index - total)/4)  * modifier * progress),
+			total_key_height() - thickness_difference - ($height_difference * modifier * progress),
+			.001
+		],$corner_radius);
+	}
+}
+
+module oldshape_hull(thickness_difference, depth_difference, modifier){
+	if ($ISOEnter) {
+		ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
+	} else {
 		hull(){
 			// $bottom_key_width + ($key_length -1) * unit is the correct length of the
 			// key. only 1u of the key should be $bottom_key_width long; all others
 			// should be 1u
-			roundedRect([total_key_width() - thickness_difference, total_key_height() - thickness_difference, .001],corner_radius);
+			roundedRect([total_key_width() - thickness_difference, total_key_height() - thickness_difference, .001],$corner_radius);
 
 			//depth_difference outside of modifier because that doesnt make sense
 			translate([0,$top_skew,$total_depth * modifier - depth_difference]){
@@ -165,7 +196,7 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 						total_key_width()  - thickness_difference - $width_difference  * modifier,
 						total_key_height() - thickness_difference - $height_difference * modifier,
 						.001
-					],corner_radius);
+					],$corner_radius);
 				}
 			}
 		}
@@ -285,6 +316,7 @@ module example_key(){
   $stem_rotation = stem_rotation;
 	$text = text;
 	$inset_text = inset_text;
+	$corner_radius = corner_radius;
 
 	key();
 }

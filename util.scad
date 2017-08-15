@@ -1,5 +1,16 @@
+$fs=.1;
+
 //centered
+// offset, who knew?
 module roundedRect(size, radius) {
+	linear_extrude(height = size[2]){
+		offset(r=radius){
+			square([size[0] - radius * 2, size[1] - radius * 2], center=true);
+		}
+	}
+}
+
+module oldroundedRect(size, radius) {
 	x = size[0];
 	y = size[1];
 	z = size[2];

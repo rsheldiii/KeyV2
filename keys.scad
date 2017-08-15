@@ -6,6 +6,8 @@
 // special variables, but that's a limitation of SCAD we'll have to work around
 
 /* TODO:
+ * make SA keycaps get more rounded the further up they are (like in real life)
+ * make that rounding thing ^ only happen on certain keycaps via limiting the amount of slives we take to 2
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
  * bowed sides for SA? jebus
  * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
@@ -13,6 +15,7 @@
  * Pregenerated keysets for DCS (rounded tops too intense) [ ] 60% [ ] TKL [ ] full
  * Full experimental ISO enter
  * customizer version where everything is copy/pasted in
+ * I probably need to switch to surfaces for dishes don't I
  */
 
 use <key.scad>
@@ -41,6 +44,9 @@ $rounded_key = false;
 $stem_profile = 0;
 $stem_inset = 0;
 $stem_rotation = 0;
+$text = "";
+$inset_text = false;
+$corner_radius = 1;
 
 // key profile definitions
 
@@ -137,6 +143,7 @@ module g20() {
 	$dish_depth = 0;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
+	$minkowski_radius = 1.75;
 
   //also,
   $rounded_key = true;
@@ -340,11 +347,12 @@ module legend(text, inset=false) {
   $inset_text = inset;
 }
 
-translate([0,0,0]){
+/*translate([0,0,0]){
   for (x = [1:4]){
     translate_u(0,(x-1)){
-      sa_row(5-x) blank() key();
+      sa_row(5-x) 2_75u() blank() key();
     }
   }
-  translate([-10,-10,-2]) cube([40,80,2]);
-}
+}*/
+
+sa_row(1) rounded() blank() key();
