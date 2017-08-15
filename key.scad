@@ -2,6 +2,7 @@
 include <util.scad>
 include <stems.scad>
 include <dishes.scad>
+include <libraries/geodesic_sphere.scad>
 /* [Settings] */
 
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
@@ -77,6 +78,9 @@ text = "";
 inset_text = false;
 // radius of corners of keycap
 corner_radius = 1;
+// if you're doing fancy bowed keycap sides, this controls how many slices you take
+// default of 1 for no sampling, just top/bottom
+height_slices = 1;
 
 
 /* [Hidden] */
@@ -155,10 +159,10 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 		ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
 	} else {
 		slices = 10;
-		for (index = [0:slices-1]) {
+		for (index = [0:$height_slices-1]) {
 			color("red") hull() {
-				shape_slice(index, slices, thickness_difference, depth_difference, modifier);
-				shape_slice(index + 1, slices, thickness_difference, depth_difference, modifier);
+				shape_slice(index, $height_slices, thickness_difference, depth_difference, modifier);
+				shape_slice(index + 1, $height_slices, thickness_difference, depth_difference, modifier);
 			}
 		}
 	}
@@ -173,9 +177,9 @@ module shape_slice(index, total, thickness_difference, depth_difference, modifie
 	]) rotate([-$top_tilt / $key_height * progress,0,0]){
 		roundedRect([
 			total_key_width()  - thickness_difference - (($width_difference - abs(index - total)/4)  * modifier * progress),
-			total_key_height() - thickness_difference - ($height_difference * modifier * progress),
+			total_key_height() - thickness_difference - (($height_difference - abs(index - total)/4) * modifier * progress),
 			.001
-		],$corner_radius);
+		],$corner_radius + (pow(progress, 2)));
 	}
 }
 
@@ -317,6 +321,7 @@ module example_key(){
 	$text = text;
 	$inset_text = inset_text;
 	$corner_radius = corner_radius;
+	$height_slices = height_slices;
 
 	key();
 }

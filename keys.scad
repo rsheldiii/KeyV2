@@ -9,6 +9,7 @@
  * make SA keycaps get more rounded the further up they are (like in real life)
  * make that rounding thing ^ only happen on certain keycaps via limiting the amount of slives we take to 2
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
+ * functions to control bowed edges? and bowed corners
  * bowed sides for SA? jebus
  * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
  * Add inset stem to all profiles that need it
@@ -47,6 +48,7 @@ $stem_rotation = 0;
 $text = "";
 $inset_text = false;
 $corner_radius = 1;
+$height_slices = 1;
 
 // key profile definitions
 
@@ -111,6 +113,7 @@ module sa_row(n=1) {
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 0;
+	$height_slices = 10;
 
   if (n == 1){
     $total_depth = 14.89;

@@ -1,14 +1,10 @@
 // from https://www.thingiverse.com/thing:1484333
 // public domain license
-$fs = .01;
-geodesic_sphere(2);
-
-translate([4, 0, 0])
-sphere(2);
-
 // same syntax and semantics as built-in sphere, so should be a drop-in replacement
 // it's a bit slow for large numbers of facets
 module geodesic_sphere(r=-1, d=-1) {
+
+  echo(r);
   // if neither parameter specified, radius is taken to be 1
   rad = r > 0 ? r : d > 0 ? d/2 : 1;
 
