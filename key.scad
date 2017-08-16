@@ -16,14 +16,12 @@ brim_radius = 8;
 brim_depth = .3;
 //whether stabilizer connectors are enabled
 stabilizers = false;
-// stem offset in units NOT MM. for stepped caps lock basically
-stem_offset = 0;
 // font used for text
 font="Arial";
 // font size used for text
 font_size = 8;
 // whether or not to render fake keyswitches to check clearances
-clearance_check = true;
+clearance_check = false;
 
 /* [Key profile] */
 
@@ -78,9 +76,18 @@ text = "";
 inset_text = false;
 // radius of corners of keycap
 corner_radius = 1;
+
+
+
+/* [Fancy Bowed Sides] */
+
+
 // if you're doing fancy bowed keycap sides, this controls how many slices you take
 // default of 1 for no sampling, just top/bottom
 height_slices = 1;
+enable_side_sculpting = false;
+
+
 
 
 /* [Hidden] */
@@ -170,16 +177,19 @@ module shape_hull(thickness_difference, depth_difference, modifier){
 
 module shape_slice(index, total, thickness_difference, depth_difference, modifier) {
 	progress = index / (total);
+	extra_side_size =  $enable_side_sculpting ? abs(index - total)/4 : 0;
+	extra_corner_size = $enable_side_sculpting ? pow(progress, 2) : 0;
+
 	translate([
 		0,
 		$top_skew * progress,
 		($total_depth * modifier - depth_difference) * progress
 	]) rotate([-$top_tilt / $key_height * progress,0,0]){
 		roundedRect([
-			total_key_width()  - thickness_difference - (($width_difference - abs(index - total)/4)  * modifier * progress),
-			total_key_height() - thickness_difference - (($height_difference - abs(index - total)/4) * modifier * progress),
+			total_key_width()  - thickness_difference - (($width_difference - extra_side_size) * progress  * modifier),
+			total_key_height() - thickness_difference - (($height_difference - extra_side_size) * progress * modifier),
 			.001
-		],$corner_radius + (pow(progress, 2)));
+		],$corner_radius + extra_corner_size);
 	}
 }
 
@@ -322,6 +332,7 @@ module example_key(){
 	$inset_text = inset_text;
 	$corner_radius = corner_radius;
 	$height_slices = height_slices;
+	$enable_side_sculpting = enable_side_sculpting;
 
 	key();
 }
@@ -364,10 +375,11 @@ module fakeISOEnter(thickness_difference = 0){
         [unit(1.25) - t,      unit(1)  - t],
         [unit(1.25) - t,      unit(2)  - t],
         [         0 + t,      unit(2)  - t]
-    ]
-			offset(r=$corner_radius) {
-				polygon(points=pointArray);
-			}
+    ];
+
+		offset(r=$corner_radius) {
+			polygon(points=pointArray);
+		}
 }
 
 //corollary is shape_hull
@@ -382,6 +394,6 @@ module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
 	linear_extrude(height = height, scale = [width_scale, height_scale]) {
 
 		// TODO completely making up these numbers here
-		translate([unit(-.5), unit(-.9)]) fakeISOEnter();
+		translate([unit(-.5), unit(-.95)]) fakeISOEnter(thickness_difference);
 	}
 }

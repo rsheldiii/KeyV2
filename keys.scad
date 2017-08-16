@@ -6,17 +6,13 @@
 // special variables, but that's a limitation of SCAD we'll have to work around
 
 /* TODO:
- * make SA keycaps get more rounded the further up they are (like in real life)
- * make that rounding thing ^ only happen on certain keycaps via limiting the amount of slives we take to 2
- * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
- * functions to control bowed edges? and bowed corners
- * bowed sides for SA? jebus
- * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
- * Add inset stem to all profiles that need it
- * Pregenerated keysets for DCS (rounded tops too intense) [ ] 60% [ ] TKL [ ] full
  * Full experimental ISO enter
+ * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
+ * Pregenerated keysets for DCS (rounded tops too intense) [ ] 60% [ ] TKL [ ] full
+ * Add inset stem to all profiles that need it (DCS?)
+ * generate dishes via math? kind of hard
+ * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
  * customizer version where everything is copy/pasted in
- * I probably need to switch to surfaces for dishes don't I
  */
 
 use <key.scad>
@@ -114,6 +110,10 @@ module sa_row(n=1) {
   $dish_skew_y = 0;
   $top_skew = 0;
 	$height_slices = 10;
+	$enable_side_sculpting = true;
+	// might wanna change this if you don't minkowski
+	// do you even minkowski bro
+	$corner_radius = 0.01;
 
   if (n == 1){
     $total_depth = 14.89;
@@ -166,7 +166,9 @@ module fake_iso_enter() {
 	$dish_skew_y = 0;
 	$ISOEnter = true;
 
-  stabilized(vertical=true) children();
+  stabilized(vertical=true) {
+		children();
+	}
 }
 
 module brimmed() {
@@ -182,6 +184,11 @@ module rounded() {
 module inverted() {
   $inverted_dish = true;
   children();
+}
+
+module rotated() {
+	$stem_rotation = 90;
+	children();
 }
 
 module stabilized(mm=12, vertical = false) {
@@ -361,4 +368,4 @@ module legend(text, inset=false) {
 /*
 sa_row(1) blank() key();*/
 
-blank() dishless() fake_iso_enter() cherry() key();
+/*blank() dishless() rounded() sa_row(1) blank() key();*/
