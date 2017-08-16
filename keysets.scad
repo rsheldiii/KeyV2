@@ -1,40 +1,26 @@
 /*use <key.scad>*/
+// NEED to include, not use this, even with the default variables set. don't know why
 include <keys.scad>
 
-//TODO duplicate def to not make this a special var. maybe not worth it
-unit = 19.05;
+60_percent = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,2],
+  [1.5,1,1,1,1,1,1,1,1,1,1,1,1,1.5],
+  [1.75,1,1,1,1,1,1,1,1,1,1,1,2.25],
+  [2.25,1,1,1,1,1,1,1,1,1,1,2.75],
+  [1.25,1.25,1.25,6.25,1.25,1.25,1.25,1.25]
+];
 
-// defaults
-$bottom_key_width = 18.16;
-$bottom_key_height = 18.16;
-$width_difference = 6;
-$height_difference = 4;
-$total_depth = 11.5;
-$top_tilt = -6;
-$top_skew = 1.7;
-$dish_type = 0;
-$dish_depth = 1;
-$dish_skew_x = 0;
-$dish_skew_y = 0;
-$key_length = 1;
-$key_height = 1;
-$has_brim = false;
-$inverted_dish = false;
-$connectors = [[0,0]];
-$ISOEnter = false;
-$rounded_key = false;
-$stem_profile = 0;
-$stem_inset = 0;
-$stem_rotation = 0;
-$text = "";
-$inset_text = false;
-$corner_radius = 1;
-$height_slices = 1;
+function sum(list, x=0) =
+  len(list) <= 1 ?
+    x + list[0] :
+    sum([for (x = [1: len(list) - 1]) list[x]], x+list[0]);
 
+echo(sum([1,2,3]));
 
-for (column = [1:15]){
-  for(row = [1:4]) {
-    echo(row);
-    translate_u(column, row) dishless() dcs_row(5-row)  blank() key();
+for (row = [0:len(60_percent)]){
+  for(column = [0:len(60_percent[row])]) {
+    columnDist = sum([for (x = [0 : column]) 60_percent[row][x]]);
+    a = 60_percent[row][column];
+    translate_u(columnDist - (a/2), -row) dishless() dcs_row((row+4) % 5 + 1) u(a)  blank() key();
   }
 }
