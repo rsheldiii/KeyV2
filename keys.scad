@@ -164,8 +164,9 @@ module fake_iso_enter() {
 	$dish_depth = 1;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
+	$ISOEnter = true;
 
-  children();
+  stabilized(vertical=true) children();
 }
 
 module brimmed() {
@@ -357,5 +358,7 @@ module legend(text, inset=false) {
     }
   }
 }*/
+/*
+sa_row(1) blank() key();*/
 
-sa_row(1) rounded() blank() key();
+blank() dishless() fake_iso_enter() cherry() key();

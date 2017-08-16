@@ -345,18 +345,15 @@ example_key();
 
 // Experimental stuff
 
-// NOT 3D, NOT CENTERED
 // corollary is roundedRect
-module fakeISOEnter(thickness_difference){
-    z = 0.001;
-    radius = 2;
+// NOT 3D
+module fakeISOEnter(thickness_difference = 0){
 		// 1u is the space taken upy by a 1u keycap.
 		// unit is the space taken up by a unit space for a keycap.
 		// formula is 1u + unit *(length - 1)
 
 		// t is all modifications to the polygon array
-		// could do map but can scad even do map?
-		t = radius + thickness_difference/2;
+		t = $corner_radius + thickness_difference/2;
 
 		function unit(length) = 19.02 * (length) + (18.16 - 19.02);
 
@@ -367,22 +364,24 @@ module fakeISOEnter(thickness_difference){
         [unit(1.25) - t,      unit(1)  - t],
         [unit(1.25) - t,      unit(2)  - t],
         [         0 + t,      unit(2)  - t]
-    ];
-
-    minkowski(){
-        circle(r=radius, $fn=24);
+    ]
+			offset(r=$corner_radius) {
 				polygon(points=pointArray);
-    }
+			}
 }
 
 //corollary is shape_hull
 module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
-    function unit(length) = 19.02 * (length) + (18.16 - 19.02);
-		height = 8 - depth_difference;
+	// TODO move this somewhere
+  function unit(length) = 19.02 * (length) + (18.16 - 19.02);
 
-    translate([unit(-0.25), unit(.5)]) linear_extrude(height=height*modifier, scale=[.8, .9]){
-        translate([unit(-.5), unit(-1.5)]) minkowski(){
-            fakeISOEnter(thickness_difference);
-        }
-    }
+	height = $total_depth - depth_difference;
+	width_scale = top_total_key_width() / total_key_width();
+	height_scale = top_total_key_height() / total_key_height();
+
+	linear_extrude(height = height, scale = [width_scale, height_scale]) {
+
+		// TODO completely making up these numbers here
+		translate([unit(-.5), unit(-.9)]) fakeISOEnter();
+	}
 }
