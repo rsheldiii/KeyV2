@@ -12,7 +12,7 @@
  * Add inset stem to all profiles that need it (DCS?)
  * generate dishes via math? kind of hard
  * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
- * customizer version where everything is copy/pasted in
+ * customizer version where everything is copy/pasted in. needs to be last.
  */
 
 use <key.scad>
