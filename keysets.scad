@@ -21,6 +21,13 @@ for (row = [0:len(60_percent)]){
   for(column = [0:len(60_percent[row])]) {
     columnDist = sum([for (x = [0 : column]) 60_percent[row][x]]);
     a = 60_percent[row][column];
-    translate_u(columnDist - (a/2), -row) dishless() dcs_row((row+4) % 5 + 1) u(a)  blank() key();
+    translate_u(columnDist - (a/2), -row) dishless() dcs_row((row+4) % 5 + 1) u(a) blank(){
+      if (a != 6.25) {
+        key();
+      } else {
+        $dish_type = 2;
+        key();
+      }
+    }
   }
 }

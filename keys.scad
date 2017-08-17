@@ -54,7 +54,7 @@ module dcs_row(n=1) {
 	$bottom_key_height = 18.16;
 	$width_difference = 6;
 	$height_difference = 4;
-  $dish_type = 2;
+  $dish_type = 0;
   $dish_depth = 1;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
@@ -95,6 +95,11 @@ module dsa_row(n=3) {
 	$dish_depth = 1.2;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
+	$height_slices = 10;
+	$enable_side_sculpting = true;
+	// might wanna change this if you don't minkowski
+	// do you even minkowski bro
+	$corner_radius = 0.25;
 
   children();
 }
@@ -113,7 +118,7 @@ module sa_row(n=1) {
 	$enable_side_sculpting = true;
 	// might wanna change this if you don't minkowski
 	// do you even minkowski bro
-	$corner_radius = 0.01;
+	$corner_radius = 0.25;
 
   if (n == 1){
     $total_depth = 14.89;
@@ -148,12 +153,14 @@ module g20() {
 	$dish_skew_y = 0;
 	$minkowski_radius = 1.75;
 
+
+	children();
   //also,
-  $rounded_key = true;
+  /*$rounded_key = true;*/
 }
 
 module fake_iso_enter() {
-	$bottom_key_width = 18.16 * 1.5;
+	$bottom_key_width = 18.16 * 1.9;
 	$bottom_key_height = 18.16 * 2;
 	$width_difference = 4;
 	$height_difference = 4;
@@ -358,13 +365,21 @@ module legend(text, inset=false) {
   $inset_text = inset;
 }
 
-/*translate([0,0,0]){
+translate([0,0,0]){
   for (x = [1:4]){
     translate_u(0,(x-1)){
-      sa_row(5-x) 2_75u() blank() key();
+      sa_row(5-x) blank() key();
+			translate_u(1) dcs_row(5-x) blank() key();
     }
   }
-}*/
+}
+
+translate_u(2.1) {
+
+	translate_u(0, 1.5) fake_iso_enter() blank() key();
+	dsa_row() blank() key();
+	translate_u(0, 3) g20() blank() key();
+}
 /*
 sa_row(1) blank() key();*/
 
