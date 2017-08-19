@@ -57,7 +57,10 @@ module spherical_dish(width, height, depth, inverted, tilt, txt=""){
 	/*}*/
 }
 
-module oldspherical_dish(width, height, depth, inverted, tilt, txt=""){
+//the older, 'more accurate', and MUCH slower spherical dish.
+/* I guess this stuff requires some explaining:
+*/
+module old_spherical_dish(width, height, depth, inverted, tilt, txt=""){
 
 	//same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
 	chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top

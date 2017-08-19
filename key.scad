@@ -9,11 +9,6 @@ include <libraries/geodesic_sphere.scad>
 keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 wall_thickness = 3;
-/* [Brim] */
-//brim radius. 11 ensconces normal keycap stem in normal keycap
-brim_radius = 8;
-//brim depth
-brim_depth = .3;
 //whether stabilizer connectors are enabled
 stabilizers = false;
 // font used for text
@@ -251,8 +246,7 @@ module connectors($stem_profile) {
 		for (connector_pos = $connectors) {
 			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
 				rotate([0, 0, $stem_rotation]){
-					connector($stem_profile);
-					if ($has_brim) cylinder(r=brim_radius,h=brim_depth);
+					connector($stem_profile, $has_brim);
 				}
 			}
 		}
@@ -378,7 +372,7 @@ module fakeISOEnter(thickness_difference = 0){
     ];
 
 		offset(r=$corner_radius) {
-			polygon(points=pointArray);
+			polygon(points=pointArray, center=true);
 		}
 }
 
@@ -394,6 +388,7 @@ module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
 	linear_extrude(height = height, scale = [width_scale, height_scale]) {
 
 		// TODO completely making up these numbers here
-		translate([unit(-.5), unit(-.95)]) fakeISOEnter(thickness_difference);
+		// 0.86mm is from the unit function, 18.16 - 19.02. no idea what the 18 is, shows me for not leaving better comments
+		translate([unit(-.5), unit(-1) + 0.86]) fakeISOEnter(thickness_difference);
 	}
 }

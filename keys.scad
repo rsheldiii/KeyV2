@@ -6,12 +6,13 @@
 // special variables, but that's a limitation of SCAD we'll have to work around
 
 /* TODO:
- * Full experimental ISO enter
+ * fix stem inset
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
- * Pregenerated keysets for DCS (rounded tops too intense) [ ] 60% [ ] TKL [ ] full
+ * make OEM profile from my WASD keyset
+ * Pregenerated keysets for DCS (rounded tops too intense) WITH rounded spacebar [ ] 60% [ ] TKL [ ] full
  * Add inset stem to all profiles that need it (DCS?)
- * generate dishes via math? kind of hard
  * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
+ * generate dishes via math? kind of hard
  * customizer version where everything is copy/pasted in
  */
 
@@ -88,7 +89,7 @@ module dsa_row(n=3) {
 	$bottom_key_height = 18.4;
 	$width_difference = 5.7;
 	$height_difference = 5.7;
-	$total_depth = 7.4;
+	$total_depth = 8;
 	$top_tilt = (n-1) * 7 - 14;
 	$top_skew = 0;
 	$dish_type = 1;
@@ -366,19 +367,19 @@ module legend(text, inset=false) {
 }
 
 translate([0,0,0]){
-  for (x = [1:4]){
+  for (x = [0:4]){
     translate_u(0,(x-1)){
-      sa_row(5-x) blank() key();
+      /*sa_row(5-x) blank() key();*/
 			translate_u(1) dcs_row(5-x) blank() key();
     }
   }
 }
 
-translate_u(2.1) {
+brimmed() translate_u(2.1) {
 
-	translate_u(0, 1.5) fake_iso_enter() blank() key();
-	dsa_row() blank() key();
-	translate_u(0, 3) g20() blank() key();
+	translate_u(0, 1.5) fake_iso_enter() cherry() key();
+	dsa_row() alps() key();
+	translate_u(0, 3) g20() rounded_cherry() key();
 }
 /*
 sa_row(1) blank() key();*/
