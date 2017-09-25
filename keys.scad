@@ -3,7 +3,7 @@
 // key.scad uses, it doesn't generate anything itself until the end. This
 // makes it remain easy to use key.scad like before (except without key profiles)
 // without having to rely on this file. Unfortunately that means setting tons of
-// special variables, but that's a limitation of SCAD we'll have to work around
+// special variables, but that's a limitation of SCAD we have to work around
 
 /* TODO:
  * fix stem inset
@@ -11,7 +11,6 @@
  * make OEM profile from my WASD keyset
  * Pregenerated keysets for DCS (rounded tops too intense) WITH rounded spacebar [ ] 60% [ ] TKL [ ] full
  * Add inset stem to all profiles that need it (DCS?)
- * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
  * generate dishes via math? kind of hard
  * customizer version where everything is copy/pasted in
  */
@@ -28,7 +27,7 @@ $height_difference = 4;
 $total_depth = 11.5;
 $top_tilt = -6;
 $top_skew = 1.7;
-$dish_type = 0;
+$dish_type = "cylindrical";
 $dish_depth = 1;
 $dish_skew_x = 0;
 $dish_skew_y = 0;
@@ -55,7 +54,7 @@ module dcs_row(n=1) {
 	$bottom_key_height = 18.16;
 	$width_difference = 6;
 	$height_difference = 4;
-  $dish_type = 0;
+  $dish_type = "cylindrical";
   $dish_depth = 1;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
@@ -84,15 +83,49 @@ module dcs_row(n=1) {
   }
 }
 
+module oem_row(n=1) {
+	$bottom_key_width = 18.05;
+	$bottom_key_height = 18.05;
+	$width_difference = 5.8;
+	$height_difference = 4;
+  $dish_type = "cylindrical";
+  $dish_depth = 1;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 1.75;
+
+  if (n == 5) {
+    $total_depth = 11.2;
+    $top_tilt = -3;
+    children();
+  } else if (n == 1) {
+    $total_depth = 9.45;
+    $top_tilt = 1;
+    children();
+  } else if (n == 2) {
+    $total_depth = 9;
+    $top_tilt = 6;
+    children();
+  } else if (n == 3) {
+    $total_depth = 9.25;
+    $top_tilt = 9;
+    children();
+  } else if (n == 4) {
+    $total_depth = 9.25;
+    $top_tilt = 10;
+    children();
+  }
+}
+
 module dsa_row(n=3) {
-	$bottom_key_width = 18.4;
-	$bottom_key_height = 18.4;
-	$width_difference = 5.7;
-	$height_difference = 5.7;
+	$bottom_key_width = 18.24; // 18.4;
+	$bottom_key_height = 18.24; // 18.4;
+	$width_difference = 6; // 5.7;
+	$height_difference = 6; // 5.7;
 	$total_depth = 8;
 	$top_tilt = (n-1) * 7 - 14;
 	$top_skew = 0;
-	$dish_type = 1;
+	$dish_type = "spherical";
 	$dish_depth = 1.2;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
@@ -110,7 +143,7 @@ module sa_row(n=1) {
 	$bottom_key_height = 18.4;
 	$width_difference = 5.7;
 	$height_difference = 5.7;
-  $dish_type = 1;
+  $dish_type = "spherical";
   $dish_depth = 0.85;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
@@ -148,7 +181,7 @@ module g20() {
 	$total_depth = 6;
 	$top_tilt = 2.5;
 	$top_skew = 0.75;
-	$dish_type = 3;
+	$dish_type = "no dish";
 	$dish_depth = 0;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
@@ -168,7 +201,7 @@ module fake_iso_enter() {
 	$total_depth = 7;
 	$top_tilt = 0;
 	$top_skew = 1.75;
-	$dish_type = 0;
+	$dish_type = "cylindrical";
 	$dish_depth = 1;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
@@ -220,13 +253,18 @@ module stabilized(mm=12, vertical = false) {
 }
 
 module dishless() {
-  $dish_type = 3;
+  $dish_type = "no dish";
   children();
 }
 
 module spacebar() {
   $inverted_dish = true;
-  6_25u() stabilized(mm=50) children();
+	if ($dish_type == "cylindrical") {
+		$dish_type = "sideways cylindrical";
+		6_25u() stabilized(mm=50) children();
+	} else {
+		6_25u() stabilized(mm=50) children();
+	}
 }
 
 module lshift() {
@@ -341,6 +379,10 @@ module 6_25uh() {
   uh(6.25) children();
 }
 
+module filled() {
+	$stem_profile = "filled";
+	children();
+}
 module blank() {
   $stem_profile = "blank";
   children();
@@ -364,24 +406,16 @@ module rounded_cherry() {
 module legend(text, inset=false) {
   $text=text;
   $inset_text = inset;
+	children();
 }
 
-translate([0,0,0]){
-  for (x = [0:4]){
-    translate_u(0,(x-1)){
-      /*sa_row(5-x) blank() key();*/
-			translate_u(1) dcs_row(5-x) blank() key();
-    }
-  }
+rows = [4,3,2,1,5];
+
+translate_u(-.5, -.5) cube([40,115,.3]);
+
+translate([0,0,.3]) {
+	dsa_row(3) filled() key();
+	for (y = [0:4]) {
+		translate_u(0, y+1) oem_row(rows[y]) filled() key();
+	}
 }
-
-brimmed() translate_u(2.1) {
-
-	translate_u(0, 1.5) fake_iso_enter() cherry() key();
-	dsa_row() alps() key();
-	translate_u(0, 3) g20() rounded_cherry() key();
-}
-/*
-sa_row(1) blank() key();*/
-
-/*blank() dishless() rounded() sa_row(1) blank() key();*/

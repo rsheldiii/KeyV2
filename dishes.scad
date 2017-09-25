@@ -3,6 +3,19 @@ include <util.scad>
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
 
+//dish selector
+module  dish(width, height, depth, inverted, tilt) {
+		if($dish_type == "cylindrical"){
+			cylindrical_dish(width, height, depth, inverted, tilt);
+		}
+		else if ($dish_type == "spherical") {
+			spherical_dish(width, height, depth, inverted, tilt);
+		}
+		else if ($dish_type == "sideways cylindrical"){
+			sideways_cylindrical_dish(width, height, depth, inverted, tilt);
+		}
+		// else no dish, "no dish" is the value
+}
 
 module cylindrical_dish(width, height, depth, inverted, tilt){
 	// .5 has problems starting around 3u
@@ -24,6 +37,20 @@ module cylindrical_dish(width, height, depth, inverted, tilt){
 	    cylinder(h=height + 20, r=rad, center=true);
     }
   }
+}
+
+module sideways_cylindrical_dish(width, height, depth, inverted, tilt){
+	$fa=1;
+	chord_length = (pow(height, 2) - 4 * pow(depth, 2)) / (8 * depth);
+	rad = (pow(height, 2) + 4 * pow(depth, 2)) / (8 * depth);
+
+  direction = inverted ? -1 : 1;
+
+	rotate([90,tilt,90]){
+		translate([0,chord_length * direction,0]){
+			cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
+		}
+	}
 }
 
 module spherical_dish(width, height, depth, inverted, tilt, txt=""){
@@ -58,8 +85,8 @@ module spherical_dish(width, height, depth, inverted, tilt, txt=""){
 }
 
 //the older, 'more accurate', and MUCH slower spherical dish.
-/* I guess this stuff requires some explaining:
-*/
+// generates the largest sphere possible that still contains the chord we are looking for
+// much more graduated curvature at an immense cost
 module old_spherical_dish(width, height, depth, inverted, tilt, txt=""){
 
 	//same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
@@ -90,18 +117,4 @@ module old_spherical_dish(width, height, depth, inverted, tilt, txt=""){
 		// this line causes openscad to die. maybe re-enable when that doesn't happen instead of differencing the inside() when we add the dish to the shape()
 		/*translate([0,0,0]) roundedRect([width, height, depth], 1.5);*/
 	/*}*/
-}
-
-module sideways_cylindrical_dish(width, height, depth, inverted, tilt){
-	$fa=1;
-	chord_length = (pow(height, 2) - 4 * pow(depth, 2)) / (8 * depth);
-	rad = (pow(height, 2) + 4 * pow(depth, 2)) / (8 * depth);
-
-  direction = inverted ? -1 : 1;
-
-	rotate([90,tilt,90]){
-		translate([0,chord_length * direction,0]){
-			cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
-		}
-	}
 }

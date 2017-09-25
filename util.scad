@@ -37,7 +37,6 @@ module functional_scaled_extrude(height = 10, slices=[]) {
 	for (index = [0 : len(slices)-2]){
 		slice1 = slices[index];
 		slice2 = slices[index+1];
-		echo(slice2);
 		hull(){
 			translate([0,0,nominal_height * index]) {
 				scale(slice1) children();

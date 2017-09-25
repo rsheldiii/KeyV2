@@ -97,6 +97,12 @@ module alps_stem(has_brim = false){
 	}
 }
 
+module filled_stem(has_brim=false) {
+  // this is mostly for testing. we don't pass the size of the keycp in here
+  // so we can't make this work for all keys
+  cube(100, center=true);
+}
+
 
 //whole connector, alps or cherry, trimmed to fit
 module connector(stem_profile, has_brim){
@@ -106,5 +112,7 @@ module connector(stem_profile, has_brim){
 			cherry_stem_rounded(has_brim);
 		} else if (stem_profile == "cherry") {
 			cherry_stem(has_brim);
-		}
+		} else if (stem_profile == "filled") {
+      filled_stem();
+    }
 }

@@ -3,8 +3,6 @@
 // same syntax and semantics as built-in sphere, so should be a drop-in replacement
 // it's a bit slow for large numbers of facets
 module geodesic_sphere(r=-1, d=-1) {
-
-  echo(r);
   // if neither parameter specified, radius is taken to be 1
   rad = r > 0 ? r : d > 0 ? d/2 : 1;
 
@@ -92,7 +90,6 @@ module geodesic_sphere(r=-1, d=-1) {
   // actually a chord and not circumference but let's say it's close enough
   // subdivision factor should be rad*2*tan(edge_subtend/2)/$fs
   side_levels = ceil(log(rad*2*tan(edge_subtend/2)/$fs)/log(2));
-    echo(side_levels);
 
   // subdivision level based on $fn: (fragments around circumference, not total facets)
   // icosahedron circumference around equator is about 5 (level 1 is exactly 10)
