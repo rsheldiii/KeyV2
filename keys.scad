@@ -12,12 +12,7 @@
  * Pregenerated keysets for DCS (rounded tops too intense) WITH rounded spacebar [ ] 60% [ ] TKL [ ] full
  * Add inset stem to all profiles that need it (DCS?)
  * generate dishes via math? kind of hard
-<<<<<<< HEAD
- * customizer version where everything is copy/pasted in
-=======
- * sideways cylindrical dish needs to be used for some spacebars but not others. currently none of them use it
  * customizer version where everything is copy/pasted in. needs to be last.
->>>>>>> 0013b2aa1744926a5f9f9f7ce11d46d0f986dd69
  */
 
 use <key.scad>
