@@ -6,8 +6,7 @@
 // special variables, but that's a limitation of SCAD we have to work around
 
 /* TODO:
- * fix stem inset
- * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [ ] DSA [ ] OEM?
+ * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
  * make OEM profile from my WASD keyset
  * Pregenerated keysets for DCS (rounded tops too intense) WITH rounded spacebar [ ] 60% [ ] TKL [ ] full
  * Add inset stem to all profiles that need it (DCS?)
@@ -93,6 +92,7 @@ module oem_row(n=1) {
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 1.75;
+	$stem_inset = 1.2;
 
   if (n == 5) {
     $total_depth = 11.2;
@@ -122,7 +122,7 @@ module dsa_row(n=3) {
 	$bottom_key_height = 18.24; // 18.4;
 	$width_difference = 6; // 5.7;
 	$height_difference = 6; // 5.7;
-	$total_depth = 8;
+	$total_depth = 8.1;
 	$top_tilt = (n-1) * 7 - 14;
 	$top_skew = 0;
 	$dish_type = "spherical";
@@ -411,11 +411,6 @@ module legend(text, inset=false) {
 
 rows = [4,3,2,1,5];
 
-translate_u(-.5, -.5) cube([40,115,.3]);
 
-translate([0,0,.3]) {
-	dsa_row(3) filled() key();
-	for (y = [0:4]) {
-		translate_u(0, y+1) oem_row(rows[y]) filled() key();
-	}
-}
+translate_u(0, 0) oem_row(rows[0]) cherry() key();
+translate_u(0, 1) oem_row(rows[1]) cherry() key();
