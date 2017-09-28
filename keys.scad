@@ -257,6 +257,11 @@ module dishless() {
   children();
 }
 
+module inset(val=1) {
+	$stem_inset = val;
+	children();
+}
+
 module spacebar() {
   $inverted_dish = true;
 	if ($dish_type == "cylindrical") {
