@@ -1,17 +1,15 @@
 // the point of this file is to be a sort of DSL for constructing keycaps.
 // when you create a method chain you are just changing the parameters
 // key.scad uses, it doesn't generate anything itself until the end. This
-// makes it remain easy to use key.scad like before (except without key profiles)
+// lets it remain easy to use key.scad like before (except without key profiles)
 // without having to rely on this file. Unfortunately that means setting tons of
 // special variables, but that's a limitation of SCAD we have to work around
 
 /* TODO:
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
- * make OEM profile from my WASD keyset
- * Pregenerated keysets for DCS (rounded tops too intense) WITH rounded spacebar [ ] 60% [ ] TKL [ ] full
- * Add inset stem to all profiles that need it (DCS?)
- * generate dishes via math? kind of hard
+ * Add inset stem to all profiles that need it. [x] OEM [ ] DCS?
  * customizer version where everything is copy/pasted in. needs to be last.
+ * generate dishes via math? kind of hard, maybe later
  */
 
 use <key.scad>
@@ -414,8 +412,9 @@ module legend(text, inset=false) {
 	children();
 }
 
-rows = [4,3,2,1,5];
+/*rows = [4,3,2,1,5];
 
 
-translate_u(0, 0) oem_row(rows[0]) cherry() key();
-translate_u(0, 1) oem_row(rows[1]) cherry() key();
+translate_u(0, 0) oem_row(1) cherry() key() {
+	cube(2, center=true);
+};*/

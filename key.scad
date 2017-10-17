@@ -186,12 +186,21 @@ module dished(depth_difference, inverted = false) {
 	}
 }
 
-module keytext() {
+// puts it's children at the center of the dishing on the key. this DOES rotate them though, it's not straight up
+module top_of_key(){
 	extra_dish_depth = ($dish_type == "no dish") ? 0 : $dish_depth;
+	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - extra_dish_depth]){
+		rotate([-$top_tilt,0,0]){
+			children();
+		}
+	}
+}
+
+module keytext() {
 	extra_inset_depth = ($inset_text) ? keytop_thickness/4 : 0;
 
-	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - extra_dish_depth - extra_inset_depth]){
-		rotate([-$top_tilt,0,0]){
+	translate([0, 0, -extra_inset_depth]){
+		top_of_key(){
 			linear_extrude(height=$dish_depth){
 				text(text=$text, font=font, size=font_size, halign="center", valign="center");
 			}
@@ -252,6 +261,9 @@ module key() {
 			if($stem_profile != "blank") connectors($stem_profile);
 			if(!$inset_text) keytext();
 			clearance_check();
+			top_of_key() {
+				children();
+			}
 		}
 		if ($inset_text) keytext();
 	}
