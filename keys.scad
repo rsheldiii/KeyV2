@@ -6,6 +6,7 @@
 // special variables, but that's a limitation of SCAD we have to work around
 
 /* TODO:
+ * pull out side sculpting options to let people tweak them?
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
  * Add inset stem to all profiles that need it. [x] OEM [ ] DCS?
  * customizer version where everything is copy/pasted in. needs to be last.
