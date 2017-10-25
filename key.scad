@@ -109,11 +109,11 @@ function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)
 module shape(thickness_difference, depth_difference){
 	intersection(){
 		dished(depth_difference, $inverted_dish) {
-			shape_hull(thickness_difference, depth_difference, 1);
+			color([.2667,.5882,1]) shape_hull(thickness_difference, depth_difference, 1);
 		}
 		if ($inverted_dish) {
 			// larger shape_hull to clip off bits of the inverted dish
-			shape_hull(thickness_difference, 0, 1, 2);
+			color([.5412, .4784, 1]) shape_hull(thickness_difference, 0, 1, 2);
 		}
 	}
 }
@@ -141,7 +141,7 @@ module shape_hull(thickness_difference, depth_difference, modifier, extra_slices
 	} else {
 		slices = 10;
 		for (index = [0:$height_slices - 1 + extra_slices]) {
-			color("red") hull() {
+			hull() {
 				shape_slice(index, $height_slices, thickness_difference, depth_difference, modifier);
 				shape_slice(index + 1, $height_slices, thickness_difference, depth_difference, modifier);
 			}
@@ -173,14 +173,14 @@ module dished(depth_difference, inverted = false) {
 		union() {
 			children();
 			translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-				dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+				color([.4078, .3569, .749]) dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
 			}
 		}
 	} else {
 		difference() {
 			children();
 			translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-				dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+				color([.4078, .3569, .749]) dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
 			}
 		}
 	}
@@ -213,11 +213,11 @@ module connectors($stem_profile) {
 		for (connector_pos = $connectors) {
 			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
 				rotate([0, 0, $stem_rotation]){
-					connector($stem_profile, $has_brim);
+					color([1, .6941, .2]) connector($stem_profile, $has_brim);
 				}
 			}
 		}
-		// used to be difference of the inside() but really I want intersection
+		// cut off anything that isn't underneath the keytop
 		shape(wall_thickness, keytop_thickness);
 	}
 }

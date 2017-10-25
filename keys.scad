@@ -412,9 +412,8 @@ module legend(text, inset=false) {
 	children();
 }
 
-/*rows = [4,3,2,1,5];
+rows = [4,3,2,1,5];
 
 
-translate_u(0, 0) oem_row(1) cherry() key() {
-	cube(2, center=true);
-};*/
+translate_u(0, 0) dcs_row(1) cherry() key() {
+};

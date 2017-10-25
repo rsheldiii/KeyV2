@@ -2,12 +2,16 @@ $fs=.1;
 
 //centered
 // offset, who knew?
-module roundedRect(size, radius) {
+module roundedRect(size, radius, center=true) {
 	linear_extrude(height = size[2]){
-		offset(r=radius){
-			square([size[0] - radius * 2, size[1] - radius * 2], center=true);
-		}
+		roundedSquare([size[0], size[1]], radius, center=center);
 	}
+}
+
+module roundedSquare(size, radius, center = true) {
+		offset(r=radius){
+			square([size[0] - radius * 2, size[1] - radius * 2], center=center);
+		}
 }
 
 module oldroundedRect(size, radius) {
