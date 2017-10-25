@@ -208,12 +208,12 @@ module keytext() {
 	}
 }
 
-module connectors($stem_profile) {
+module connectors(stem_profile) {
 	intersection() {
 		for (connector_pos = $connectors) {
 			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
 				rotate([0, 0, $stem_rotation]){
-					color([1, .6941, .2]) connector($stem_profile, $has_brim);
+					color([1, .6941, .2]) connector(stem_profile, $has_brim);
 				}
 			}
 		}
