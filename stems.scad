@@ -11,7 +11,9 @@ module brim(has_brim) {
   if (has_brim) color([0,1,0]) cube([brim_radius, brim_radius, brim_depth]);
 }
 
-module cherry_stem(has_brim, slop = 0.3) {
+module cherry_stem(has_brim, slop) {
+
+  echo(slop);
 
   stem_width = 7.2 - slop * 2;
   stem_height = 5.5 - slop * 2;
@@ -48,12 +50,12 @@ module cherry_stem(has_brim, slop = 0.3) {
   }
 }
 
-module cherry_stem_rounded(has_brim) {
+module cherry_stem_rounded(has_brim, slop) {
   // cross length
   cross_length = 4.4;
   //dimensions of connector
   // outer cross extra length in y
-  extra_outer_cross_height = 1.0;
+  extra_outer_cross_height = 1.1;
   // dimensions of cross
   // horizontal cross bar width
   horizontal_cross_width = 1.4;
@@ -78,7 +80,7 @@ module cherry_stem_rounded(has_brim) {
   }
 }
 
-module alps_stem(has_brim = false){
+module alps_stem(has_brim, slop){
 	cross_depth = 40;
 	width = 4.45;
 	height = 2.25;
@@ -92,7 +94,7 @@ module alps_stem(has_brim = false){
 	}
 }
 
-module filled_stem(has_brim=false) {
+module filled_stem() {
   // this is mostly for testing. we don't pass the size of the keycp in here
   // so we can't make this work for all keys
   cube(100, center=true);
@@ -100,13 +102,14 @@ module filled_stem(has_brim=false) {
 
 
 //whole connector, alps or cherry, trimmed to fit
-module connector(stem_profile, has_brim){
+module connector(stem_profile, has_brim, slop){
+  echo(slop);
 		if (stem_profile == "alps") {
-			alps_stem(has_brim);
+			alps_stem(has_brim, slop);
 		} else if (stem_profile == "cherry_rounded") {
-			cherry_stem_rounded(has_brim);
+			cherry_stem_rounded(has_brim, slop);
 		} else if (stem_profile == "cherry") {
-			cherry_stem(has_brim);
+			cherry_stem(has_brim, slop);
 		} else if (stem_profile == "filled") {
       filled_stem();
     }

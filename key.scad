@@ -12,9 +12,9 @@ wall_thickness = 3;
 //whether stabilizer connectors are enabled
 stabilizers = false;
 // font used for text
-font="Arial";
+font="DejaVu Sans Mono:style=Book";
 // font size used for text
-font_size = 8;
+font_size = 6;
 // whether or not to render fake keyswitches to check clearances
 clearance_check = false;
 
@@ -71,6 +71,8 @@ text = "";
 inset_text = false;
 // radius of corners of keycap
 corner_radius = 1;
+// keystem slop - lengthens the cross and thins out the connector
+slop = 0.3;
 
 
 
@@ -90,7 +92,7 @@ $fs = .1;
 //beginning to use unit instead of baked in 19.05
 unit = 19.05;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 default for faux G20
-$minkowski_radius = .75;
+$minkowski_radius = .33;
 
 
 
@@ -120,12 +122,15 @@ module shape(thickness_difference, depth_difference){
 
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
-	minkowski(){
-		shape($minkowski_radius*2, $minkowski_radius);
-		difference(){
-			sphere(r=$minkowski_radius, $fn=24);
-			translate([0,0,-$minkowski_radius])
+	render(){
+		minkowski(){
+			// half minkowski. that means the shape is neither circumscribed nor inscribed.
+			shape($minkowski_radius * 2, $minkowski_radius/2);
+			difference(){
+				sphere(r=$minkowski_radius, $fn=24);
+				translate([0,0,-$minkowski_radius])
 				cube([2*$minkowski_radius,2*$minkowski_radius,2*$minkowski_radius], center=true);
+			}
 		}
 	}
 }
@@ -136,14 +141,16 @@ module rounded_shape() {
 // $height_difference used for keytop thickness
 // extra_slices is a hack to make inverted dishes still work
 module shape_hull(thickness_difference, depth_difference, modifier, extra_slices = 0){
-	if ($ISOEnter) {
-		ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
-	} else {
-		slices = 10;
-		for (index = [0:$height_slices - 1 + extra_slices]) {
-			hull() {
-				shape_slice(index, $height_slices, thickness_difference, depth_difference, modifier);
-				shape_slice(index + 1, $height_slices, thickness_difference, depth_difference, modifier);
+	render() {
+		if ($ISOEnter) {
+			ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
+		} else {
+			slices = 10;
+			for (index = [0:$height_slices - 1 + extra_slices]) {
+				hull() {
+					shape_slice(index, $height_slices, thickness_difference, depth_difference, modifier);
+					shape_slice(index + 1, $height_slices, thickness_difference, depth_difference, modifier);
+				}
 			}
 		}
 	}
@@ -197,7 +204,7 @@ module top_of_key(){
 }
 
 module keytext() {
-	extra_inset_depth = ($inset_text) ? keytop_thickness/4 : 0;
+	extra_inset_depth = ($inset_text) ? 0.3 : 0;
 
 	translate([0, 0, -extra_inset_depth]){
 		top_of_key(){
@@ -208,12 +215,12 @@ module keytext() {
 	}
 }
 
-module connectors(stem_profile) {
+module connectors() {
 	intersection() {
 		for (connector_pos = $connectors) {
 			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
 				rotate([0, 0, $stem_rotation]){
-					color([1, .6941, .2]) connector(stem_profile, $has_brim);
+					color([1, .6941, .2]) connector($stem_profile, $has_brim, $slop);
 				}
 			}
 		}
@@ -258,7 +265,7 @@ module key() {
 	difference() {
 		union(){
 			keytop();
-			if($stem_profile != "blank") connectors($stem_profile);
+			if($stem_profile != "blank") connectors();
 			if(!$inset_text) keytext();
 			clearance_check();
 			top_of_key() {
@@ -298,6 +305,7 @@ module example_key(){
 	$corner_radius = corner_radius;
 	$height_slices = height_slices;
 	$enable_side_sculpting = enable_side_sculpting;
+	$slop = slop;
 
 	key();
 }

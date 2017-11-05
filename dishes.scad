@@ -14,6 +14,9 @@ module  dish(width, height, depth, inverted, tilt) {
 		else if ($dish_type == "sideways cylindrical"){
 			sideways_cylindrical_dish(width, height, depth, inverted, tilt);
 		}
+		else if ($dish_type == "old spherical") {
+			old_spherical_dish(width, height, depth, inverted, tilt);
+		}
 		// else no dish, "no dish" is the value
 }
 
@@ -68,10 +71,12 @@ module spherical_dish(width, height, depth, inverted, tilt, txt=""){
 		rotate([-tilt,0,0]){
 			translate([0,0,0 * direction]){
 				if (geodesic){
-					$fa=10;
-					geodesic_sphere(r=rad);
+					$fa=20;
+					scale([chord/2/depth, chord/2/depth]) {
+						geodesic_sphere(r=depth);
+					}
 				} else {
-					$fa=1;
+					$fa=7;
 					// rotate 1 because the bottom of the sphere looks like trash.
 					scale([chord/2/depth, chord/2/depth]) {
 						geodesic_sphere(r=depth);
@@ -102,15 +107,12 @@ module old_spherical_dish(width, height, depth, inverted, tilt, txt=""){
 		rotate([-tilt,0,0]){
 			translate([0,0,chord_length * direction]){
 				if (geodesic){
-					$fa=3;
+					$fa=7;
 					geodesic_sphere(r=rad);
 				} else {
 					$fa=1;
-					// rotate 1 because the bottom of the sphere looks like trash.
-					%difference() {
-						sphere(r=rad);
-						translate([0,0,rad]) cube(rad*2, center=true);
-					}
+					// rotate 1 because the bottom of the sphere looks like trash
+					sphere(r=rad);
 				}
 	    }
 		}

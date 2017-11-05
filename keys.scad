@@ -6,6 +6,7 @@
 // special variables, but that's a limitation of SCAD we have to work around
 
 /* TODO:
+ * add keys.scad function for fudge factor in stem
  * pull out side sculpting options to let people tweak them?
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
  * Add inset stem to all profiles that need it. [x] OEM [ ] DCS?
@@ -43,6 +44,7 @@ $text = "";
 $inset_text = false;
 $corner_radius = 1;
 $height_slices = 1;
+$slop = 0.3;
 
 // key profile definitions
 
@@ -392,17 +394,20 @@ module blank() {
   children();
 }
 
-module cherry() {
+module cherry(slop = 0.3) {
+	$slop = slop;
   $stem_profile = "cherry";
   children();
 }
 
-module alps() {
+module alps(slop = 0.3) {
+	$slop = slop;
   $stem_profile = "alps";
   children();
 }
 
-module rounded_cherry() {
+module rounded_cherry(slop = 0.3) {
+	$slop = slop;
   $stem_profile = "cherry_rounded";
   children();
 }
@@ -413,8 +418,4 @@ module legend(text, inset=false) {
 	children();
 }
 
-rows = [4,3,2,1,5];
-
-
-translate_u(0, 0) dcs_row(1) cherry() key() {
-};
+translate_u(0, 0) oem_row(1) cherry() key();
