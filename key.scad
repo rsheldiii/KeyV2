@@ -147,7 +147,7 @@ module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
 		// TODO completely making up these numbers here
 		// 0.86mm is from the unit function, 18.16 - 19.02. no idea what the 18 is, shows me for not leaving better comments
 	 translate([0,-19.05 * 0.5,0])
-	 fakeISOEnter(thickness_difference);
+	 fakeISOEnter(thickness_difference/2);
 	}
 }
 
