@@ -418,4 +418,5 @@ module legend(text, inset=false) {
 	children();
 }
 
-translate_u(0, 0) oem_row(1) cherry() key();
+translate_u(1.125, 0.5) fake_iso_enter() cherry() key();
+translate_u(0, 0) dcs_row(2) cherry() key();

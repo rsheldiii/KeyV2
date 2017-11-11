@@ -135,6 +135,23 @@ module rounded_shape() {
 	}
 }
 
+//corollary is shape_hull
+module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
+
+	height = $total_depth - depth_difference;
+	width_scale = top_total_key_width() / total_key_width();
+	height_scale = top_total_key_height() / total_key_height();
+
+	translate([0,19.05 * 0.5,0])
+	linear_extrude(height = height, scale = [width_scale, height_scale]) {
+		// TODO completely making up these numbers here
+		// 0.86mm is from the unit function, 18.16 - 19.02. no idea what the 18 is, shows me for not leaving better comments
+	 translate([0,-19.05 * 0.5,0])
+	 fakeISOEnter(thickness_difference);
+	}
+}
+
+
 // basic key shape, no dish, no inside
 // modifier multiplies the height and top differences of the shape,
 // which is only used for dishing to cut the dish off correctly
@@ -158,9 +175,16 @@ module shape_hull(thickness_difference, depth_difference, modifier, extra_slices
 
 module shape_slice(index, total, thickness_difference, depth_difference, modifier) {
 	progress = index / (total);
+
 	// TODO extract these out somehow so you can make custom rounded sides
+	// makes the sides bow
 	extra_side_size =  $enable_side_sculpting ? (total - index)/4 : 0;
+	// makes the rounded corners of the keycap grow larger as they move upwards
 	extra_corner_size = $enable_side_sculpting ? pow(progress, 2) : 0;
+
+	// width and height differences for this slice
+	extra_width_difference = ($width_difference - extra_side_size) * progress  * modifier;
+	extra_height_difference = ($height_difference - extra_side_size) * progress * modifier;
 
 	translate([
 		0,
@@ -168,8 +192,8 @@ module shape_slice(index, total, thickness_difference, depth_difference, modifie
 		($total_depth * modifier - depth_difference) * progress
 	]) rotate([-$top_tilt / $key_height * progress,0,0]){
 		roundedRect([
-			total_key_width()  - thickness_difference - (($width_difference - extra_side_size) * progress  * modifier),
-			total_key_height() - thickness_difference - (($height_difference - extra_side_size) * progress * modifier),
+			total_key_width()  - thickness_difference - extra_width_difference,
+			total_key_height() - thickness_difference - extra_height_difference,
 			.001
 		],$corner_radius + extra_corner_size);
 	}
@@ -311,92 +335,3 @@ module example_key(){
 }
 
 example_key();
-//minkowski_key();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Experimental stuff, except not really anymore
-
-// corollary is roundedRect
-// NOT 3D
-module fakeISOEnter(thickness_difference = 0){
-		// 1u is the space taken upy by a 1u keycap.
-		// unit is the space taken up by a unit space for a keycap.
-		// formula is 1u + unit *(length - 1)
-
-		// t is all modifications to the polygon array
-		t = $corner_radius + thickness_difference/2;
-
-		function unit(length) = 19.02 * (length) + (18.16 - 19.02);
-
-    pointArray = [
-        [         0 + t,             0 + t],
-        [unit(1.5)  - t,             0 + t],
-        [unit(1.5)  - t,      unit(1)  - t],
-        [unit(1.25) - t,      unit(1)  - t],
-        [unit(1.25) - t,      unit(2)  - t],
-        [         0 + t,      unit(2)  - t]
-    ];
-
-		offset(r=$corner_radius) {
-			polygon(points=pointArray, center=true);
-		}
-}
-
-//corollary is shape_hull
-module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
-	// TODO move this somewhere
-  function unit(length) = 19.02 * (length) + (18.16 - 19.02);
-
-	height = $total_depth - depth_difference;
-	width_scale = top_total_key_width() / total_key_width();
-	height_scale = top_total_key_height() / total_key_height();
-
-	linear_extrude(height = height, scale = [width_scale, height_scale]) {
-
-		// TODO completely making up these numbers here
-		// 0.86mm is from the unit function, 18.16 - 19.02. no idea what the 18 is, shows me for not leaving better comments
-		translate([unit(-.5), unit(-1) + 0.86]) fakeISOEnter(thickness_difference);
-	}
-}
-
-
-// old stuff
-
-// old non-sliced shape hull
-
-/*module oldshape_hull(thickness_difference, depth_difference, modifier){
-	if ($ISOEnter) {
-		ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
-	} else {
-		hull(){
-			// $bottom_key_width + ($key_length -1) * unit is the correct length of the
-			// key. only 1u of the key should be $bottom_key_width long; all others
-			// should be 1u
-			roundedRect([total_key_width() - thickness_difference, total_key_height() - thickness_difference, .001],$corner_radius);
-
-			//depth_difference outside of modifier because that doesnt make sense
-			translate([0,$top_skew,$total_depth * modifier - depth_difference]){
-				rotate([-$top_tilt / $key_height,0,0]){
-					roundedRect([
-						total_key_width()  - thickness_difference - $width_difference  * modifier,
-						total_key_height() - thickness_difference - $height_difference * modifier,
-						.001
-					],$corner_radius);
-				}
-			}
-		}
-	}
-}*/
