@@ -1,5 +1,5 @@
 // files
-include <util.scad>
+include <shapes.scad>
 include <stems.scad>
 include <dishes.scad>
 include <libraries/geodesic_sphere.scad>
@@ -53,9 +53,9 @@ inverted_dish = false;
 // array of positions of all stems. includes stabilizers as well, for now
 // ternary is a bad hack to keep the stabilizers flag working
 connectors = stabilizers ? [[0,0],[-50,0],[50,0]] : [[0,0]];
-// whether or not we use the functions to generate an ISO enter
-// NOTE this uses data in the profile so be sure to set the profile to ISO enter too
-ISOEnter = false;
+// use linear_extrude instead of hull slices to make the shape of the key
+// should be faster, also required for concave shapes
+linear_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 rounded_key = false;
 // 'cherry', 'alps' or 'cherry_rounded'
@@ -73,6 +73,12 @@ inset_text = false;
 corner_radius = 1;
 // keystem slop - lengthens the cross and thins out the connector
 slop = 0.3;
+// support type. default is 'flared' for easy FDM printing
+support_type = "flared";
+// key shape type. default is 'normal'. only other supported option is 'iso_enter'
+key_shape_type = "normal";
+// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+linear_extrude_height_adjustment = 0;
 
 
 
@@ -100,22 +106,29 @@ $minkowski_radius = .33;
 // derived values. can't be variables if we want them to change when the special variables do
 
 // actual mm key width and height
-function total_key_width() = $bottom_key_width + (unit * ($key_length - 1));
-function total_key_height() = $bottom_key_height + (unit * ($key_height - 1));
+function total_key_width() = $bottom_key_width + unit * ($key_length - 1);
+function total_key_height() = $bottom_key_height + unit * ($key_height - 1);
 
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + (unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)) - $height_difference;
 
+// side sculpting functions
+// bows the sides out on stuff like SA and DSA keycaps
+function side_sculpting(progress) = (1 - progress) * 2.5;
+// makes the rounded corners of the keycap grow larger as they move upwards
+function corner_sculpting(progress) = pow(progress, 2);
+
+
 // key shape including dish. used as the ouside and inside shape in key()
 module shape(thickness_difference, depth_difference){
 	intersection(){
 		dished(depth_difference, $inverted_dish) {
-			color([.2667,.5882,1]) shape_hull(thickness_difference, depth_difference, 1);
+			color([.2667,.5882,1]) shape_hull(thickness_difference, depth_difference);
 		}
 		if ($inverted_dish) {
 			// larger shape_hull to clip off bits of the inverted dish
-			color([.5412, .4784, 1]) shape_hull(thickness_difference, 0, 1, 2);
+			color([.5412, .4784, 1]) shape_hull(thickness_difference, 0, 2);
 		}
 	}
 }
@@ -135,67 +148,71 @@ module rounded_shape() {
 	}
 }
 
+// basic key shape, no dish, no inside
+// which is only used for dishing to cut the dish off correctly
+// $height_difference used for keytop thickness
+// extra_slices is a hack to make inverted dishes still work
+module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
+	render() {
+		if ($linear_extrude_shape) {
+			linear_extrude_shape_hull(thickness_difference, depth_difference);
+		} else {
+			hull_shape_hull(thickness_difference, depth_difference, extra_slices);
+		}
+	}
+}
+
 //corollary is shape_hull
-module ISOEnterShapeHull(thickness_difference, depth_difference, modifier){
+module linear_extrude_shape_hull(thickness_difference, depth_difference){
 
 	height = $total_depth - depth_difference;
 	width_scale = top_total_key_width() / total_key_width();
 	height_scale = top_total_key_height() / total_key_height();
 
-	translate([0,19.05 * 0.5,0])
-	linear_extrude(height = height, scale = [width_scale, height_scale]) {
-		// TODO completely making up these numbers here
-		// 0.86mm is from the unit function, 18.16 - 19.02. no idea what the 18 is, shows me for not leaving better comments
-	 translate([0,-19.05 * 0.5,0])
-	 fakeISOEnter(thickness_difference/2);
-	}
-}
-
-
-// basic key shape, no dish, no inside
-// modifier multiplies the height and top differences of the shape,
-// which is only used for dishing to cut the dish off correctly
-// $height_difference used for keytop thickness
-// extra_slices is a hack to make inverted dishes still work
-module shape_hull(thickness_difference, depth_difference, modifier, extra_slices = 0){
-	render() {
-		if ($ISOEnter) {
-			ISOEnterShapeHull(thickness_difference, depth_difference, modifier);
-		} else {
-			slices = 10;
-			for (index = [0:$height_slices - 1 + extra_slices]) {
-				hull() {
-					shape_slice(index, $height_slices, thickness_difference, depth_difference, modifier);
-					shape_slice(index + 1, $height_slices, thickness_difference, depth_difference, modifier);
-				}
+	translate([0,$linear_extrude_height_adjustment,0]){
+		linear_extrude(height = height, scale = [width_scale, height_scale]) {
+	 	 	translate([0,-$linear_extrude_height_adjustment,0]){
+				key_shape(total_key_width(), total_key_height(), thickness_difference, thickness_difference, $corner_radius);
 			}
 		}
 	}
 }
 
-module shape_slice(index, total, thickness_difference, depth_difference, modifier) {
-	progress = index / (total);
+module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0) {
+	slices = 10;
+	for (index = [0:$height_slices - 1 + extra_slices]) {
+		hull() {
+			shape_slice(index / $height_slices, thickness_difference, depth_difference);
+			shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
+		}
+	}
+}
 
-	// TODO extract these out somehow so you can make custom rounded sides
+module shape_slice(progress, thickness_difference, depth_difference) {
 	// makes the sides bow
-	extra_side_size =  $enable_side_sculpting ? (total - index)/4 : 0;
+	extra_side_size =  $enable_side_sculpting ? side_sculpting(progress) : 0;
 	// makes the rounded corners of the keycap grow larger as they move upwards
-	extra_corner_size = $enable_side_sculpting ? pow(progress, 2) : 0;
+	extra_corner_size = $enable_side_sculpting ? corner_sculpting(progress) : 0;
 
-	// width and height differences for this slice
-	extra_width_difference = ($width_difference - extra_side_size) * progress  * modifier;
-	extra_height_difference = ($height_difference - extra_side_size) * progress * modifier;
+	// computed values for this slice
+	extra_width_this_slice = ($width_difference - extra_side_size) * progress;
+	extra_height_this_slice = ($height_difference - extra_side_size) * progress;
+	skew_this_slice = $top_skew * progress;
+	depth_this_slice = ($total_depth - depth_difference) * progress;
+	tilt_this_slice = -$top_tilt / $key_height * progress;
 
-	translate([
-		0,
-		$top_skew * progress,
-		($total_depth * modifier - depth_difference) * progress
-	]) rotate([-$top_tilt / $key_height * progress,0,0]){
-		roundedRect([
-			total_key_width()  - thickness_difference - extra_width_difference,
-			total_key_height() - thickness_difference - extra_height_difference,
-			.001
-		],$corner_radius + extra_corner_size);
+	translate([0, skew_this_slice, depth_this_slice]) {
+		rotate([tilt_this_slice,0,0]){
+			linear_extrude(height = 0.001){
+				key_shape(
+					total_key_width(),
+					total_key_height(),
+					thickness_difference+extra_width_this_slice,
+					thickness_difference+extra_height_this_slice,
+					$corner_radius + extra_corner_size
+				);
+			}
+		}
 	}
 }
 
@@ -244,7 +261,7 @@ module connectors() {
 		for (connector_pos = $connectors) {
 			translate([connector_pos[0], connector_pos[1], $stem_inset]) {
 				rotate([0, 0, $stem_rotation]){
-					color([1, .6941, .2]) connector($stem_profile, $has_brim, $slop);
+					color([1, .6941, .2]) connector($stem_profile, $has_brim, $slop, $support_type);
 				}
 			}
 		}
@@ -278,7 +295,7 @@ module keytop() {
 		} else {
 			shape(0, 0);
 		}
-		shape(wall_thickness, keytop_thickness);
+		translate([0,0,-0.01]) shape(wall_thickness, keytop_thickness);
 	}
 }
 
@@ -319,7 +336,7 @@ module example_key(){
 	$has_brim = has_brim;
 	$inverted_dish = inverted_dish;
 	$connectors = connectors;
-	$ISOEnter = ISOEnter;
+	$linear_extrude_shape = linear_extrude_shape;
 	$rounded_key = rounded_key;
 	$stem_profile = stem_profile;
 	$stem_inset = stem_inset;
@@ -330,6 +347,9 @@ module example_key(){
 	$height_slices = height_slices;
 	$enable_side_sculpting = enable_side_sculpting;
 	$slop = slop;
+	$support_type = support_type;
+	$linear_extrude_height_adjustment = linear_extrude_height_adjustment;
+
 
 	key();
 }

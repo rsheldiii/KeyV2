@@ -1,6 +1,22 @@
 include <util.scad>
+include <supports.scad>
 
-stem_depth = 24;
+stem_depth = 240;
+
+//whole connector, alps or cherry, trimmed to fit
+module connector(stem_profile, has_brim, slop, support_type){
+  echo(slop);
+		if (stem_profile == "alps") {
+			alps_stem(has_brim, slop);
+		} else if (stem_profile == "cherry_rounded") {
+			cherry_stem_rounded(has_brim, slop);
+		} else if (stem_profile == "cherry") {
+			cherry_stem(has_brim, slop, support_type);
+		} else if (stem_profile == "filled") {
+      filled_stem();
+    }
+}
+
 
 module brim(has_brim) {
   //brim radius. 11 ensconces normal keycap stem in normal keycap
@@ -11,10 +27,7 @@ module brim(has_brim) {
   if (has_brim) color([0,1,0]) cube([brim_radius, brim_radius, brim_depth]);
 }
 
-module cherry_stem(has_brim, slop) {
-
-  echo(slop);
-
+module cherry_stem(has_brim, slop, support_type) {
   stem_width = 7.2 - slop * 2;
   stem_height = 5.5 - slop * 2;
 
@@ -32,20 +45,23 @@ module cherry_stem(has_brim, slop) {
 
   translate([0,0,stem_inset]) {
     brim(has_brim);
-    linear_extrude(height = cross_depth) {
-      difference(){
+    difference(){
+      linear_extrude(height = stem_depth) {
         roundedSquare(stem, 1, center=true);
-        off = 0;
-        offset(r = off){
-          square(vertical_cross + [-off * 2,-off * 2], center=true);
-          square(horizontal_cross + [-off * 2,-off * 2], center=true);
-        }
+      }
+      linear_extrude(height = cross_depth) {
+        square(vertical_cross, center=true);
+        square(horizontal_cross, center=true);
       }
     }
     // flared support
-    // 6 and 8 are magic numbers I got from trying to make the sides of the flared part of the stem 45 degree overhangs
-    translate([0,0,cross_depth]) linear_extrude(height=(stem_depth - cross_depth), scale = [6,8]){
-      roundedSquare([stem_width, stem_height], 1, center=true);
+    echo(support_type);
+    if (support_type == "flared") {
+      cherry_flared(cross_depth, (stem_depth - cross_depth), [stem_width, stem_height]);
+    } else if (support_type == "flat") {
+      flat(cross_depth, (stem_depth - cross_depth), [stem_width, stem_height]);
+    } else if (support_type == "bars") {
+      bars(cross_depth, (stem_depth - cross_depth), [stem_width, stem_height]);
     }
   }
 }
@@ -98,19 +114,4 @@ module filled_stem() {
   // this is mostly for testing. we don't pass the size of the keycp in here
   // so we can't make this work for all keys
   cube(100, center=true);
-}
-
-
-//whole connector, alps or cherry, trimmed to fit
-module connector(stem_profile, has_brim, slop){
-  echo(slop);
-		if (stem_profile == "alps") {
-			alps_stem(has_brim, slop);
-		} else if (stem_profile == "cherry_rounded") {
-			cherry_stem_rounded(has_brim, slop);
-		} else if (stem_profile == "cherry") {
-			cherry_stem(has_brim, slop);
-		} else if (stem_profile == "filled") {
-      filled_stem();
-    }
 }

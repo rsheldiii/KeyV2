@@ -35,7 +35,7 @@ $key_height = 1;
 $has_brim = false;
 $inverted_dish = false;
 $connectors = [[0,0]];
-$ISOEnter = false;
+$linear_extrude_shape = false;
 $rounded_key = false;
 $stem_profile = 0;
 $stem_inset = 0;
@@ -45,6 +45,9 @@ $inset_text = false;
 $corner_radius = 1;
 $height_slices = 1;
 $slop = 0.3;
+$support_type = "bars";
+$key_shape_type = "normal";
+$linear_extrude_height_adjustment = 0;
 
 // key profile definitions
 
@@ -206,7 +209,10 @@ module fake_iso_enter() {
 	$dish_depth = 1;
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
-	$ISOEnter = true;
+	$key_shape_type = "iso_enter";
+	$linear_extrude_shape = true;
+	$linear_extrude_height_adjustment = 19.05 * 0.5;
+
 
   stabilized(vertical=true) {
 		children();
@@ -419,4 +425,6 @@ module legend(text, inset=false) {
 }
 
 translate_u(1.125, 0.5) fake_iso_enter() cherry() key();
-translate_u(0, 0) dcs_row(2) cherry() key();
+translate_u(0, 0) sa_row(2) legend("q", inset=true) cherry() {
+	key();
+}

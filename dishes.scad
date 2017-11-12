@@ -1,5 +1,5 @@
 include <libraries/geodesic_sphere.scad>
-include <util.scad>
+include <shapes.scad>
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
 
@@ -84,9 +84,6 @@ module spherical_dish(width, height, depth, inverted, tilt, txt=""){
 				}
 	    }
 		}
-		// this line causes openscad to die. maybe re-enable when that doesn't happen instead of differencing the inside() when we add the dish to the shape()
-		/*translate([0,0,0]) roundedRect([width, height, depth], 1.5);*/
-	/*}*/
 }
 
 //the older, 'more accurate', and MUCH slower spherical dish.
@@ -116,7 +113,4 @@ module old_spherical_dish(width, height, depth, inverted, tilt, txt=""){
 				}
 	    }
 		}
-		// this line causes openscad to die. maybe re-enable when that doesn't happen instead of differencing the inside() when we add the dish to the shape()
-		/*translate([0,0,0]) roundedRect([width, height, depth], 1.5);*/
-	/*}*/
 }
