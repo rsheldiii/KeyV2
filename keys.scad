@@ -197,11 +197,12 @@ module g20() {
   /*$rounded_key = true;*/
 }
 
-module fake_iso_enter() {
-	$bottom_key_width = 18.16 * 1.9;
-	$bottom_key_height = 18.16 * 2;
-	$width_difference = 4;
-	$height_difference = 4;
+module iso_enter() {
+	$bottom_key_width = 18.16;
+	$bottom_key_height = 18.16;
+	$key_length = 1.5;
+	$key_height = 2;
+
 	$total_depth = 7;
 	$top_tilt = 0;
 	$top_skew = 1.75;
@@ -424,7 +425,7 @@ module legend(text, inset=false) {
 	children();
 }
 
-translate_u(1.125, 0.5) fake_iso_enter() cherry() key();
+translate_u(1.125, 0.5) iso_enter() cherry() key();
 translate_u(0, 0) sa_row(2) legend("q", inset=true) cherry() {
-	key();
+	/*key();*/
 }
