@@ -39,6 +39,8 @@ module ISO_enter(width, height, width_difference, height_difference, corner_size
 	width_ratio = unit_length(1.25) / unit_length(1.5);
 	height_ratio = unit_length(1) / unit_length(2);
 
+	echo((unit_length(1.5) - unit_length(1.25))/ 2);
+
   pointArray = [
       [                      -width_difference/2,                        -height_difference/2],
       [                      -width_difference/2,               -height + height_difference/2],

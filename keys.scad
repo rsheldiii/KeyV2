@@ -48,6 +48,8 @@ $slop = 0.3;
 $support_type = "bars";
 $key_shape_type = "normal";
 $linear_extrude_height_adjustment = 0;
+$dish_overdraw_width = 0;
+$dish_overdraw_height = 0;
 
 // key profile definitions
 
@@ -206,13 +208,11 @@ module iso_enter() {
 	$total_depth = 7;
 	$top_tilt = 0;
 	$top_skew = 1.75;
-	$dish_type = "cylindrical";
-	$dish_depth = 1;
-	$dish_skew_x = 0;
-	$dish_skew_y = 0;
 	$key_shape_type = "iso_enter";
 	$linear_extrude_shape = true;
 	$linear_extrude_height_adjustment = 19.05 * 0.5;
+	// (unit_length(1.5) - unit_length(1.25)) / 2
+	$dish_overdraw_width = 2.38125;
 
 
   stabilized(vertical=true) {

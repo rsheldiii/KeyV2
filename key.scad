@@ -79,6 +79,10 @@ support_type = "flared";
 key_shape_type = "normal";
 // ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
 linear_extrude_height_adjustment = 0;
+// if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
+dish_overdraw_width = 0;
+// same as width but for height
+dish_overdraw_height = 0;
 
 
 
@@ -221,14 +225,14 @@ module dished(depth_difference, inverted = false) {
 		union() {
 			children();
 			translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-				color([.4078, .3569, .749]) dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+				color([.4078, .3569, .749]) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish, $top_tilt / $key_height);
 			}
 		}
 	} else {
 		difference() {
 			children();
 			translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-				color([.4078, .3569, .749]) dish(top_total_key_width(), top_total_key_height(), $dish_depth, $inverted_dish, $top_tilt / $key_height);
+				color([.4078, .3569, .749]) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish, $top_tilt / $key_height);
 			}
 		}
 	}
@@ -349,6 +353,8 @@ module example_key(){
 	$slop = slop;
 	$support_type = support_type;
 	$linear_extrude_height_adjustment = linear_extrude_height_adjustment;
+	$dish_overdraw_width = dish_overdraw_width;
+	$dish_overdraw_height = dish_overdraw_height;
 
 
 	key();
