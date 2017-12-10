@@ -39,15 +39,15 @@ module ISO_enter(width, height, width_difference, height_difference, corner_size
 	width_ratio = unit_length(1.25) / unit_length(1.5);
 	height_ratio = unit_length(1) / unit_length(2);
 
-	echo((unit_length(1.5) - unit_length(1.25))/ 2);
+  // height and width difference currently don't do anything - but I think I should keep them. they don't do anything because we currently use scaling in the linear_extrude to express the difference in height and width of the top of the keycap
 
   pointArray = [
-      [                      -width_difference/2,                        -height_difference/2],
-      [                      -width_difference/2,               -height + height_difference/2],
-      [-width * width_ratio + width_difference/2,               -height + height_difference/2],
-      [-width * width_ratio + width_difference/2,-height * height_ratio + height_difference/2],
-      [              -width + width_difference/2,-height * height_ratio + height_difference/2],
-      [              -width + width_difference/2,                        -height_difference/2]
+      [                      -width_difference/2,                        -height_difference/2], // top right
+      [                      -width_difference/2,               -height + height_difference/2], // bottom right
+      [-width * width_ratio + width_difference/2,               -height + height_difference/2], // bottom left
+      [-width * width_ratio + width_difference/2,-height * height_ratio + height_difference/2], // inner middle point
+      [              -width + width_difference/2,-height * height_ratio + height_difference/2], // outer middle point
+      [              -width + width_difference/2,                        -height_difference/2]  // top left
   ];
 
 	minkowski(){

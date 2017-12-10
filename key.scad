@@ -159,7 +159,7 @@ module rounded_shape() {
 module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
 	render() {
 		if ($linear_extrude_shape) {
-			linear_extrude_shape_hull(thickness_difference, depth_difference);
+				linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
 		} else {
 			hull_shape_hull(thickness_difference, depth_difference, extra_slices);
 		}
@@ -167,7 +167,8 @@ module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
 }
 
 //corollary is shape_hull
-module linear_extrude_shape_hull(thickness_difference, depth_difference){
+// extra_slices unused, only to match argument signatures
+module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0){
 
 	height = $total_depth - depth_difference;
 	width_scale = top_total_key_width() / total_key_width();
