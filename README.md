@@ -1,6 +1,6 @@
 # Parametric Mechanical Keycap Library
 
-this library is meant to be a keycap and keyset construction library for mechanical keyboards.
+this library is a keycap and keyset construction library for mechanical keyboards, written in openSCAD.
 
 ## Let's Go! I wanna make some keycaps!
 
@@ -14,12 +14,18 @@ The `key()` function also supports children, and will place them in the center o
 
 ## What if I want to get _really_ technical?
 
-If you're not afraid to write some code yourself, at the base level this library _should_ function well as a key profile design library. by loading up `key.scad` (notice no s) you can tweak variables in `settings.scad` to make your own profiles. You can design your own keyset with custom top skew, width and height, dish tilt, fonts, wall thickness, etc.
+If you're not afraid to write some code yourself, at the base level this library _should_ function well as a key profile design library. by loading up `src/key.scad` (notice no s) you can tweak variables in `src/settings.scad` to prototype your own profiles. You can design your own keyset with custom width height and depth, dish tilt, top skew, fonts, wall thickness, etc.
 
+In addition, the library should be abstract enough to handle new dish types, keystems, and key shapes, in case you want to design your own DataMancer keycaps, support buckling spring keyboards (maybe) or design some kind of triangular dished profile. `src/shapes.scad` `src/stems.scad` and `src/dishes.scad` all have a 'selector' module at the top that should allow you to implement your own creations alongside what already exists.
 
+This readme is currently incomplete and I plan on finishing it later.
 
-
-##TODO:
+## TODO:
+ * finish readme
+   * printing guide
+   * examples
+     * beginner, intermediate, advanced
+   * pictures
  * pull out side sculpting options to let people tweak them?
  * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
  * Add inset stem to all profiles that need it. [x] OEM [ ] DCS?
