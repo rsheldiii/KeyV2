@@ -13,7 +13,7 @@ At the highest level this library supports Cherry and Alps switches, and has pre
 Every key starts with defaults that are overridden by each function call. The simplest cherry key you can make would be:
 
 ```
-cherry() key()
+cherry() key();
 ```
 ![a bog-standard cherry key](assets/example1.JPG)
 
