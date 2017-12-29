@@ -15,6 +15,9 @@ Every key starts with defaults that are overridden by each function call. The si
 ```
 cherry() key()
 ```
+![a bog-standard cherry key](assets/example1.JPG)
+
+
 
 which is a bog-standard DCS row 5 keycap. To change key profile or make varying width keys, you can use the row and unit length functions, like so:
 
@@ -22,6 +25,7 @@ which is a bog-standard DCS row 5 keycap. To change key profile or make varying 
 sa_row(2) u(2) cherry() key();
 ```
 
+![a 2 unit SA row 2 cherry key](assets/example2.JPG)
 
 ## What if I want to customize my keycaps?
 
@@ -36,6 +40,8 @@ for(y=[0:3]) {
 }
 ```
 
+![a set of 2 unit keys with legends](assets/example3.JPG)
+
 The `key()` function also supports children, and will place them in the center of the top of the keycap, if you want to quickly design your own artisan keycaps:
 
 ```
@@ -43,6 +49,8 @@ cherry() key() {
   translate([-6.25,2.3,-0]) scale(0.074) import("Assieme1.stl");
 };
 ```
+
+![an artisan key with no-face on it](assets/example4.JPG)
 
 ## What if I want to get _really_ technical?
 
@@ -79,7 +87,9 @@ union() {
 }
 ```
 
-## I'm not getting good prints...
+![three stop-sign shaped keys with legends](assets/example5.JPG)
+
+## Printing Help
 
 Prints from this library are still challenging, despite all efforts to the contrary. Resin printers can create great looking keycaps; FDM printers can create usable keys that look alright, but may require tweaking to get prints acceptable. There are a few quick things that you can do:
 
