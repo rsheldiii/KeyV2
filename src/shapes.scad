@@ -8,7 +8,9 @@ module key_shape(width, height, width_difference, height_difference, corner_size
 		roundedSquare([width - width_difference, height - height_difference], corner_size);
 	} else if ($key_shape_type == "circle") {
 		circle(d=width - width_difference);
-	}
+	} else if ($key_shape_type == "square") {
+		square([width - width_difference, height - height_difference], center = true);
+  }
 }
 
 // centered

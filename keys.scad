@@ -20,6 +20,4 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
-translate_u(1.125, 0.5) sa_row(4) u(2) bar_support() cherry(){
-  key();
-}
+sa_row(2) u(2) cherry() key();
