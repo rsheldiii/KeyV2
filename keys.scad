@@ -20,4 +20,13 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
-sa_row(2) u(2) cherry() key();
+dcs_row(2) u(2) dishless() cherry() {
+  /* $inverted_dish = true; */
+  $key_shape_type = "obloid";
+  key();
+}
+
+  translate_u(3) u(2) dcs_row(3) dishless() cherry() {
+    $key_shape_type = "obloid";
+    key();
+  }

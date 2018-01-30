@@ -28,18 +28,12 @@ $minkowski_radius = .33;
 // derived values. can't be variables if we want them to change when the special variables do
 
 // actual mm key width and height
-function total_key_width() = $bottom_key_width + unit * ($key_length - 1);
-function total_key_height() = $bottom_key_height + unit * ($key_height - 1);
+function total_key_width(delta = 0) = $bottom_key_width + unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + unit * ($key_height - 1) - delta;
 
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + (unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)) - $height_difference;
-
-// side sculpting functions
-// bows the sides out on stuff like SA and DSA keycaps
-function side_sculpting(progress) = (1 - progress) * 2.5;
-// makes the rounded corners of the keycap grow larger as they move upwards
-function corner_sculpting(progress) = pow(progress, 2);
 
 
 // key shape including dish. used as the ouside and inside shape in key()
@@ -84,7 +78,7 @@ module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
 	}
 }
 
-//corollary is shape_hull
+//corollary is hull_shape_hull
 // extra_slices unused, only to match argument signatures
 module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0){
 
@@ -95,7 +89,7 @@ module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_s
 	translate([0,$linear_extrude_height_adjustment,0]){
 		linear_extrude(height = height, scale = [width_scale, height_scale]) {
 	 	 	translate([0,-$linear_extrude_height_adjustment,0]){
-				key_shape(total_key_width(), total_key_height(), thickness_difference, thickness_difference, $corner_radius);
+				key_shape(total_key_width(thickness_difference), total_key_height(thickness_difference));
 			}
 		}
 	}
@@ -112,14 +106,6 @@ module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0)
 }
 
 module shape_slice(progress, thickness_difference, depth_difference) {
-	// makes the sides bow
-	extra_side_size =  $enable_side_sculpting ? side_sculpting(progress) : 0;
-	// makes the rounded corners of the keycap grow larger as they move upwards
-	extra_corner_size = $enable_side_sculpting ? corner_sculpting(progress) : 0;
-
-	// computed values for this slice
-	extra_width_this_slice = ($width_difference - extra_side_size) * progress;
-	extra_height_this_slice = ($height_difference - extra_side_size) * progress;
 	skew_this_slice = $top_skew * progress;
 	depth_this_slice = ($total_depth - depth_difference) * progress;
 	tilt_this_slice = -$top_tilt / $key_height * progress;
@@ -128,11 +114,15 @@ module shape_slice(progress, thickness_difference, depth_difference) {
 		rotate([tilt_this_slice,0,0]){
 			linear_extrude(height = 0.001){
 				key_shape(
-					total_key_width(),
-					total_key_height(),
-					thickness_difference+extra_width_this_slice,
-					thickness_difference+extra_height_this_slice,
-					$corner_radius + extra_corner_size
+					[
+						total_key_width(thickness_difference),
+						total_key_height(thickness_difference)
+					],
+					[
+						$width_difference,
+						$height_difference
+					],
+					progress
 				);
 			}
 		}

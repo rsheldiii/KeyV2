@@ -20,6 +20,9 @@ for (row = [0:len(60_percent)-1]){
     columnDist = sum([for (x = [0 : column]) 60_percent[row][x]]);
     a = 60_percent[row][column];
     translate_u(columnDist - (a/2), -row) dishless() dcs_row((row+4) % 5 + 1) u(a) cherry() {
+      $width_difference = 0;
+      $height_difference = 0;
+      $key_shape_type  = "obloid";
       if (a != 6.25) {
         key();
       } else {

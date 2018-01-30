@@ -38,10 +38,16 @@ module cherry_stem(depth, has_brim, slop, stem_inset, support_type) {
     difference(){
       union() {
         linear_extrude(height = depth) {
-          roundedSquare(stem, 1, center=true);
+          offset(r=1){
+            square(stem - [2,2], center=true);
+          }
         }
         if(has_brim) {
-          roundedRect([stem_width*2, stem_height*2,brim_height], 1, 1, center=true);
+          linear_extrude(height = brim_height){
+            offset(r=1){
+              square(stem - [2,2], center=true);
+            }
+          }
         }
       }
       linear_extrude(height = cross_depth) {
