@@ -27,7 +27,7 @@ $total_depth = 11.5;
 $top_tilt = -6;
 // how skewed towards the back the top is (0 for center)
 $top_skew = 1.7;
-// what type of dish the key has. 0 for cylindrical, 1 for spherical, 2 for something else idk TODO
+// what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
 $dish_type = "cylindrical";
 // how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
 $dish_depth = 1;
@@ -51,25 +51,21 @@ $connectors = $stabilizers ? [[0,0],[-50,0],[50,0]] : [[0,0]];
 $linear_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 $rounded_key = false;
-// 'cherry', 'alps' or 'cherry_rounded'
-$stem_profile = "cherry";
+// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
+$stem_type = "cherry";
 // how much higher the stem is than the bottom of the keycap.
 // inset stem requires support but is more accurate in some profiles
 $stem_inset = 0;
 // how many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
-//text to be rendered in the center of the key, if any
-$text = "";
-// is the text on the key inset? inset text is still experimental
-$inset_text = false;
 // radius of corners of keycap
 $corner_radius = 1;
 // keystem slop - lengthens the cross and thins out the connector
-$slop = 0.3;
-// support type. default is 'flared' for easy FDM printing
+$stem_slop = 0.3;
+// support type. default is "flared" for easy FDM printing. to disable pass false
 $support_type = "flared";
-// key shape type. default is 'normal'. only other supported option is 'iso_enter'
-$key_shape_type = "normal";
+// key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
 // ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
 $linear_extrude_height_adjustment = 0;
 // if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
@@ -77,4 +73,39 @@ $dish_overdraw_width = 0;
 // same as width but for height
 $dish_overdraw_height = 0;
 // how many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// if you're doing fancy bowed keycap sides, this controls how many slices you take
 $height_slices = 1;
+// this enables some fancy and currently hardcoded logic to bow the sides and corners of SA keycaps
+$enable_side_sculpting = false;
+
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+
+// [ Stem Variables ]
+
+
+// the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+$stem_slop = 0.3;
+
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
+// how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+
+// cherry stem dimensions
+$cherry_stem = [7.2 - $stem_slop * 2, 5.5 - $stem_slop * 2];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+$cherry_cross = [
+  // horizontal tine
+  [4.03 + $stem_slop, 1.15],
+  // vertical tine
+  [1.25, $cherry_stem[1] + .005],
+];
+
+// diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];

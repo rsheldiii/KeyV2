@@ -1,11 +1,7 @@
 module spacebar() {
   $inverted_dish = true;
-	if ($dish_type == "cylindrical") {
-		$dish_type = "sideways cylindrical";
-		6_25u() stabilized(mm=50) children();
-	} else {
-		6_25u() stabilized(mm=50) children();
-	}
+  $dish_type = "sideways cylindrical";
+	6_25u() stabilized(mm=50) children();
 }
 
 module lshift() {

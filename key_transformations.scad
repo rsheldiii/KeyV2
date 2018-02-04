@@ -51,37 +51,31 @@ module inset(val=1) {
 }
 
 module filled() {
-	$stem_profile = "filled";
+	$stem_type = "filled";
 	children();
 }
 
 module blank() {
-  $stem_profile = "blank";
+  $stem_type = "blank";
   children();
 }
 
 module cherry(slop = 0.3) {
-	$slop = slop;
-  $stem_profile = "cherry";
+	$stem_slop = slop;
+  $stem_type = "cherry";
   children();
 }
 
 module alps(slop = 0.3) {
-	$slop = slop;
-  $stem_profile = "alps";
+	$stem_slop = slop;
+  $stem_type = "alps";
   children();
 }
 
 module rounded_cherry(slop = 0.3) {
-	$slop = slop;
-  $stem_profile = "cherry_rounded";
+	$stem_slop = slop;
+  $stem_type = "cherry_rounded";
   children();
-}
-
-module legend(text, inset=false) {
-  $text=text;
-  $inset_text = inset;
-	children();
 }
 
 module flared_support() {

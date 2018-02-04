@@ -10,26 +10,25 @@ function corner_sculpting(progress) = pow(progress, 2);
 module key_shape(size, delta, progress = 0) {
 	if ($key_shape_type == "iso_enter") {
 		ISO_enter(size, delta, progress);
-	} else if ($key_shape_type == "normal") {
+	} else if ($key_shape_type == "rounded_square") {
 		roundedSquare(size, delta, progress);
-	} else if ($key_shape_type == "circle") {
-		circle(d=width);
 	} else if ($key_shape_type == "square") {
 		square(size - delta, center = true);
-  } else if ($key_shape_type == "obloid") {
-		obloid(size, delta, progress);
+  } else if ($key_shape_type == "spherical") {
+		spherical(size, delta, progress);
+	} else {
+		echo("Warning: unsupported $key_shape_type");
 	}
 }
 
-module obloid(size, delta, progress) {
-	width = size[0];
-	height = size[1] - delta[1] * progress; // TODO if we don't account for the delta somehow 1u keys will not render as the offset margin is greater than the size of the key. this does not work however
+module spherical(size, delta, progress) {
+	// .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
+	height = size[1] - delta[1] * progress - .05;
 
-	if (progress < .5 && false) {
-		circle(d=5.5);
+	if (progress < 0.5) {
 	} else {
-		offset(r=height / 2.1) {
-			square(size - [height / 1.05, height / 1.05] - delta * progress, center=true);
+		offset(r=height / 2) {
+			square(size - [height, height] - delta * progress, center=true);
 		}
 	}
 }
