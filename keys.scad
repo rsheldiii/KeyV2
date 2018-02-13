@@ -5,9 +5,6 @@
 // without having to rely on this file. Unfortunately that means setting tons of
 // special variables, but that's a limitation of SCAD we have to work around
 
-//TODO duplicate def to not make this a special var. maybe not worth it
-unit = 19.05;
-
 use <src/key.scad>
 
 include <src/settings.scad>

@@ -120,7 +120,7 @@ module inside() {
 // put something at the top of the key, with no adjustments for dishing
 module top_placement(depth_difference) {
 	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-		rotate([-$top_tilt,0,0]){
+		rotate([-$top_tilt / top_total_key_height(),0,0]){
 			children();
 		}
 	}
