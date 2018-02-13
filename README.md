@@ -124,8 +124,6 @@ That's it, if you have any questions feel free to open an issue or leave a comme
 
 
 ## TODO:
- * pull out side sculpting options to let people tweak them?
- * can now measure keycaps very accurately. need to redo measurements: [x] SA [ ] DCS [X] DSA [X] OEM?
- * Add inset stem to all profiles that need it. [x] OEM [ ] DCS?
- * customizer version where everything is copy/pasted in. needs to be last.
+ * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something
+ * replace current ISO enter shape with one that works for `skin()`
  * generate dishes via math? kind of hard, maybe later

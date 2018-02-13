@@ -16,10 +16,10 @@ module spherical_dish(width, height, depth, inverted){
 				geodesic_sphere(r=depth);
 			}
 		} else {
-			$fa=7;
+			$fa=6.5;
 			// rotate 1 because the bottom of the sphere looks like trash.
 			scale([chord/2/depth, chord/2/depth]) {
-				geodesic_sphere(r=depth);
+				sphere(r=depth);
 			}
 		}
   }

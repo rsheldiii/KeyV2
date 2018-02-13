@@ -13,7 +13,7 @@ color1 = [.2667,.5882,1];
 color2 = [.5412, .4784, 1];
 color3 = [.4078, .3569, .749];
 color4 = [1, .6941, .2];
-transparent_red = [1,0,0, 0.5];
+transparent_red = [1,0,0, 0.15];
 
 // derived values. can't be variables if we want them to change when the special variables do
 
@@ -29,21 +29,19 @@ function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference){
 	dished(depth_difference, $inverted_dish) {
-		color(color1) shape_hull(thickness_difference, depth_difference, 1);
+		color(color1) shape_hull(thickness_difference, depth_difference, 2);
 	}
 }
 
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
-	render(){
-		color(color1) minkowski(){
-			// half minkowski. that means the shape is neither circumscribed nor inscribed.
-			shape($minkowski_radius * 2, $minkowski_radius/2);
-			difference(){
-				sphere(r=$minkowski_radius, $fn=24);
-				translate([0,0,-$minkowski_radius]){
-					cube($minkowski_radius * 2, center=true);
-				}
+	color(color1) minkowski(){
+		// half minkowski in the z direction
+		shape($minkowski_radius * 2, $minkowski_radius/2);
+		difference(){
+			sphere(r=$minkowski_radius, $fn=20);
+			translate([0,0,-$minkowski_radius]){
+				cube($minkowski_radius * 2, center=true);
 			}
 		}
 	}

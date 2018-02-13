@@ -13,8 +13,9 @@ module sa_row(n=1) {
 	// might wanna change this if you don't minkowski
 	// do you even minkowski bro
 	$corner_radius = 0.25;
-
-  if (n == 1){
+	// 5th row is usually unsculpted or the same as the row below it
+	// making a super-sculpted top row (or bottom row!) would be real easy
+  if (n == 1 || n == 5){
     $total_depth = 14.89;
     $top_tilt = -13;
     children();
@@ -22,7 +23,7 @@ module sa_row(n=1) {
     $total_depth = 12.925;
     $top_tilt = -7;
     children();
-  } else if (n == 3) {
+  } else if (n == 3 || n == 5) {
     $total_depth = 12.5;
     $top_tilt = 0;
     children();

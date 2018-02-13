@@ -19,14 +19,17 @@ for (row = [0:len(60_percent)-1]){
   for(column = [0:len(60_percent[row])-1]) {
     columnDist = sum([for (x = [0 : column]) 60_percent[row][x]]);
     a = 60_percent[row][column];
-    translate_u(columnDist - (a/2), -row) dishless() dcs_row((row+4) % 5 + 1) u(a) cherry() {
-      $width_difference = 0;
-      $height_difference = 0;
-      $key_shape_type  = "spherical";
-      if (a != 6.25) {
-        key();
-      } else {
+    translate_u(columnDist - (a/2), -row) g20_row(3) u(a) cherry() { // (row+4) % 5 + 1
+      if (a == 6.25) {
         spacebar() key();
+      } else if (a == 2.25) {
+        lshift() key();
+      } else if (a == 2) {
+        backspace() key();
+      } else if (a == 2.75) {
+        rshift() key();
+      } else {
+        key();
       }
     }
   }
