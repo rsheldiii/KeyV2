@@ -60,8 +60,6 @@ $stem_inset = 0;
 $stem_rotation = 0;
 // radius of corners of keycap
 $corner_radius = 1;
-// keystem slop - lengthens the cross and thins out the connector
-$stem_slop = 0.3;
 // support type. default is "flared" for easy FDM printing. to disable pass false
 $support_type = "flared";
 // key shape type, determines the shape of the key. default is 'rounded square'
@@ -99,9 +97,9 @@ $cherry_stem = [7.2 - $stem_slop * 2, 5.5 - $stem_slop * 2];
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 $cherry_cross = [
   // horizontal tine
-  [4.03 + $stem_slop, 1.15],
+  [4.03 + $stem_slop, 1.15 + $stem_slop / 3],
   // vertical tine
-  [1.25, $cherry_stem[1] + .005],
+  [1.25 + $stem_slop / 3, $cherry_stem[1] + .005],
 ];
 
 // diameter of the outside of the rounded cherry stem
