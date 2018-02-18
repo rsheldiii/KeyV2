@@ -1,5 +1,9 @@
 module filled_stem() {
-  // this is mostly for testing. we don't pass the size of the keycp in here
-  // so we can't make this work for all keys
-  cube(1000, center=true);
+  // I broke the crap out of this stem type due to the changes I made around how stems are differenced
+  // now that we just take the dish out of stems in order to support stuff like
+  // bare stem keycaps (and buckling spring eventually) we can't just make a
+  // cube. shape() works but means that you certainly couldn't render this
+  // stem without the presence of the entire library
+
+  shape();
 }
