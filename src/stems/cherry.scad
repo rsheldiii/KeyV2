@@ -10,9 +10,9 @@ module cherry_stem(depth, has_brim) {
 
       // brim, if applicable
       if(has_brim) {
-        linear_extrude(height = brim_height){
+        linear_extrude(height = $brim_height){
           offset(r=1){
-            square($cherry_stem - [2,2], center=true);
+            square($cherry_stem + [2,2], center=true);
           }
         }
       }

@@ -3,7 +3,7 @@ module rounded_cherry_stem(depth, has_brim) {
     union(){
       cylinder(d=$rounded_cherry_stem_d, h=depth);
       if(has_brim) {
-        cylinder(d=$rounded_cherry_stem_d * 2, h=brim_height);
+        cylinder(d=$rounded_cherry_stem_d * 2, h=$brim_height);
       }
     }
 

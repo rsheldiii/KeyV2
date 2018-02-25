@@ -41,6 +41,8 @@ $key_length = 1;
 $key_height = 1;
 //print brim for connector to help with bed adhesion
 $has_brim = false;
+//when $has_brim this is the height of the brim
+$brim_height = 0.2;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
 // array of positions of all stems. includes stabilizers as well, for now

@@ -7,8 +7,9 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
-module brimmed() {
+module brimmed(height = 0.2) {
   $has_brim = true;
+  $brim_height = height;
   children();
 }
 
