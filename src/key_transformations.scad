@@ -100,3 +100,10 @@ module flat_support() {
   $support_type = "flat";
   children();
 }
+
+module legend(text, valign="center", halign="center", size=0) {
+    //valign = "top" or "center" or "bottom"
+    //halign = "left" or "center" or "right"
+    $legends = [for(L=[$legends, [[text, halign, valign, size > 0 ? size : $font_size]]], a=L) a];
+    children();
+}

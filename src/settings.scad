@@ -109,3 +109,9 @@ $rounded_cherry_stem_d = 5.5;
 
 // dimensions of alps stem
 $alps_stem = [4.45, 2.25];
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+$legends = [];
+
