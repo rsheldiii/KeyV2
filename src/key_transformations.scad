@@ -107,3 +107,9 @@ module legend(text, valign="center", halign="center", size=0) {
     $legends = [for(L=[$legends, [[text, halign, valign, size > 0 ? size : $font_size]]], a=L) a];
     children();
 }
+
+module bump(depth=undef) {
+    $key_bump = true;
+    $key_bump_depth = depth == undef ? $key_bump_depth : depth;
+    children();
+}

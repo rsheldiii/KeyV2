@@ -12,6 +12,8 @@ module g20_row(n=3) {
 	$dish_skew_x = 0;
 	$dish_skew_y = 0;
 	$minkowski_radius = 1.75;
+    $key_bump_depth = 0.6;
+    $key_bump_edge = 2;
   //also,
 	$rounded_key = true;
 

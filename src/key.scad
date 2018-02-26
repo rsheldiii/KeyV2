@@ -171,6 +171,14 @@ module keytext(text, halign, valign, font_size, depth) {
 	}
 }
 
+module keybump(depth = 0, edge_inset=0.4) {
+    radius = 0.5;
+	translate([0, -top_total_key_height()/2 + edge_inset, depth]){
+        rotate([90,0,90]) cylinder($font_size, radius, radius, true);
+        translate([0,0,-radius]) cube([$font_size, radius*2, radius*2], true);
+	}
+}
+
 module keystem_positions() {
 	for (connector_pos = $connectors) {
 		translate(connector_pos) {
@@ -253,6 +261,7 @@ module key(inset = false) {
 		union(){
 			// the shape of the key, inside and out
 			keytop();
+            if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
 			// additive objects at the top of the key
 			if(!inset) artisan() children();
 			// render the clearance check if it's enabled, but don't have it intersect with anything

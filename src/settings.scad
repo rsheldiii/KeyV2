@@ -114,4 +114,10 @@ $alps_stem = [4.45, 2.25];
 //halign = "left" or "center" or "right"
 //valign = "top" or "center" or "bottom"
 $legends = [];
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.3;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
 
