@@ -25,6 +25,11 @@ module cherry_stem(depth, has_brim) {
         square($cherry_cross[0], center=true);
         square($cherry_cross[1], center=true);
       }
+      // Guides to assist insertion and mitigate first layer squishing
+      for (i = $cherry_cross) hull() {
+        linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+        translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+      }
     }
   }
 }
