@@ -6,6 +6,20 @@ Relevant links:
 * Thingiverse: https://www.thingiverse.com/thing:468651
 * Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
 
+## How to run
+
+To run this project, you will need openSCAD. you can download it here: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they are much further along than the current stable release (as of writing, 2015.03-3). However, this library has been tested down to 2015.03-3 and works well.
+
+After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the code should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set!
+
+#### Development considerations
+
+While developing can be done wholly in openSCAD (and is a great place to start if you just want to play around with the library), if you're used to more featureful editors and are doing a lot of changes, you might want to look into other alternatives.
+
+OpenSCAD has a watch mode, 'Automatic Reload and Preview', in the Design menu. With this enabled, OpenSCAD will watch for changes to the file and re-load the preview (F5) automatically. This allows you to minimize the code panel and use your own editor.
+
+If you want to forego OpenSCAD (almost) altogether, I've rigged up a gulpfile to run openscad on any changed `.scad` files at the base level of this folder, exporting their rendered object to `{filename}.scad.stl`. With this, you can skip using OpenSCAD entirely by setting up an STL viewer to watch the output file. I use [fstl](https://github.com/mkeeter/fstl) which required me to [coment out these lines](https://github.com/mkeeter/fstl/blob/master/src/window.cpp#L123-L126) before building to get rid of an error message that would pop up on load. For some reason the gulp task never renders the first time, so if that happens to you just save again and it should work fine.
+
 ## Let's Go! I wanna make a keycap!
 
 At the highest level this library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, and (some form of) OEM keycaps. `keys.scad` is meant as an entry point for everything but the most technical use; there should already be an example at the bottom to get you started! Pre-programmed key profiles can be found at the `key_profiles` directory.
@@ -122,8 +136,7 @@ Prints from this library are still challenging, despite all efforts to the contr
 
 That's it, if you have any questions feel free to open an issue or leave a comment on thingiverse!
 
-
 ## TODO:
- * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something
+ * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something, to enable concave extrusions
  * replace current ISO enter shape with one that works for `skin()`
  * generate dishes via math? kind of hard, maybe later

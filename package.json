@@ -1,0 +1,31 @@
+{
+  "name": "keyv2",
+  "version": "1.0.0",
+  "description": "automated stl build platform for KeyV2",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsheldiii/openSCAD-projects.git"
+  },
+  "keywords": [
+    "mechanical",
+    "keyboard"
+  ],
+  "author": "rsheldiii",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/rsheldiii/openSCAD-projects/issues"
+  },
+  "homepage": "https://github.com/rsheldiii/openSCAD-projects#readme",
+  "dependencies": {
+    "gulp-changed": "^3.2.0",
+    "gulp-changed-in-place": "^2.3.0",
+    "gulp-shell": "^0.6.5"
+  },
+  "devDependencies": {
+    "gulp": "github:gulpjs/gulp#4.0"
+  }
+}
