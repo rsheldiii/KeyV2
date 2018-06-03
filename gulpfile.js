@@ -15,7 +15,7 @@ gulp.task('compile', function() {
              .pipe(shell([
               //  'openscad compile/compile.scad -o compile/out.stl > 1'
               'openscad <%= file.relative %> -o <%= file.relative %>.stl'
-            ], { verbose: true, shell: '/bin/bash'}))
+            ], { ignoreErrors: true }))
 });
 
 gulp.task('default', function() {
