@@ -38,3 +38,6 @@ for (p = [0:len(key_profiles)-1]) {
 }
 
 /* translate_u(0, 0) one_row_profile("oem"); */
+
+dcs_row(3) cherry() legend("X", "top", "left", 3) legend("X") key(true);
+translate_u(1, 0) dcs_row(3) cherry() legend("M", "top", "left", 3) legend("Z") key(true);

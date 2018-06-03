@@ -7,8 +7,9 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
-module brimmed() {
+module brimmed(height = 0.2) {
   $has_brim = true;
+  $brim_height = height;
   children();
 }
 
@@ -98,4 +99,17 @@ module bar_support() {
 module flat_support() {
   $support_type = "flat";
   children();
+}
+
+module legend(text, valign="center", halign="center", size=0) {
+    //valign = "top" or "center" or "bottom"
+    //halign = "left" or "center" or "right"
+    $legends = [for(L=[$legends, [[text, halign, valign, size > 0 ? size : $font_size]]], a=L) a];
+    children();
+}
+
+module bump(depth=undef) {
+    $key_bump = true;
+    $key_bump_depth = depth == undef ? $key_bump_depth : depth;
+    children();
 }

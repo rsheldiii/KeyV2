@@ -41,6 +41,8 @@ $key_length = 1;
 $key_height = 1;
 //print brim for connector to help with bed adhesion
 $has_brim = false;
+//when $has_brim this is the height of the brim
+$brim_height = 0.2;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
 // array of positions of all stems. includes stabilizers as well, for now
@@ -107,3 +109,15 @@ $rounded_cherry_stem_d = 5.5;
 
 // dimensions of alps stem
 $alps_stem = [4.45, 2.25];
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+$legends = [];
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+

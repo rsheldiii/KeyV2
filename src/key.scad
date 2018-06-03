@@ -161,11 +161,21 @@ module top_of_key(){
 	}
 }
 
-module keytext(text, depth = 0) {
-	translate([0, 0, -depth]){
+module keytext(text, halign, valign, font_size, depth) {
+    woffset = (top_total_key_width()/3.5) * (halign == "center" ? 0 : halign == "left" ? -1 : 1);
+    hoffset = (top_total_key_height()/3.5) * (valign == "center" ? 0 : valign == "bottom" ? -1 : 1);
+	translate([woffset, hoffset, -depth]){
 		linear_extrude(height=$dish_depth){
-			text(text=text, font=$font, size=$font_size, halign="center", valign="center");
+			text(text=text, font=$font, size=font_size, halign="center", valign="center");
 		}
+	}
+}
+
+module keybump(depth = 0, edge_inset=0.4) {
+    radius = 0.5;
+	translate([0, -top_total_key_height()/2 + edge_inset, depth]){
+        rotate([90,0,90]) cylinder($font_size, radius, radius, true);
+        translate([0,0,-radius]) cube([$font_size, radius*2, radius*2], true);
 	}
 }
 
@@ -217,10 +227,12 @@ module clearance_check() {
 }
 
 // legends / artisan support
-module artisan(legend, depth) {
+module artisan(depth) {
 	top_of_key() {
 		// outset legend
-		if (legend != "") keytext(legend, depth);
+        for (i=[0:len($legends)-1]) {
+            keytext($legends[i][0], $legends[i][1], $legends[i][2], $legends[i][3], depth);
+        }
 		// artisan objects / outset shape legends
 		children();
 	}
@@ -244,19 +256,20 @@ module keytop() {
 
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
-module key(legend = "", inset = false) {
+module key(inset = false) {
 	difference() {
 		union(){
 			// the shape of the key, inside and out
 			keytop();
+            if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
 			// additive objects at the top of the key
-			if(!inset) artisan(legend) children();
+			if(!inset) artisan() children();
 			// render the clearance check if it's enabled, but don't have it intersect with anything
 			if ($clearance_check) %clearance_check();
 		}
 
 		// subtractive objects at the top of the key
-		if (inset) artisan(legend, 0.3) children();
+		if (inset) artisan(0.3) children();
 		// subtract the clearance check if it's enabled, letting the user see the
 		// parts of the keycap that will hit the cherry switch
 		if ($clearance_check) clearance_check();
