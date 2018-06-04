@@ -120,4 +120,3 @@ $key_bump = false;
 $key_bump_depth = 0.5;
 //distance to move the bump from the front edge of the key
 $key_bump_edge = 0.4;
-

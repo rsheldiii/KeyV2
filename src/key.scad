@@ -3,8 +3,10 @@ include <shapes.scad>
 include <stems.scad>
 include <dishes.scad>
 include <supports.scad>
+include <key_features.scad>
 
 include <libraries/geodesic_sphere.scad>
+
 
 /* [Hidden] */
 $fs = .1;
@@ -161,21 +163,13 @@ module top_of_key(){
 	}
 }
 
-module keytext(text, halign, valign, font_size, depth) {
-    woffset = (top_total_key_width()/3.5) * (halign == "center" ? 0 : halign == "left" ? -1 : 1);
-    hoffset = (top_total_key_height()/3.5) * (valign == "center" ? 0 : valign == "bottom" ? -1 : 1);
+module keytext(text, position, font_size, depth) {
+  woffset = (top_total_key_width()/3.5) * position[0];
+  hoffset = (top_total_key_height()/3.5) * -position[1];
 	translate([woffset, hoffset, -depth]){
 		linear_extrude(height=$dish_depth){
 			text(text=text, font=$font, size=font_size, halign="center", valign="center");
 		}
-	}
-}
-
-module keybump(depth = 0, edge_inset=0.4) {
-    radius = 0.5;
-	translate([0, -top_total_key_height()/2 + edge_inset, depth]){
-        rotate([90,0,90]) cylinder($font_size, radius, radius, true);
-        translate([0,0,-radius]) cube([$font_size, radius*2, radius*2], true);
 	}
 }
 
@@ -230,9 +224,9 @@ module clearance_check() {
 module artisan(depth) {
 	top_of_key() {
 		// outset legend
-        for (i=[0:len($legends)-1]) {
-            keytext($legends[i][0], $legends[i][1], $legends[i][2], $legends[i][3], depth);
-        }
+    for (i=[0:len($legends)-1]) {
+        keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+    }
 		// artisan objects / outset shape legends
 		children();
 	}
@@ -261,7 +255,7 @@ module key(inset = false) {
 		union(){
 			// the shape of the key, inside and out
 			keytop();
-            if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
+      if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
 			// additive objects at the top of the key
 			if(!inset) artisan() children();
 			// render the clearance check if it's enabled, but don't have it intersect with anything
