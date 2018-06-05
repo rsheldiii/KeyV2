@@ -1,14 +1,14 @@
 module oem_row(n=1) {
-	$bottom_key_width = 18.05;
-	$bottom_key_height = 18.05;
-	$width_difference = 5.8;
-	$height_difference = 4;
+  $bottom_key_width = 18.05;
+  $bottom_key_height = 18.05;
+  $width_difference = 5.8;
+  $height_difference = 4;
   $dish_type = "cylindrical";
   $dish_depth = 1;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 1.75;
-	$stem_inset = 1.2;
+  $stem_inset = 1.2;
 
   if (n == 5) {
     $total_depth = 11.2;

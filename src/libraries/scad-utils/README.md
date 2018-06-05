@@ -16,8 +16,8 @@ contains basic 2D morphology operations
                            - positive values of d places the shell on the outside
                            - negative values of d places the shell on the inside
                            - center=true and positive d places the shell centered on the edge
-   
-   
+
+
 ### Examples
 
 With a basic sample polygon shape,
@@ -72,10 +72,9 @@ contains simple mirroring functions
     mirror_x()
     mirror_y()
     mirror_z()
-    
+
 example:
 
     module arrow(l=1,w=.6,t=0.15) {
         mirror_y() polygon([[0,0],[l,0],[l-w/2,w/2],[l-w/2-sqrt(2)*t,w/2],[l-t/2-sqrt(2)*t,t/2],[0,t/2]]);
     }
-
