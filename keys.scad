@@ -38,4 +38,19 @@ for (p = [0:len(key_profiles)-1]) {
 }
 
 /* translate_u(0, 0) one_row_profile("oem"); */
-legend("C", [-1,-1], 3) cherry() key(true);
+/* dsa_row(3) u(1) uh(1) cherry() key(); */
+
+translate_u(0) sa_row(3) cherry() {
+  key();
+}
+
+translate_u(1) sa_row(2) cherry() {
+  key();
+}
+
+translate_u(2) sa_row(1) cherry() {
+  key();
+}
+
+/* sculpted_square_shape([19,19], [0,0], 0.3);
+translate([26,0,0]) rounded_square_shape([19,19], [0,0], 0.3); */

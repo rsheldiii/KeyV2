@@ -1,4 +1,5 @@
 module sa_row(n=1) {
+	$key_shape_type = "sculpted_square";
 	$bottom_key_width = 18.4;
 	$bottom_key_height = 18.4;
 	$width_difference = 5.7;
@@ -9,7 +10,6 @@ module sa_row(n=1) {
   $dish_skew_y = 0;
   $top_skew = 0;
 	$height_slices = 10;
-	$enable_side_sculpting = true;
 	// might wanna change this if you don't minkowski
 	// do you even minkowski bro
 	$corner_radius = 0.25;
