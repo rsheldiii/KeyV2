@@ -236,19 +236,19 @@ unit = 19.05;
 // corollary is rounded_square
 // NOT 3D
 module ISO_enter_shape(size, delta, progress){
-	width = size[0];
-	height = size[1];
-	function unit_length(length) = unit * (length - 1) + 18.16;
+  width = size[0];
+  height = size[1];
+  function unit_length(length) = unit * (length - 1) + 18.16;
 
 
-	// in order to make the ISO keycap shape generic, we are going to express the
-	// 'elbow point' in terms of ratios. an ISO enter is just a 1.5u key stuck on
-	// top of a 1.25u key, but since our key_shape function doesnt understand that
-	// and wants to pass just width and height, we make these ratios to know where
-	// to put the elbow joint
+  // in order to make the ISO keycap shape generic, we are going to express the
+  // 'elbow point' in terms of ratios. an ISO enter is just a 1.5u key stuck on
+  // top of a 1.25u key, but since our key_shape function doesnt understand that
+  // and wants to pass just width and height, we make these ratios to know where
+  // to put the elbow joint
 
-	width_ratio = unit_length(1.25) / unit_length(1.5);
-	height_ratio = unit_length(1) / unit_length(2);
+  width_ratio = unit_length(1.25) / unit_length(1.5);
+  height_ratio = unit_length(1) / unit_length(2);
 
   pointArray = [
       [                   0,                     0], // top right
@@ -259,13 +259,13 @@ module ISO_enter_shape(size, delta, progress){
       [              -width,                     0]  // top left
   ];
 
-	minkowski(){
-		circle(r=corner_size);
-		// gives us rounded inner corner
-		offset(r=-corner_size*2) {
-			translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
-		}
-	}
+  minkowski(){
+    circle(r=corner_size);
+    // gives us rounded inner corner
+    offset(r=-corner_size*2) {
+      translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
+    }
+  }
 }
 
 // side sculpting functions
@@ -275,30 +275,30 @@ function side_sculpting(progress) = (1 - progress) * 2.5;
 function corner_sculpting(progress) = pow(progress, 2);
 
 module rounded_square_shape(size, delta, progress, center = true) {
-		width = size[0];
-		height = size[1];
+    width = size[0];
+    height = size[1];
 
-		width_difference = delta[0];
-		height_difference = delta[1];
-		// makes the sides bow
-		extra_side_size =  $enable_side_sculpting ? side_sculpting(progress) : 0;
-		// makes the rounded corners of the keycap grow larger as they move upwards
-		extra_corner_size = $enable_side_sculpting ? corner_sculpting(progress) : 0;
+    width_difference = delta[0];
+    height_difference = delta[1];
+    // makes the sides bow
+    extra_side_size =  $enable_side_sculpting ? side_sculpting(progress) : 0;
+    // makes the rounded corners of the keycap grow larger as they move upwards
+    extra_corner_size = $enable_side_sculpting ? corner_sculpting(progress) : 0;
 
-		// computed values for this slice
-		extra_width_this_slice = (width_difference - extra_side_size) * progress;
-		extra_height_this_slice = (height_difference - extra_side_size) * progress;
-		extra_corner_radius_this_slice = ($corner_radius + extra_corner_size);
+    // computed values for this slice
+    extra_width_this_slice = (width_difference - extra_side_size) * progress;
+    extra_height_this_slice = (height_difference - extra_side_size) * progress;
+    extra_corner_radius_this_slice = ($corner_radius + extra_corner_size);
 
-		offset(r=extra_corner_radius_this_slice){
-			square(
-				[
-					width - extra_width_this_slice - extra_corner_radius_this_slice * 2,
-					height - extra_height_this_slice - extra_corner_radius_this_slice * 2
-				],
-				center=center
-			);
-		}
+    offset(r=extra_corner_radius_this_slice){
+      square(
+        [
+          width - extra_width_this_slice - extra_corner_radius_this_slice * 2,
+          height - extra_height_this_slice - extra_corner_radius_this_slice * 2
+        ],
+        center=center
+      );
+    }
 }
 
 
@@ -308,30 +308,30 @@ module square_shape(size, delta, progress){
 
 
 module oblong_shape(size, delta, progress) {
-	// .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
-	height = size[1] - delta[1] * progress - .05;
+  // .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
+  height = size[1] - delta[1] * progress - .05;
 
-	if (progress < 0.5) {
-	} else {
-		offset(r=height / 2) {
-			square(size - [height, height] - delta * progress, center=true);
-		}
-	}
+  if (progress < 0.5) {
+  } else {
+    offset(r=height / 2) {
+      square(size - [height, height] - delta * progress, center=true);
+    }
+  }
 }
 
 
 module key_shape(size, delta, progress = 0) {
-	if ($key_shape_type == "iso_enter") {
-		ISO_enter_shape(size, delta, progress);
-	} else if ($key_shape_type == "rounded_square") {
-		rounded_square_shape(size, delta, progress);
-	} else if ($key_shape_type == "square") {
-		square_shape(size, delta, progress);
+  if ($key_shape_type == "iso_enter") {
+    ISO_enter_shape(size, delta, progress);
+  } else if ($key_shape_type == "rounded_square") {
+    rounded_square_shape(size, delta, progress);
+  } else if ($key_shape_type == "square") {
+    square_shape(size, delta, progress);
   } else if ($key_shape_type == "oblong") {
-		oblong_shape(size, delta, progress);
-	} else {
-		echo("Warning: unsupported $key_shape_type");
-	}
+    oblong_shape(size, delta, progress);
+  } else {
+    echo("Warning: unsupported $key_shape_type");
+  }
 }
 
 module cherry_stem(depth, has_brim) {
@@ -406,13 +406,13 @@ module filled_stem() {
 
 //whole stem, alps or cherry, trimmed to fit
 module stem(stem_type, depth, has_brim){
-		if (stem_type == "alps") {
-			alps_stem(depth, has_brim);
-		} else if (stem_type == "cherry_rounded") {
-			rounded_cherry_stem(depth, has_brim);
-		} else if (stem_type == "cherry") {
-			cherry_stem(depth, has_brim);
-		} else if (stem_type == "filled") {
+    if (stem_type == "alps") {
+      alps_stem(depth, has_brim);
+    } else if (stem_type == "cherry_rounded") {
+      rounded_cherry_stem(depth, has_brim);
+    } else if (stem_type == "cherry") {
+      cherry_stem(depth, has_brim);
+    } else if (stem_type == "filled") {
       filled_stem();
     } else {
       echo("Warning: unsupported $stem_type");
@@ -420,18 +420,18 @@ module stem(stem_type, depth, has_brim){
 }
 
 module cylindrical_dish(width, height, depth, inverted){
-	// .5 has problems starting around 3u
-	$fa=.25;
-	/* we do some funky math here
-	 * basically you want to have the dish "dig in" to the keycap x millimeters
-	 * in order to do that you have to solve a small (2d) system of equations
-	 * where the chord of the spherical cross section of the dish is
-	 * the width of the keycap.
-	 */
-	// the distance you have to move the dish so it digs in depth millimeters
-	chord_length = (pow(width, 2) - 4 * pow(depth, 2)) / (8 * depth);
-	//the radius of the dish
-	rad = (pow(width, 2) + 4 * pow(depth, 2)) / (8 * depth);
+  // .5 has problems starting around 3u
+  $fa=.25;
+  /* we do some funky math here
+   * basically you want to have the dish "dig in" to the keycap x millimeters
+   * in order to do that you have to solve a small (2d) system of equations
+   * where the chord of the spherical cross section of the dish is
+   * the width of the keycap.
+   */
+  // the distance you have to move the dish so it digs in depth millimeters
+  chord_length = (pow(width, 2) - 4 * pow(depth, 2)) / (8 * depth);
+  //the radius of the dish
+  rad = (pow(width, 2) + 4 * pow(depth, 2)) / (8 * depth);
   direction = inverted ? -1 : 1;
 
   translate([0,0, chord_length * direction]){
@@ -444,64 +444,64 @@ module cylindrical_dish(width, height, depth, inverted){
 // much more graduated curvature at an immense cost
 module old_spherical_dish(width, height, depth, inverted){
 
-	//same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
-	chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top
+  //same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
+  chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top
 
-	// the distance you have to move the dish up so it digs in depth millimeters
-	chord_length = (pow(chord, 2) - 4 * pow(depth, 2)) / (8 * depth);
-	//the radius of the dish
-	rad = (pow(chord, 2) + 4 * pow(depth, 2)) / (8 * depth);
+  // the distance you have to move the dish up so it digs in depth millimeters
+  chord_length = (pow(chord, 2) - 4 * pow(depth, 2)) / (8 * depth);
+  //the radius of the dish
+  rad = (pow(chord, 2) + 4 * pow(depth, 2)) / (8 * depth);
   direction = inverted ? -1 : 1;
 
-	translate([0,0,chord_length * direction]){
-		if (geodesic){
-			$fa=7;
-			geodesic_sphere(r=rad);
-		} else {
-			$fa=1;
-			// rotate 1 because the bottom of the sphere looks like trash
-			sphere(r=rad);
-		}
-	}
+  translate([0,0,chord_length * direction]){
+    if (geodesic){
+      $fa=7;
+      geodesic_sphere(r=rad);
+    } else {
+      $fa=1;
+      // rotate 1 because the bottom of the sphere looks like trash
+      sphere(r=rad);
+    }
+  }
 }
 
 module sideways_cylindrical_dish(width, height, depth, inverted){
-	$fa=1;
-	chord_length = (pow(height, 2) - 4 * pow(depth, 2)) / (8 * depth);
-	rad = (pow(height, 2) + 4 * pow(depth, 2)) / (8 * depth);
+  $fa=1;
+  chord_length = (pow(height, 2) - 4 * pow(depth, 2)) / (8 * depth);
+  rad = (pow(height, 2) + 4 * pow(depth, 2)) / (8 * depth);
 
   direction = inverted ? -1 : 1;
 
-	translate([0,0, chord_length * direction]){
-		// cylinder is rendered facing up, so we rotate it on the y axis first
-		rotate([0,90,0]) cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
-	}
+  translate([0,0, chord_length * direction]){
+    // cylinder is rendered facing up, so we rotate it on the y axis first
+    rotate([0,90,0]) cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
+  }
 }
 
 module spherical_dish(width, height, depth, inverted){
 
-	//same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
-	chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top
+  //same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
+  chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top
 
-	// the distance you have to move the dish up so it digs in depth millimeters
-	chord_length = (pow(chord, 2) - 4 * pow(depth, 2)) / (8 * depth);
-	//the radius of the dish
-	rad = (pow(chord, 2) + 4 * pow(depth, 2)) / (8 * depth);
+  // the distance you have to move the dish up so it digs in depth millimeters
+  chord_length = (pow(chord, 2) - 4 * pow(depth, 2)) / (8 * depth);
+  //the radius of the dish
+  rad = (pow(chord, 2) + 4 * pow(depth, 2)) / (8 * depth);
   direction = inverted ? -1 : 1;
 
-	translate([0,0,0 * direction]){
-		if (geodesic){
-			$fa=20;
-			scale([chord/2/depth, chord/2/depth]) {
-				geodesic_sphere(r=depth);
-			}
-		} else {
-			$fa=7;
-			// rotate 1 because the bottom of the sphere looks like trash.
-			scale([chord/2/depth, chord/2/depth]) {
-				geodesic_sphere(r=depth);
-			}
-		}
+  translate([0,0,0 * direction]){
+    if (geodesic){
+      $fa=20;
+      scale([chord/2/depth, chord/2/depth]) {
+        geodesic_sphere(r=depth);
+      }
+    } else {
+      $fa=7;
+      // rotate 1 because the bottom of the sphere looks like trash.
+      scale([chord/2/depth, chord/2/depth]) {
+        geodesic_sphere(r=depth);
+      }
+    }
   }
 }
 
@@ -510,22 +510,22 @@ geodesic=false;
 
 //dish selector
 module  dish(width, height, depth, inverted) {
-		if($dish_type == "cylindrical"){
-			cylindrical_dish(width, height, depth, inverted);
-		}
-		else if ($dish_type == "spherical") {
-			spherical_dish(width, height, depth, inverted);
-		}
-		else if ($dish_type == "sideways cylindrical"){
-			sideways_cylindrical_dish(width, height, depth, inverted);
-		}
-		else if ($dish_type == "old spherical") {
-			old_spherical_dish(width, height, depth, inverted);
-		} else {
-			// else no dish, "no dish" is the value
-			// switchted to actually diffing a cube here due to changes to stems being differenced from the dish instead of the inside
-			translate([0,0,500]) cube([width, height, 1000], center=true);
-		}
+    if($dish_type == "cylindrical"){
+      cylindrical_dish(width, height, depth, inverted);
+    }
+    else if ($dish_type == "spherical") {
+      spherical_dish(width, height, depth, inverted);
+    }
+    else if ($dish_type == "sideways cylindrical"){
+      sideways_cylindrical_dish(width, height, depth, inverted);
+    }
+    else if ($dish_type == "old spherical") {
+      old_spherical_dish(width, height, depth, inverted);
+    } else {
+      // else no dish, "no dish" is the value
+      // switchted to actually diffing a cube here due to changes to stems being differenced from the dish instead of the inside
+      translate([0,0,500]) cube([width, height, 1000], center=true);
+    }
 }
 
 // figures out the scale factor needed to make a 45 degree wall
@@ -601,25 +601,25 @@ function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference){
-	dished(depth_difference, $inverted_dish) {
-		color(color1) shape_hull(thickness_difference, depth_difference, 1);
-	}
+  dished(depth_difference, $inverted_dish) {
+    color(color1) shape_hull(thickness_difference, depth_difference, 1);
+  }
 }
 
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
-	render(){
-		color(color1) minkowski(){
-			// half minkowski. that means the shape is neither circumscribed nor inscribed.
-			shape($minkowski_radius * 2, $minkowski_radius/2);
-			difference(){
-				sphere(r=$minkowski_radius, $fn=24);
-				translate([0,0,-$minkowski_radius]){
-					cube($minkowski_radius * 2, center=true);
-				}
-			}
-		}
-	}
+  render(){
+    color(color1) minkowski(){
+      // half minkowski. that means the shape is neither circumscribed nor inscribed.
+      shape($minkowski_radius * 2, $minkowski_radius/2);
+      difference(){
+        sphere(r=$minkowski_radius, $fn=24);
+        translate([0,0,-$minkowski_radius]){
+          cube($minkowski_radius * 2, center=true);
+        }
+      }
+    }
+  }
 }
 
 
@@ -628,227 +628,227 @@ module rounded_shape() {
 // $height_difference used for keytop thickness
 // extra_slices is a hack to make inverted dishes still work
 module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
-	render() {
-		if ($linear_extrude_shape) {
-			linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
-		} else {
-			hull_shape_hull(thickness_difference, depth_difference, extra_slices);
-		}
-	}
+  render() {
+    if ($linear_extrude_shape) {
+      linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
+    } else {
+      hull_shape_hull(thickness_difference, depth_difference, extra_slices);
+    }
+  }
 }
 
 // corollary is hull_shape_hull
 // extra_slices unused, only to match argument signatures
 module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0){
-	height = $total_depth - depth_difference;
-	width_scale = top_total_key_width() / total_key_width();
-	height_scale = top_total_key_height() / total_key_height();
+  height = $total_depth - depth_difference;
+  width_scale = top_total_key_width() / total_key_width();
+  height_scale = top_total_key_height() / total_key_height();
 
-	translate([0,$linear_extrude_height_adjustment,0]){
-		linear_extrude(height = height, scale = [width_scale, height_scale]) {
-	 	 	translate([0,-$linear_extrude_height_adjustment,0]){
-				key_shape(total_key_width(thickness_difference), total_key_height(thickness_difference));
-			}
-		}
-	}
+  translate([0,$linear_extrude_height_adjustment,0]){
+    linear_extrude(height = height, scale = [width_scale, height_scale]) {
+        translate([0,-$linear_extrude_height_adjustment,0]){
+        key_shape(total_key_width(thickness_difference), total_key_height(thickness_difference));
+      }
+    }
+  }
 }
 
 module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0) {
-	for (index = [0:$height_slices - 1 + extra_slices]) {
-		hull() {
-			shape_slice(index / $height_slices, thickness_difference, depth_difference);
-			shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
-		}
-	}
+  for (index = [0:$height_slices - 1 + extra_slices]) {
+    hull() {
+      shape_slice(index / $height_slices, thickness_difference, depth_difference);
+      shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
+    }
+  }
 }
 
 module shape_slice(progress, thickness_difference, depth_difference) {
-	skew_this_slice = $top_skew * progress;
-	depth_this_slice = ($total_depth - depth_difference) * progress;
-	tilt_this_slice = -$top_tilt / $key_height * progress;
+  skew_this_slice = $top_skew * progress;
+  depth_this_slice = ($total_depth - depth_difference) * progress;
+  tilt_this_slice = -$top_tilt / $key_height * progress;
 
-	translate([0, skew_this_slice, depth_this_slice]) {
-		rotate([tilt_this_slice,0,0]){
-			linear_extrude(height = 0.001){
-				key_shape(
-					[
-						total_key_width(thickness_difference),
-						total_key_height(thickness_difference)
-					],
-					[$width_difference, $height_difference],
-					progress
-				);
-			}
-		}
-	}
+  translate([0, skew_this_slice, depth_this_slice]) {
+    rotate([tilt_this_slice,0,0]){
+      linear_extrude(height = 0.001){
+        key_shape(
+          [
+            total_key_width(thickness_difference),
+            total_key_height(thickness_difference)
+          ],
+          [$width_difference, $height_difference],
+          progress
+        );
+      }
+    }
+  }
 }
 
 // for when you want something to only exist inside the keycap.
 // used for the support structure
 module inside() {
-	intersection() {
-		shape($wall_thickness, $keytop_thickness);
-		children();
-	}
+  intersection() {
+    shape($wall_thickness, $keytop_thickness);
+    children();
+  }
 }
 
 // put something at the top of the key, with no adjustments for dishing
 module top_placement(depth_difference) {
-	translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-		rotate([-$top_tilt / top_total_key_height(),0,0]){
-			children();
-		}
-	}
+  translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
+    rotate([-$top_tilt / top_total_key_height(),0,0]){
+      children();
+    }
+  }
 }
 
 // just to DRY up the code
 module _dish() {
-	color(color3) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  color(color3) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
 module dished(depth_difference, inverted = false) {
-	difference() {
-		children();
-		top_placement(depth_difference){
-			difference(){
-				union() {
-					translate([-500, -500]) cube(1000);
-					if (!inverted) _dish();
-				}
-				if (inverted) _dish();
-			}
-		}
-	}
+  difference() {
+    children();
+    top_placement(depth_difference){
+      difference(){
+        union() {
+          translate([-500, -500]) cube(1000);
+          if (!inverted) _dish();
+        }
+        if (inverted) _dish();
+      }
+    }
+  }
 }
 
 // puts it's children at the center of the dishing on the key, including dish height
 // more user-friendly than top_placement
 module top_of_key(){
-	// if there is a dish, we need to account for how much it digs into the top
-	dish_depth = ($dish_type == "no dish") ? 0 : $dish_depth;
-	// if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
-	corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
+  // if there is a dish, we need to account for how much it digs into the top
+  dish_depth = ($dish_type == "no dish") ? 0 : $dish_depth;
+  // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
+  corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
 
-	top_placement(corrected_dish_depth) {
-		children();
-	}
+  top_placement(corrected_dish_depth) {
+    children();
+  }
 }
 
 module keytext(text, depth = 0) {
-	translate([0, 0, -depth]){
-		linear_extrude(height=$dish_depth){
-			text(text=text, font=$font, size=$font_size, halign="center", valign="center");
-		}
-	}
+  translate([0, 0, -depth]){
+    linear_extrude(height=$dish_depth){
+      text(text=text, font=$font, size=$font_size, halign="center", valign="center");
+    }
+  }
 }
 
 module keystem_positions() {
-	for (connector_pos = $connectors) {
-		translate(connector_pos) {
-			rotate([0, 0, $stem_rotation]){
-				children();
-			}
-		}
-	}
+  for (connector_pos = $connectors) {
+    translate(connector_pos) {
+      rotate([0, 0, $stem_rotation]){
+        children();
+      }
+    }
+  }
 }
 
 module keystems() {
-	keystem_positions() {
-		color(color4) stem($stem_type, $total_depth, $has_brim);
-	}
+  keystem_positions() {
+    color(color4) stem($stem_type, $total_depth, $has_brim);
+  }
 }
 
 module keystem_supports() {
-	keystem_positions() {
-		color(color4) supports($support_type, $stem_type, $stem_throw, $total_depth - $stem_throw);
-	}
+  keystem_positions() {
+    color(color4) supports($support_type, $stem_type, $stem_throw, $total_depth - $stem_throw);
+  }
 }
 
 // a fake cherry keyswitch, abstracted out to maybe replace with a better one later
 module cherry_keyswitch() {
-	union() {
-		hull() {
-			cube([15.6, 15.6, 0.01], center=true);
-			translate([0,1,5 - 0.01]) cube([10.5,9.5, 0.01], center=true);
-		}
-		hull() {
-			cube([15.6, 15.6, 0.01], center=true);
-			translate([0,0,-5.5]) cube([13.5,13.5,0.01], center=true);
-		}
-	}
+  union() {
+    hull() {
+      cube([15.6, 15.6, 0.01], center=true);
+      translate([0,1,5 - 0.01]) cube([10.5,9.5, 0.01], center=true);
+    }
+    hull() {
+      cube([15.6, 15.6, 0.01], center=true);
+      translate([0,0,-5.5]) cube([13.5,13.5,0.01], center=true);
+    }
+  }
 }
 
 //approximate (fully depressed) cherry key to check clearances
 module clearance_check() {
-	if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
-		color(transparent_red){
-			translate([0,0,3.6 + $stem_inset - 5]) {
-				cherry_keyswitch();
-			}
-		}
-	}
+  if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
+    color(transparent_red){
+      translate([0,0,3.6 + $stem_inset - 5]) {
+        cherry_keyswitch();
+      }
+    }
+  }
 }
 
 // legends / artisan support
 module artisan(legend, depth) {
-	top_of_key() {
-		// outset legend
-		if (legend != "") keytext(legend, depth);
-		// artisan objects / outset shape legends
-		children();
-	}
+  top_of_key() {
+    // outset legend
+    if (legend != "") keytext(legend, depth);
+    // artisan objects / outset shape legends
+    children();
+  }
 }
 
 // key with hollowed inside but no stem
 module keytop() {
-	difference(){
-		if ($rounded_key) {
-			rounded_shape();
-		} else {
-			shape(0, 0);
-		}
-		// translation purely for aesthetic purposes, to get rid of that awful lattice
-		translate([0,0,-0.005]) {
-			shape($wall_thickness, $keytop_thickness);
-		}
-	}
+  difference(){
+    if ($rounded_key) {
+      rounded_shape();
+    } else {
+      shape(0, 0);
+    }
+    // translation purely for aesthetic purposes, to get rid of that awful lattice
+    translate([0,0,-0.005]) {
+      shape($wall_thickness, $keytop_thickness);
+    }
+  }
 }
 
 
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
 module key(legend = "", inset = false) {
-	difference() {
-		union(){
-			// the shape of the key, inside and out
-			keytop();
-			// additive objects at the top of the key
-			if(!inset) artisan(legend) children();
-			// render the clearance check if it's enabled, but don't have it intersect with anything
-			if ($clearance_check) %clearance_check();
-		}
+  difference() {
+    union(){
+      // the shape of the key, inside and out
+      keytop();
+      // additive objects at the top of the key
+      if(!inset) artisan(legend) children();
+      // render the clearance check if it's enabled, but don't have it intersect with anything
+      if ($clearance_check) %clearance_check();
+    }
 
-		// subtractive objects at the top of the key
-		if (inset) artisan(legend, 0.3) children();
-		// subtract the clearance check if it's enabled, letting the user see the
-		// parts of the keycap that will hit the cherry switch
-		if ($clearance_check) clearance_check();
-	}
+    // subtractive objects at the top of the key
+    if (inset) artisan(legend, 0.3) children();
+    // subtract the clearance check if it's enabled, letting the user see the
+    // parts of the keycap that will hit the cherry switch
+    if ($clearance_check) clearance_check();
+  }
 
-	// both stem and support are optional
-	if ($stem_type){
-		dished($keytop_thickness, $inverted_dish) {
-			translate([0, 0, $stem_inset]) keystems();
-		}
-	}
+  // both stem and support are optional
+  if ($stem_type){
+    dished($keytop_thickness, $inverted_dish) {
+      translate([0, 0, $stem_inset]) keystems();
+    }
+  }
 
-	if ($support_type){
-		inside() {
-			translate([0, 0, $stem_inset]) keystem_supports();
-		}
-	}
+  if ($support_type){
+    inside() {
+      translate([0, 0, $stem_inset]) keystem_supports();
+    }
+  }
 }
 
 // key width functions
@@ -925,11 +925,11 @@ module 6_25uh() {
 
 // unlike the other files with their own dedicated folders, this one doesn't need a selector. it just collects all the functions
 module dcs_row(n=1) {
-	// names, so I don't go crazy
-	$bottom_key_width = 18.16;
-	$bottom_key_height = 18.16;
-	$width_difference = 6;
-	$height_difference = 4;
+  // names, so I don't go crazy
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 6;
+  $height_difference = 4;
   $dish_type = "cylindrical";
   $dish_depth = 1;
   $dish_skew_x = 0;
@@ -960,16 +960,16 @@ module dcs_row(n=1) {
 }
 
 module oem_row(n=1) {
-	$bottom_key_width = 18.05;
-	$bottom_key_height = 18.05;
-	$width_difference = 5.8;
-	$height_difference = 4;
+  $bottom_key_width = 18.05;
+  $bottom_key_height = 18.05;
+  $width_difference = 5.8;
+  $height_difference = 4;
   $dish_type = "cylindrical";
   $dish_depth = 1;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 1.75;
-	$stem_inset = 1.2;
+  $stem_inset = 1.2;
 
   if (n == 5) {
     $total_depth = 11.2;
@@ -995,41 +995,41 @@ module oem_row(n=1) {
 }
 
 module dsa_row(n=3) {
-	$bottom_key_width = 18.24; // 18.4;
-	$bottom_key_height = 18.24; // 18.4;
-	$width_difference = 6; // 5.7;
-	$height_difference = 6; // 5.7;
-	$total_depth = 8.1 + abs((n-3) * 1);
-	$top_tilt = (n-3) * -7;
-	$top_skew = 0;
-	$dish_type = "spherical";
-	$dish_depth = 1.2;
-	$dish_skew_x = 0;
-	$dish_skew_y = 0;
-	$height_slices = 10;
-	$enable_side_sculpting = true;
-	// might wanna change this if you don't minkowski
-	// do you even minkowski bro
-	$corner_radius = 0.25;
+  $bottom_key_width = 18.24; // 18.4;
+  $bottom_key_height = 18.24; // 18.4;
+  $width_difference = 6; // 5.7;
+  $height_difference = 6; // 5.7;
+  $total_depth = 8.1 + abs((n-3) * 1);
+  $top_tilt = (n-3) * -7;
+  $top_skew = 0;
+  $dish_type = "spherical";
+  $dish_depth = 1.2;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $height_slices = 10;
+  $enable_side_sculpting = true;
+  // might wanna change this if you don't minkowski
+  // do you even minkowski bro
+  $corner_radius = 0.25;
 
   children();
 }
 
 module sa_row(n=1) {
-	$bottom_key_width = 18.4;
-	$bottom_key_height = 18.4;
-	$width_difference = 5.7;
-	$height_difference = 5.7;
+  $bottom_key_width = 18.4;
+  $bottom_key_height = 18.4;
+  $width_difference = 5.7;
+  $height_difference = 5.7;
   $dish_type = "spherical";
   $dish_depth = 0.85;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 0;
-	$height_slices = 10;
-	$enable_side_sculpting = true;
-	// might wanna change this if you don't minkowski
-	// do you even minkowski bro
-	$corner_radius = 0.25;
+  $height_slices = 10;
+  $enable_side_sculpting = true;
+  // might wanna change this if you don't minkowski
+  // do you even minkowski bro
+  $corner_radius = 0.25;
 
   if (n == 1){
     $total_depth = 14.89;
@@ -1051,24 +1051,24 @@ module sa_row(n=1) {
 }
 
 module g20_row(n=3) {
-	$bottom_key_width = 18.16;
-	$bottom_key_height = 18.16;
-	$width_difference = 2;
-	$height_difference = 2;
-	$total_depth = 6;
-	$top_tilt = 2.5;
-	$top_tilt = (n-3) * -7 + 2.5;
-	$top_skew = 0.75;
-	$dish_type = "no dish";
-	$dish_depth = 0;
-	$dish_skew_x = 0;
-	$dish_skew_y = 0;
-	$minkowski_radius = 1.75;
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 2;
+  $height_difference = 2;
+  $total_depth = 6;
+  $top_tilt = 2.5;
+  $top_tilt = (n-3) * -7 + 2.5;
+  $top_skew = 0.75;
+  $dish_type = "no dish";
+  $dish_depth = 0;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $minkowski_radius = 1.75;
   //also,
   /*$rounded_key = true;*/
 
 
-	children();
+  children();
 }
 
 // man, wouldn't it be so cool if functions were first order
@@ -1089,7 +1089,7 @@ module key_profile(key_profile_type, row) {
 module spacebar() {
   $inverted_dish = true;
   $dish_type = "sideways cylindrical";
-	6_25u() stabilized(mm=50) children();
+  6_25u() stabilized(mm=50) children();
 }
 
 module lshift() {
@@ -1130,20 +1130,20 @@ module stepped_caps_lock() {
 }
 
 module iso_enter() {
-	$key_length = 1.5;
-	$key_height = 2;
+  $key_length = 1.5;
+  $key_height = 2;
 
-	$top_tilt = 0;
-	$key_shape_type = "iso_enter";
-	$linear_extrude_shape = true;
-	$linear_extrude_height_adjustment = 19.05 * 0.5;
-	// (unit_length(1.5) - unit_length(1.25)) / 2
-	$dish_overdraw_width = 2.38125;
+  $top_tilt = 0;
+  $key_shape_type = "iso_enter";
+  $linear_extrude_shape = true;
+  $linear_extrude_height_adjustment = 19.05 * 0.5;
+  // (unit_length(1.5) - unit_length(1.25)) / 2
+  $dish_overdraw_width = 2.38125;
 
 
   stabilized(vertical=true) {
-		children();
-	}
+    children();
+  }
 }
 
 

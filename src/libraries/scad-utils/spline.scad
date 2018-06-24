@@ -20,11 +20,11 @@ z4=[0,0,0,0];
 
 function matrix_power(m,n)= n==0? (len(m)==3?identity3():identity4()) :
         n==1 ? m : (n%2==1) ? matrix_power(m*m,floor(n/2))*m : matrix_power(m*m,n/2);
-        
+
 function det(m) = let(r=[for(i=[0:1:len(m)-1]) i]) det_help(m, 0, r);
 // Construction indices list is inefficient, but currently there is no way to imperatively
 // assign to a list element
-function det_help(m, i, r) = len(r) == 0 ? 1 : 
+function det_help(m, i, r) = len(r) == 0 ? 1 :
     m[len(m)-len(r)][r[i]]*det_help(m,0,remove(r,i)) - (i+1<len(r)? det_help(m, i+1, r) : 0);
 
 function matrix_invert(m) = let(r=[for(i=[0:len(m)-1]) i]) [for(i=r) [for(j=r)
@@ -40,7 +40,7 @@ function spline_args(p, closed=false, v1=undef, v2=undef)=len(p)<2 ? []:
         pcnt=closed? len(p) + 1 : len(p),
         un=[p[pcnt-2],p[closed?0:pcnt-1],v1==undef?z4:v1, v2==undef?z4:v2],
         sn=matrix_invert(q4+q3*matrix_power(qn1i2,pcnt-2))*(un-q3*q1inv*spline_helper(0, pcnt, p)))
-    // result[i+1] recurrently defines result[i]. This is O(n) runtime with imperative language and 
+    // result[i+1] recurrently defines result[i]. This is O(n) runtime with imperative language and
     // may be O(n^2) if OpenSCAD doesn't cache spline_si(i+1).
     [for(i=[0:pcnt-2]) spline_si(i, pcnt-2, p, sn)];
 
@@ -57,24 +57,24 @@ function spline_si(i,n, p, sn) = i == n ? sn : q1inv*(spline_u(i,p)-q2*spline_si
 // In the second case second tangent is constructed from the next tangent by symmetric map.
 // I.e. if current points are p0,p1,p2 then anchor points are p0 and p2, first tangent defined by p1-p0,
 // second tangent defined by p3-p2.
-// Return array of coefficients accepted by spline(), spline_tan() and similar    
+// Return array of coefficients accepted by spline(), spline_tan() and similar
 function bezier3_args(p, symmetric=false) = let(step=symmetric?2:3)
     [for(i=[0:step:len(p)-3]) [[1,0,0,0],[-3,3,0,0],[3,-6,3,0],[-1,3,-3,1]]*
         (symmetric?[p[i],p[i]+p[i+1],p[i+2]-p[i+3],p[i+2]] : [p[i], p[i]+p[i+1], p[i+3]+p[i+2], p[i+3]])];
-        
+
 // s - spline arguments calculated by spline_args
-// t - defines point on curve. each segment length is 1. I.e. t= 0..1 is first segment, t=1..2 - second.   
-function spline(s, t)= let(i=t>=len(s)?len(s)-1: floor(t), t2=t-i) [1,t2,t2*t2,t2*t2*t2]*s[i];    
-    
+// t - defines point on curve. each segment length is 1. I.e. t= 0..1 is first segment, t=1..2 - second.
+function spline(s, t)= let(i=t>=len(s)?len(s)-1: floor(t), t2=t-i) [1,t2,t2*t2,t2*t2*t2]*s[i];
+
 function spline_tan(s, t)= let(i=t>=len(s)?len(s)-1: floor(t), t2=t-i) [0,1,2*t2,3*t2*t2]*s[i];
 function spline_tan_unit(s, t)= unit(spline_tan(s,t));
 function spline_d2(s,t)= let(i=t>=len(s)?len(s)-1: floor(t), t2=t-i) [0,0,2,6*t2]*s[i];
 function spline_binormal_unit(s,t)= unit(cross(spline_tan(s, t), spline_d2(s,t)));
 function spline_normal_unit(s,t)= unit(cross(spline_tan(s, t), spline_binormal_unit(s,t)));
-    
+
 function spline_transform(s, t)=
     construct_Rt(transpose_3([spline_normal_unit(s,t), spline_binormal_unit(s,t), spline_tan_unit(s,t)]), spline(s,t));
-    
+
 // Unit tests
 __s = spline_args([[0,10,0], [10,0,0],[0,-5,2]], v1=[0,1,0], v2=[-1,0,0], closed=true);
 for(t=[0:0.01:len(__s)]) translate(spline(__s, t))
@@ -107,7 +107,4 @@ for(t=[0:0.05:len(__s3)]) translate(spline(__s3, t)) {
 }
 
 translate([0,0,9]) for(t=[0:0.025:len(__s3)])
-    multmatrix(spline_transform(__s3,t)) cube([1,1,0.1],center=true);   
-
- 
-        
+    multmatrix(spline_transform(__s3,t)) cube([1,1,0.1],center=true);

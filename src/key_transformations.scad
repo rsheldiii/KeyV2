@@ -24,8 +24,8 @@ module inverted() {
 }
 
 module rotated() {
-	$stem_rotation = 90;
-	children();
+  $stem_rotation = 90;
+  children();
 }
 
 module stabilized(mm=12, vertical = false) {
@@ -54,13 +54,13 @@ module dishless() {
 }
 
 module inset(val=1) {
-	$stem_inset = val;
-	children();
+  $stem_inset = val;
+  children();
 }
 
 module filled() {
-	$stem_type = "filled";
-	children();
+  $stem_type = "filled";
+  children();
 }
 
 module blank() {
@@ -69,19 +69,19 @@ module blank() {
 }
 
 module cherry(slop = 0.3) {
-	$stem_slop = slop;
+  $stem_slop = slop;
   $stem_type = "cherry";
   children();
 }
 
 module alps(slop = 0.3) {
-	$stem_slop = slop;
+  $stem_slop = slop;
   $stem_type = "alps";
   children();
 }
 
 module rounded_cherry(slop = 0.3) {
-	$stem_slop = slop;
+  $stem_slop = slop;
   $stem_type = "cherry_rounded";
   children();
 }

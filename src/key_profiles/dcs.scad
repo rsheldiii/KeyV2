@@ -1,9 +1,9 @@
 module dcs_row(n=1) {
-	// names, so I don't go crazy
-	$bottom_key_width = 18.16;
-	$bottom_key_height = 18.16;
-	$width_difference = 6;
-	$height_difference = 4;
+  // names, so I don't go crazy
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 6;
+  $height_difference = 4;
   $dish_type = "cylindrical";
   $dish_depth = 1;
   $dish_skew_x = 0;
