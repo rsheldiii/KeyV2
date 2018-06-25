@@ -68,20 +68,20 @@ module blank() {
   children();
 }
 
-module cherry(slop = 0.3) {
-  $stem_slop = slop;
+module cherry(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "cherry";
   children();
 }
 
-module alps(slop = 0.3) {
-  $stem_slop = slop;
+module alps(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "alps";
   children();
 }
 
-module rounded_cherry(slop = 0.3) {
-  $stem_slop = slop;
+module rounded_cherry(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "cherry_rounded";
   children();
 }

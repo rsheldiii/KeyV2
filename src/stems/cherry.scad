@@ -1,10 +1,21 @@
-module cherry_stem(depth, has_brim) {
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 5.5 - slop * 2 + .005],
+];
+
+module cherry_stem(depth, has_brim, slop) {
   difference(){
     union() {
       // outside shape
       linear_extrude(height = depth) {
         offset(r=1){
-          square($cherry_stem - [2,2], center=true);
+          square(outer_cherry_stem(slop) - [2,2], center=true);
         }
       }
 
@@ -12,7 +23,7 @@ module cherry_stem(depth, has_brim) {
       if(has_brim) {
         linear_extrude(height = $brim_height){
           offset(r=1){
-            square($cherry_stem + [2,2], center=true);
+            square(outer_cherry_stem(slop) + [2,2], center=true);
           }
         }
       }
@@ -22,11 +33,11 @@ module cherry_stem(depth, has_brim) {
     // translation purely for aesthetic purposes, to get rid of that awful lattice
     translate([0,0,-0.005]) {
       linear_extrude(height = $stem_throw) {
-        square($cherry_cross[0], center=true);
-        square($cherry_cross[1], center=true);
+        square(cherry_cross(slop)[0], center=true);
+        square(cherry_cross(slop)[1], center=true);
       }
       // Guides to assist insertion and mitigate first layer squishing
-      for (i = $cherry_cross) hull() {
+      for (i = cherry_cross(slop)) hull() {
         linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
         translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
       }

@@ -1,4 +1,4 @@
-module alps_stem(depth, has_brim){
+module alps_stem(depth, has_brim, slop){
   if(has_brim) {
     linear_extrude(height=$brim_height) {
       offset(r=1){

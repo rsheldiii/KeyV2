@@ -91,17 +91,6 @@ $brim_height = 0.4;
 // how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
 
-// cherry stem dimensions
-$cherry_stem = [7.2 - $stem_slop * 2, 5.5 - $stem_slop * 2];
-
-// .005 purely for aesthetics, to get rid of that ugly crosshatch
-$cherry_cross = [
-  // horizontal tine
-  [4.03 + $stem_slop, 1.15 + $stem_slop / 3],
-  // vertical tine
-  [1.25 + $stem_slop / 3, $cherry_stem[1] + .005],
-];
-
 // diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
 

@@ -185,7 +185,7 @@ module keystem_positions() {
 
 module keystems() {
   keystem_positions() {
-    color(color4) stem($stem_type, $total_depth, $has_brim);
+    color(color4) stem($stem_type, $total_depth, $has_brim, $stem_slop);
   }
 }
 

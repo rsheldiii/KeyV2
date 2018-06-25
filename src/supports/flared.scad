@@ -1,3 +1,7 @@
+// cherry stem dimensions
+// don't wanna introduce slop here so $stem_slop it is I guess
+function outer_cherry_stem() = [7.2 - $stem_slop * 2, 5.5 - $stem_slop * 2];
+
 // figures out the scale factor needed to make a 45 degree wall
 function scale_for_45(height, starting_size) = (height * 2 + starting_size) / starting_size;
 
@@ -6,10 +10,10 @@ function scale_for_45(height, starting_size) = (height * 2 + starting_size) / st
 module flared_support(stem_type, loft, height) {
   translate([0,0,loft]){
     if(stem_type == "cherry") {
-      cherry_scale = [scale_for_45(height, $cherry_stem[0]), scale_for_45(height, $cherry_stem[1])];
+      cherry_scale = [scale_for_45(height, outer_cherry_stem()[0]), scale_for_45(height, outer_cherry_stem()[1])];
       linear_extrude(height=height, scale = cherry_scale){
         offset(r=1){
-          square($cherry_stem - [2,2], center=true);
+          square(outer_cherry_stem() - [2,2], center=true);
         }
       }
     } else if (stem_type == "cherry_rounded") {
