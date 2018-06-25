@@ -45,9 +45,9 @@ $has_brim = false;
 $brim_height = 0.2;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
-// array of positions of all stems. includes stabilizers as well, for now
+// array of positions of stabilizers
 // ternary is a bad hack to keep the stabilizers flag working
-$connectors = $stabilizers ? [[0,0],[-50,0],[50,0]] : [[0,0]];
+$stabilizers = [[-50,0],[50,0]];
 // use linear_extrude instead of hull slices to make the shape of the key
 // should be faster, also required for concave shapes
 $linear_extrude_shape = false;
@@ -55,6 +55,10 @@ $linear_extrude_shape = false;
 $rounded_key = false;
 // what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
 $stem_type = "cherry";
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+$stem_positions = [[0,0]];
+// what type of stem you want for the stabilizers. false disables
+$stabilizer_type = false;
 // how much higher the stem is than the bottom of the keycap.
 // inset stem requires support but is more accurate in some profiles
 $stem_inset = 0;

@@ -173,8 +173,8 @@ module keytext(text, position, font_size, depth) {
   }
 }
 
-module keystem_positions() {
-  for (connector_pos = $connectors) {
+module keystem_positions(positions) {
+  for (connector_pos = positions) {
     translate(connector_pos) {
       rotate([0, 0, $stem_rotation]){
         children();
@@ -183,15 +183,15 @@ module keystem_positions() {
   }
 }
 
-module keystems() {
-  keystem_positions() {
-    color(color4) stem($stem_type, $total_depth, $has_brim, $stem_slop);
+module support_for(positions, stem_type) {
+  keystem_positions(positions) {
+    color(color4) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
   }
 }
 
-module keystem_supports() {
-  keystem_positions() {
-    color(color4) supports($support_type, $stem_type, $stem_throw, $total_depth - $stem_throw);
+module stems_for(positions, stem_type) {
+  keystem_positions(positions) {
+    color(color4) stem(stem_type, $total_depth, $has_brim, $stem_slop);
   }
 }
 
@@ -270,15 +270,25 @@ module key(inset = false) {
   }
 
   // both stem and support are optional
-  if ($stem_type){
+  if ($stem_type || $stabilizer_type) {
     dished($keytop_thickness, $inverted_dish) {
-      translate([0, 0, $stem_inset]) keystems();
+      translate([0, 0, $stem_inset]) {
+        if ($stabilizer_type) stems_for($stabilizers, $stabilizer_type);
+        if ($stem_type) stems_for($stem_positions, $stem_type);
+      }
     }
   }
 
   if ($support_type){
     inside() {
-      translate([0, 0, $stem_inset]) keystem_supports();
+      translate([0, 0, $stem_inset]) {
+        if ($stabilizer_type) support_for($stabilizers, $stabilizer_type);
+
+        // always render stem support even if there isn't a stem.
+        // rendering flat support w/no stem is much more common than a hollow keycap
+        // so if you want a hollow keycap you'll have to turn support off entirely
+        support_for($stem_positions, $stem_type);
+      }
     }
   }
 }

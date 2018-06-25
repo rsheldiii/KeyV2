@@ -34,9 +34,7 @@ module numpad_0() {
 
 module stepped_caps_lock() {
   u(1.75) {
-    $connectors = [
-      [-5, 0]
-    ];
+    $stem_positions = [[-5, 0]];
     children();
   }
 }

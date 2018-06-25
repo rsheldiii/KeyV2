@@ -28,18 +28,18 @@ module rotated() {
   children();
 }
 
-module stabilized(mm=12, vertical = false) {
+module stabilized(mm=12, vertical = false, type="cherry") {
   if (vertical) {
-    $connectors = [
-    [0,   0],
+    $stabilizer_type = type;
+    $stabilizers = [
     [0,  mm],
     [0, -mm]
     ];
 
     children();
   } else {
-    $connectors = [
-      [0,   0],
+    $stabilizer_type = type;
+    $stabilizers = [
       [mm,  0],
       [-mm, 0]
     ];

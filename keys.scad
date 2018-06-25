@@ -40,15 +40,17 @@ for (p = [0:len(key_profiles)-1]) {
 /* translate_u(0, 0) one_row_profile("oem"); */
 /* dsa_row(3) u(1) uh(1) cherry() key(); */
 
-translate_u(0) sa_row(3) cherry() {
+translate_u(0, 0) sa_row(3) stepped_caps_lock() {
   key();
 }
 
-translate_u(1) sa_row(2) cherry() {
+translate_u(0, 1) sa_row(2) lshift() {
+  $stem_type = false;
   key();
 }
 
-translate_u(2) sa_row(1) cherry() {
+translate_u(0, 2) sa_row(1) spacebar() alps() {
+  $support_type = false;
   key();
 }
 
