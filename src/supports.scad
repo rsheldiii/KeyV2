@@ -4,11 +4,11 @@ include <supports/bars.scad>
 
 module supports(type, stem_type, loft, height) {
   if (type == "flared") {
-    flared_support(stem_type, loft, height);
+    flared(stem_type, loft, height);
   } else if (type == "flat") {
-    flat_support(stem_type, loft, height);
+    flat(stem_type, loft, height);
   } else if (type == "bars") {
-    bars_support(stem_type, loft, height);
+    bars(stem_type, loft, height);
   } else {
     echo("Warning: unsupported $support_type");
   }

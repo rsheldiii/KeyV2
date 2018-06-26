@@ -7,7 +7,7 @@ function scale_for_45(height, starting_size) = (height * 2 + starting_size) / st
 
 // complicated since we want the different stems to work well
 // also kind of messy... oh well
-module flared_support(stem_type, loft, height) {
+module flared(stem_type, loft, height) {
   translate([0,0,loft]){
     if (stem_type == "cherry_rounded") {
       linear_extrude(height=height, scale = scale_for_45(height, $rounded_cherry_stem_d)){
