@@ -21,7 +21,7 @@ def expand(filename)
   lines
 end
 
-lines = expand(ARGV[1] || 'keys.scad')
+lines = expand(ARGV[1] || 'customizer_base.scad')
 
 f = File.open('customizer.scad', 'w')
 f.write lines.join

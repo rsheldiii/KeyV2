@@ -1,9 +1,560 @@
-// the point of this file is to be a sort of DSL for constructing keycaps.
-// when you create a method chain you are just changing the parameters
-// key.scad uses, it doesn't generate anything itself until the end. This
-// lets it remain easy to use key.scad like before (except without key profiles)
-// without having to rely on this file. Unfortunately that means setting tons of
-// special variables, but that's a limitation of SCAD we have to work around
+// entry point for customizer script. This probably isn't useful to most people,
+// as it's just a wrapper that helps generate customizer.scad for thingiverse.
+
+/* [Key] */
+
+//length in units of key
+$key_length = 1;
+//height in units of key. should remain 1 for most uses
+$key_height = 1;
+
+/* [Brim] */
+
+//print brim for connector to help with bed adhesion
+$has_brim = false;
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
+// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
+
+/* [Stem] */
+// What stem do you want to use?
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled]
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+$stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+$stem_rotation = 0;
+// the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+$stem_slop = 0.3;
+
+/* [Support] */
+
+// support type. default is "flared" for easy FDM printing. to disable pass false
+$support_type = "flared"; // [flared, bars, flat]
+
+/* [Misc] */
+
+// font size used for text
+$font_size = 6;
+
+
+/* [Advanced Features] */
+
+/* Key */
+
+// keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// radius of corners of keycap
+$corner_radius = 1;
+// width of the very bottom of the key
+$bottom_key_width = 18.16;
+// height (from the front) of the very bottom of the ke
+$bottom_key_height = 18.16;
+// how much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// how much less height there is on the top
+$height_difference = 4;
+// how deep the key is, before adding a dish
+$total_depth = 11.5;
+// the tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// how skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+/* Stem */
+
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+$stem_positions = [[0,0]];
+// how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+/* Stabilizers */
+
+// array of positions of stabilizers
+$stabilizers = [[-50,0],[50,0]];
+// what type of stem you want for the stabilizers. false disables
+$stabilizer_type = false;
+
+
+/* Shape */
+
+// key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// how many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// if you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* Dish */
+
+// what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical]
+// how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// how skewed in the x direction the dish is
+$dish_skew_x = 0;
+// how skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+// invert dishing. mostly for spacebar
+$inverted_dish = false;
+// if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
+$dish_overdraw_width = 0;
+// same as width but for height
+$dish_overdraw_height = 0;
+
+/* Misc */
+
+// font used for text
+$font="DejaVu Sans Mono:style=Book";
+// whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// use linear_extrude instead of hull slices to make the shape of the key
+// should be faster, also required for concave shapes
+$linear_extrude_shape = false;
+//should the key be rounded? unnecessary for most printers, and very slow
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* Features */
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+$legends = [];
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+// key width functions
+
+module u(u=1) {
+  $key_length = u;
+  children();
+}
+
+module 1u() {
+  u(1) children();
+}
+
+module 1_25u() {
+  u(1.25) children();
+}
+
+module 1_5u() {
+  u(1.5) children();
+}
+
+module 2u() {
+  u(2) children();
+}
+
+module 2_25u() {
+  u(2.25) children();
+}
+
+module 2_75u() {
+  u(2.75) children();
+}
+
+module 6_25u() {
+  u(6.25) children();
+}
+
+// key height functions
+
+module uh(u=1) {
+  $key_height = u;
+  children();
+}
+
+module 1uh() {
+  uh(1) children();
+}
+
+module 2uh() {
+  uh(2) children();
+}
+
+module 1_25uh() {
+  uh(1.25) children();
+}
+
+module 1_5uh() {
+  uh(1.5) children();
+}
+
+module 2_25uh() {
+  uh(2.25) children();
+}
+
+module 2_75uh() {
+  uh(2.75) children();
+}
+
+module 6_25uh() {
+  uh(6.25) children();
+}
+// key profile definitions
+
+// unlike the other files with their own dedicated folders, this one doesn't
+// need a selector. I wrote one anyways for customizer support though
+module dcs_row(n=1) {
+  // names, so I don't go crazy
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 6;
+  $height_difference = 4;
+  $dish_type = "cylindrical";
+  $dish_depth = 1;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 1.75;
+
+  if (n == 5) {
+    $total_depth = 11.5;
+    $top_tilt = -6;
+    children();
+  } else if (n == 1) {
+    $total_depth = 8.5;
+    $top_tilt = -1;
+    children();
+  } else if (n == 2) {
+    $total_depth = 7.5;
+    $top_tilt = 3;
+    children();
+  } else if (n == 3) {
+    $total_depth = 6;
+    $top_tilt = 7;
+    children();
+  } else if (n == 4) {
+    $total_depth = 6;
+    $top_tilt = 16;
+    children();
+  }
+}
+module oem_row(n=1) {
+  $bottom_key_width = 18.05;
+  $bottom_key_height = 18.05;
+  $width_difference = 5.8;
+  $height_difference = 4;
+  $dish_type = "cylindrical";
+  $dish_depth = 1;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 1.75;
+  $stem_inset = 1.2;
+
+  if (n == 5) {
+    $total_depth = 11.2;
+    $top_tilt = -3;
+    children();
+  } else if (n == 1) {
+    $total_depth = 9.45;
+    $top_tilt = 1;
+    children();
+  } else if (n == 2) {
+    $total_depth = 9;
+    $top_tilt = 6;
+    children();
+  } else if (n == 3) {
+    $total_depth = 9.25;
+    $top_tilt = 9;
+    children();
+  } else if (n == 4) {
+    $total_depth = 9.25;
+    $top_tilt = 10;
+    children();
+  }
+}
+module dsa_row(n=3) {
+  $key_shape_type = "sculpted_square";
+  depth_raisers = [0, 3.5, 1, 0, 1, 3];
+  $bottom_key_width = 18.24; // 18.4;
+  $bottom_key_height = 18.24; // 18.4;
+  $width_difference = 6; // 5.7;
+  $height_difference = 6; // 5.7;
+  $total_depth = 8.1 + depth_raisers[n];
+  $top_tilt = n == 5 ? -21 : (n-3) * 7;
+  $top_skew = 0;
+  $dish_type = "spherical";
+  $dish_depth = 1.2;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $height_slices = 10;
+  $enable_side_sculpting = true;
+  // might wanna change this if you don't minkowski
+  // do you even minkowski bro
+  $corner_radius = 0.25;
+
+  children();
+}
+module sa_row(n=1) {
+  $key_shape_type = "sculpted_square";
+  $bottom_key_width = 18.4;
+  $bottom_key_height = 18.4;
+  $width_difference = 5.7;
+  $height_difference = 5.7;
+  $dish_type = "spherical";
+  $dish_depth = 0.85;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 0;
+  $height_slices = 10;
+  // might wanna change this if you don't minkowski
+  // do you even minkowski bro
+  $corner_radius = 0.25;
+  // 5th row is usually unsculpted or the same as the row below it
+  // making a super-sculpted top row (or bottom row!) would be real easy
+  // bottom row would just be 13 tilt and 14.89 total depth
+  // top row would be something new entirely - 18 tilt maybe?
+  if (n == 1 || n == 5){
+    $total_depth = 14.89;
+    $top_tilt = -13;
+    children();
+  } else if (n == 2) {
+    $total_depth = 12.925;
+    $top_tilt = -7;
+    children();
+  } else if (n == 3 || n == 5) {
+    $total_depth = 12.5;
+    $top_tilt = 0;
+    children();
+  } else if (n == 4){
+    $total_depth = 12.925;
+    $top_tilt = 7;
+    children();
+  }
+}
+module g20_row(n=3) {
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 2;
+  $height_difference = 2;
+  $total_depth = 6 + abs((n-3) * 0.5);
+  $top_tilt = 2.5;
+  $top_tilt =  n == 5 ? -18.5 : (n-3) * 7 + 2.5;
+  $top_skew = 0.75;
+  $dish_type = "no dish";
+  $dish_depth = 0;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $minkowski_radius = 1.75;
+    $key_bump_depth = 0.6;
+    $key_bump_edge = 2;
+  //also,
+  $rounded_key = true;
+
+
+  children();
+}
+
+// man, wouldn't it be so cool if functions were first order
+module key_profile(key_profile_type, row) {
+  if (key_profile_type == "dcs") {
+    dcs_row(row) children();
+  } else if (key_profile_type == "oem") {
+    oem_row(row) children();
+  } else if (key_profile_type == "dsa") {
+    dsa_row(row) children();
+  } else if (key_profile_type == "sa") {
+    sa_row(row) children();
+  } else if (key_profile_type == "g20") {
+    g20_row(row) children();
+  }
+}
+module spacebar() {
+  $inverted_dish = true;
+  $dish_type = "sideways cylindrical";
+  6_25u() stabilized(mm=50) children();
+}
+
+module lshift() {
+  2_25u() stabilized() children();
+}
+
+module rshift() {
+  2_75u() stabilized() children();
+}
+
+module backspace() {
+  2u() stabilized() children();
+}
+
+module enter() {
+  2_25u() stabilized() children();
+}
+
+module numpad_enter() {
+  2uh() stabilized(vertical=true) children();
+}
+
+module numpad_plus() {
+  numpad_enter() children();
+}
+
+module numpad_0() {
+  backspace() children();
+}
+
+module stepped_caps_lock() {
+  u(1.75) {
+    $stem_positions = [[-5, 0]];
+    children();
+  }
+}
+
+module iso_enter() {
+  $key_length = 1.5;
+  $key_height = 2;
+
+  $top_tilt = 0;
+  $key_shape_type = "iso_enter";
+  $linear_extrude_shape = true;
+  $linear_extrude_height_adjustment = 19.05 * 0.5;
+  // (unit_length(1.5) - unit_length(1.25)) / 2
+  $dish_overdraw_width = 2.38125;
+
+
+  stabilized(vertical=true) {
+    children();
+  }
+}
+// kind of a catch-all at this point for any directive that doesn't fit in the other files
+
+//TODO duplicate def to not make this a special var. maybe not worth it
+unit = 19.05;
+
+module translate_u(x=0, y=0, z=0){
+  translate([x * unit, y*unit, z*unit]) children();
+}
+
+module brimmed(height = 0.2) {
+  $has_brim = true;
+  $brim_height = height;
+  children();
+}
+
+module rounded() {
+  $rounded_key = true;
+  children();
+}
+
+module inverted() {
+  $inverted_dish = true;
+  children();
+}
+
+module rotated() {
+  $stem_rotation = 90;
+  children();
+}
+
+module stabilized(mm=12, vertical = false, type="cherry") {
+  if (vertical) {
+    $stabilizer_type = type;
+    $stabilizers = [
+    [0,  mm],
+    [0, -mm]
+    ];
+
+    children();
+  } else {
+    $stabilizer_type = type;
+    $stabilizers = [
+      [mm,  0],
+      [-mm, 0]
+    ];
+
+    children();
+  }
+}
+
+module dishless() {
+  $dish_type = "no dish";
+  children();
+}
+
+module inset(val=1) {
+  $stem_inset = val;
+  children();
+}
+
+module filled() {
+  $stem_type = "filled";
+  children();
+}
+
+module blank() {
+  $stem_type = "blank";
+  children();
+}
+
+module cherry(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "cherry";
+  children();
+}
+
+module alps(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "alps";
+  children();
+}
+
+module rounded_cherry(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "rounded_cherry";
+  children();
+}
+
+module flared_support() {
+  $support_type = "flared";
+  children();
+}
+
+module bar_support() {
+  $support_type = "bars";
+  children();
+}
+
+module flat_support() {
+  $support_type = "flat";
+  children();
+}
+
+module legend(text, position=[0,0], size=undef) {
+    font_size = size == undef ? $font_size : size;
+    $legends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
+module bump(depth=undef) {
+    $key_bump = true;
+    $key_bump_depth = depth == undef ? $key_bump_depth : depth;
+    children();
+}
+
+module one_single_key(profile, row, unsculpted) {
+   key_profile(profile, unsculpted ? 3 : row) key();
+}
+
+module one_row_profile(profile, unsculpted = false) {
+  rows = [5, 1, 2, 3, 4];
+  for(row = [0:len(rows)-1]) {
+    translate_u(0, -row) one_single_key(profile, rows[row], unsculpted);
+  }
+}
 
 // files
 $fs=.1;
@@ -254,7 +805,7 @@ module filled_stem() {
 module stem(stem_type, depth, has_brim, slop){
     if (stem_type == "alps") {
       alps_stem(depth, has_brim, slop);
-    } else if (stem_type == "cherry_rounded") {
+    } else if (stem_type == "rounded_cherry") {
       rounded_cherry_stem(depth, has_brim, slop);
     } else if (stem_type == "cherry") {
       cherry_stem(depth, has_brim, slop);
@@ -491,7 +1042,7 @@ function scale_for_45(height, starting_size) = (height * 2 + starting_size) / st
 // also kind of messy... oh well
 module flared(stem_type, loft, height) {
   translate([0,0,loft]){
-    if (stem_type == "cherry_rounded") {
+    if (stem_type == "rounded_cherry") {
       linear_extrude(height=height, scale = scale_for_45(height, $rounded_cherry_stem_d)){
         circle(d=$rounded_cherry_stem_d);
       }
@@ -858,7 +1409,7 @@ module cherry_keyswitch() {
 
 //approximate (fully depressed) cherry key to check clearances
 module clearance_check() {
-  if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
+  if($stem_type == "cherry" || $stem_type == "rounded_cherry"){
     color(transparent_red){
       translate([0,0,3.6 + $stem_inset - 5]) {
         cherry_keyswitch();
@@ -943,21 +1494,53 @@ module key(inset = false) {
 // actual full key with space carved out and keystem/stabilizer connectors
 // this is an example key with all the fixins from settings.scad
 module example_key(){
+/* [Key] */
+
+//length in units of key
+$key_length = 1;
+//height in units of key. should remain 1 for most uses
+$key_height = 1;
+
+/* [Brim] */
+
+//print brim for connector to help with bed adhesion
+$has_brim = false;
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
+// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
+
+/* [Stem] */
+// What stem do you want to use?
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled]
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+$stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+$stem_rotation = 0;
+// the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+$stem_slop = 0.3;
+
+/* [Support] */
+
+// support type. default is "flared" for easy FDM printing. to disable pass false
+$support_type = "flared"; // [flared, bars, flat]
+
+/* [Misc] */
+
+// font size used for text
+$font_size = 6;
+
+
+/* [Advanced Features] */
+
+/* Key */
+
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
-//whether stabilizer connectors are enabled
-$stabilizers = false;
-// font used for text
-$font="DejaVu Sans Mono:style=Book";
-// font size used for text
-$font_size = 6;
-// whether or not to render fake keyswitches to check clearances
-$clearance_check = false;
-
-/* [Key profile] */
-
+// radius of corners of keycap
+$corner_radius = 1;
 // width of the very bottom of the key
 $bottom_key_width = 18.16;
 // height (from the front) of the very bottom of the ke
@@ -972,79 +1555,68 @@ $total_depth = 11.5;
 $top_tilt = -6;
 // how skewed towards the back the top is (0 for center)
 $top_skew = 1.7;
+
+/* Stem */
+
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+$stem_positions = [[0,0]];
+// how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+/* Stabilizers */
+
+// array of positions of stabilizers
+$stabilizers = [[-50,0],[50,0]];
+// what type of stem you want for the stabilizers. false disables
+$stabilizer_type = false;
+
+
+/* Shape */
+
+// key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// how many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// if you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* Dish */
+
 // what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
-$dish_type = "cylindrical";
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical]
 // how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
 $dish_depth = 1;
 // how skewed in the x direction the dish is
 $dish_skew_x = 0;
 // how skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-//length in units of key
-$key_length = 1;
-//height in units of key. should remain 1 for most uses
-$key_height = 1;
-//print brim for connector to help with bed adhesion
-$has_brim = false;
-//when $has_brim this is the height of the brim
-$brim_height = 0.2;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
-// array of positions of stabilizers
-// ternary is a bad hack to keep the stabilizers flag working
-$stabilizers = [[-50,0],[50,0]];
+// if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
+$dish_overdraw_width = 0;
+// same as width but for height
+$dish_overdraw_height = 0;
+
+/* Misc */
+
+// font used for text
+$font="DejaVu Sans Mono:style=Book";
+// whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
 // use linear_extrude instead of hull slices to make the shape of the key
 // should be faster, also required for concave shapes
 $linear_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 $rounded_key = false;
-// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
-$stem_type = "cherry";
-// where the stems are in relation to the center of the keycap, in units. default is one in the center
-$stem_positions = [[0,0]];
-// what type of stem you want for the stabilizers. false disables
-$stabilizer_type = false;
-// how much higher the stem is than the bottom of the keycap.
-// inset stem requires support but is more accurate in some profiles
-$stem_inset = 0;
-// how many degrees to rotate the stems. useful for sideways keycaps, maybe
-$stem_rotation = 0;
-// radius of corners of keycap
-$corner_radius = 1;
-// support type. default is "flared" for easy FDM printing. to disable pass false
-$support_type = "flared";
-// key shape type, determines the shape of the key. default is 'rounded square'
-$key_shape_type = "rounded_square";
-// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
-$linear_extrude_height_adjustment = 0;
-// if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
-$dish_overdraw_width = 0;
-// same as width but for height
-$dish_overdraw_height = 0;
-// how many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
-// if you're doing fancy bowed keycap sides, this controls how many slices you take
-$height_slices = 1;
-
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
 $minkowski_radius = .33;
 
-
-// [ Stem Variables ]
-
-
-// the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3;
-
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
-// how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
-$stem_throw = 4;
-
-// diameter of the outside of the rounded cherry stem
-$rounded_cherry_stem_d = 5.5;
-
-// dimensions of alps stem
-$alps_stem = [4.45, 2.25];
+/* Features */
 
 //list of legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
@@ -1060,567 +1632,4 @@ $key_bump_edge = 0.4;
 }
 
 
-// keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 1;
-// wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
-$wall_thickness = 3;
-//whether stabilizer connectors are enabled
-$stabilizers = false;
-// font used for text
-$font="DejaVu Sans Mono:style=Book";
-// font size used for text
-$font_size = 6;
-// whether or not to render fake keyswitches to check clearances
-$clearance_check = false;
-
-/* [Key profile] */
-
-// width of the very bottom of the key
-$bottom_key_width = 18.16;
-// height (from the front) of the very bottom of the ke
-$bottom_key_height = 18.16;
-// how much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
-$width_difference = 6;
-// how much less height there is on the top
-$height_difference = 4;
-// how deep the key is, before adding a dish
-$total_depth = 11.5;
-// the tilt of the dish in degrees. divided by key height
-$top_tilt = -6;
-// how skewed towards the back the top is (0 for center)
-$top_skew = 1.7;
-// what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
-$dish_type = "cylindrical";
-// how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
-$dish_depth = 1;
-// how skewed in the x direction the dish is
-$dish_skew_x = 0;
-// how skewed in the y direction (height) the dish is
-$dish_skew_y = 0;
-//length in units of key
-$key_length = 1;
-//height in units of key. should remain 1 for most uses
-$key_height = 1;
-//print brim for connector to help with bed adhesion
-$has_brim = false;
-//when $has_brim this is the height of the brim
-$brim_height = 0.2;
-// invert dishing. mostly for spacebar
-$inverted_dish = false;
-// array of positions of stabilizers
-// ternary is a bad hack to keep the stabilizers flag working
-$stabilizers = [[-50,0],[50,0]];
-// use linear_extrude instead of hull slices to make the shape of the key
-// should be faster, also required for concave shapes
-$linear_extrude_shape = false;
-//should the key be rounded? unnecessary for most printers, and very slow
-$rounded_key = false;
-// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
-$stem_type = "cherry";
-// where the stems are in relation to the center of the keycap, in units. default is one in the center
-$stem_positions = [[0,0]];
-// what type of stem you want for the stabilizers. false disables
-$stabilizer_type = false;
-// how much higher the stem is than the bottom of the keycap.
-// inset stem requires support but is more accurate in some profiles
-$stem_inset = 0;
-// how many degrees to rotate the stems. useful for sideways keycaps, maybe
-$stem_rotation = 0;
-// radius of corners of keycap
-$corner_radius = 1;
-// support type. default is "flared" for easy FDM printing. to disable pass false
-$support_type = "flared";
-// key shape type, determines the shape of the key. default is 'rounded square'
-$key_shape_type = "rounded_square";
-// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
-$linear_extrude_height_adjustment = 0;
-// if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
-$dish_overdraw_width = 0;
-// same as width but for height
-$dish_overdraw_height = 0;
-// how many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
-// if you're doing fancy bowed keycap sides, this controls how many slices you take
-$height_slices = 1;
-
-//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
-$minkowski_radius = .33;
-
-
-// [ Stem Variables ]
-
-
-// the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3;
-
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
-// how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
-$stem_throw = 4;
-
-// diameter of the outside of the rounded cherry stem
-$rounded_cherry_stem_d = 5.5;
-
-// dimensions of alps stem
-$alps_stem = [4.45, 2.25];
-
-//list of legends to place on a key format: [text, halign, valign, size]
-//halign = "left" or "center" or "right"
-//valign = "top" or "center" or "bottom"
-$legends = [];
-//insert locating bump
-$key_bump = false;
-//height of the location bump from the top surface of the key
-$key_bump_depth = 0.5;
-//distance to move the bump from the front edge of the key
-$key_bump_edge = 0.4;
-// key width functions
-
-module u(u=1) {
-  $key_length = u;
-  children();
-}
-
-module 1u() {
-  u(1) children();
-}
-
-module 1_25u() {
-  u(1.25) children();
-}
-
-module 1_5u() {
-  u(1.5) children();
-}
-
-module 2u() {
-  u(2) children();
-}
-
-module 2_25u() {
-  u(2.25) children();
-}
-
-module 2_75u() {
-  u(2.75) children();
-}
-
-module 6_25u() {
-  u(6.25) children();
-}
-
-// key height functions
-
-module uh(u=1) {
-  $key_height = u;
-  children();
-}
-
-module 1uh() {
-  uh(1) children();
-}
-
-module 2uh() {
-  uh(2) children();
-}
-
-module 1_25uh() {
-  uh(1.25) children();
-}
-
-module 1_5uh() {
-  uh(1.5) children();
-}
-
-module 2_25uh() {
-  uh(2.25) children();
-}
-
-module 2_75uh() {
-  uh(2.75) children();
-}
-
-module 6_25uh() {
-  uh(6.25) children();
-}
-// key profile definitions
-
-// unlike the other files with their own dedicated folders, this one doesn't need a selector. it just collects all the functions
-module dcs_row(n=1) {
-  // names, so I don't go crazy
-  $bottom_key_width = 18.16;
-  $bottom_key_height = 18.16;
-  $width_difference = 6;
-  $height_difference = 4;
-  $dish_type = "cylindrical";
-  $dish_depth = 1;
-  $dish_skew_x = 0;
-  $dish_skew_y = 0;
-  $top_skew = 1.75;
-
-  if (n == 5) {
-    $total_depth = 11.5;
-    $top_tilt = -6;
-    children();
-  } else if (n == 1) {
-    $total_depth = 8.5;
-    $top_tilt = -1;
-    children();
-  } else if (n == 2) {
-    $total_depth = 7.5;
-    $top_tilt = 3;
-    children();
-  } else if (n == 3) {
-    $total_depth = 6;
-    $top_tilt = 7;
-    children();
-  } else if (n == 4) {
-    $total_depth = 6;
-    $top_tilt = 16;
-    children();
-  }
-}
-module oem_row(n=1) {
-  $bottom_key_width = 18.05;
-  $bottom_key_height = 18.05;
-  $width_difference = 5.8;
-  $height_difference = 4;
-  $dish_type = "cylindrical";
-  $dish_depth = 1;
-  $dish_skew_x = 0;
-  $dish_skew_y = 0;
-  $top_skew = 1.75;
-  $stem_inset = 1.2;
-
-  if (n == 5) {
-    $total_depth = 11.2;
-    $top_tilt = -3;
-    children();
-  } else if (n == 1) {
-    $total_depth = 9.45;
-    $top_tilt = 1;
-    children();
-  } else if (n == 2) {
-    $total_depth = 9;
-    $top_tilt = 6;
-    children();
-  } else if (n == 3) {
-    $total_depth = 9.25;
-    $top_tilt = 9;
-    children();
-  } else if (n == 4) {
-    $total_depth = 9.25;
-    $top_tilt = 10;
-    children();
-  }
-}
-module dsa_row(n=3) {
-  $key_shape_type = "sculpted_square";
-  depth_raisers = [0, 3.5, 1, 0, 1, 3];
-  $bottom_key_width = 18.24; // 18.4;
-  $bottom_key_height = 18.24; // 18.4;
-  $width_difference = 6; // 5.7;
-  $height_difference = 6; // 5.7;
-  $total_depth = 8.1 + depth_raisers[n];
-  $top_tilt = n == 5 ? -21 : (n-3) * 7;
-  $top_skew = 0;
-  $dish_type = "spherical";
-  $dish_depth = 1.2;
-  $dish_skew_x = 0;
-  $dish_skew_y = 0;
-  $height_slices = 10;
-  $enable_side_sculpting = true;
-  // might wanna change this if you don't minkowski
-  // do you even minkowski bro
-  $corner_radius = 0.25;
-
-  children();
-}
-module sa_row(n=1) {
-  $key_shape_type = "sculpted_square";
-  $bottom_key_width = 18.4;
-  $bottom_key_height = 18.4;
-  $width_difference = 5.7;
-  $height_difference = 5.7;
-  $dish_type = "spherical";
-  $dish_depth = 0.85;
-  $dish_skew_x = 0;
-  $dish_skew_y = 0;
-  $top_skew = 0;
-  $height_slices = 10;
-  // might wanna change this if you don't minkowski
-  // do you even minkowski bro
-  $corner_radius = 0.25;
-  // 5th row is usually unsculpted or the same as the row below it
-  // making a super-sculpted top row (or bottom row!) would be real easy
-  // bottom row would just be 13 tilt and 14.89 total depth
-  // top row would be something new entirely - 18 tilt maybe?
-  if (n == 1 || n == 5){
-    $total_depth = 14.89;
-    $top_tilt = -13;
-    children();
-  } else if (n == 2) {
-    $total_depth = 12.925;
-    $top_tilt = -7;
-    children();
-  } else if (n == 3 || n == 5) {
-    $total_depth = 12.5;
-    $top_tilt = 0;
-    children();
-  } else if (n == 4){
-    $total_depth = 12.925;
-    $top_tilt = 7;
-    children();
-  }
-}
-module g20_row(n=3) {
-  $bottom_key_width = 18.16;
-  $bottom_key_height = 18.16;
-  $width_difference = 2;
-  $height_difference = 2;
-  $total_depth = 6 + abs((n-3) * 0.5);
-  $top_tilt = 2.5;
-  $top_tilt =  n == 5 ? -18.5 : (n-3) * 7 + 2.5;
-  $top_skew = 0.75;
-  $dish_type = "no dish";
-  $dish_depth = 0;
-  $dish_skew_x = 0;
-  $dish_skew_y = 0;
-  $minkowski_radius = 1.75;
-    $key_bump_depth = 0.6;
-    $key_bump_edge = 2;
-  //also,
-  $rounded_key = true;
-
-
-  children();
-}
-
-// man, wouldn't it be so cool if functions were first order
-module key_profile(key_profile_type, row) {
-  if (key_profile_type == "dcs") {
-    dcs_row(row) children();
-  } else if (key_profile_type == "oem") {
-    oem_row(row) children();
-  } else if (key_profile_type == "dsa") {
-    dsa_row(row) children();
-  } else if (key_profile_type == "sa") {
-    sa_row(row) children();
-  } else if (key_profile_type == "g20") {
-    g20_row(row) children();
-  }
-}
-module spacebar() {
-  $inverted_dish = true;
-  $dish_type = "sideways cylindrical";
-  6_25u() stabilized(mm=50) children();
-}
-
-module lshift() {
-  2_25u() stabilized() children();
-}
-
-module rshift() {
-  2_75u() stabilized() children();
-}
-
-module backspace() {
-  2u() stabilized() children();
-}
-
-module enter() {
-  2_25u() stabilized() children();
-}
-
-module numpad_enter() {
-  2uh() stabilized(vertical=true) children();
-}
-
-module numpad_plus() {
-  numpad_enter() children();
-}
-
-module numpad_0() {
-  backspace() children();
-}
-
-module stepped_caps_lock() {
-  u(1.75) {
-    $stem_positions = [[-5, 0]];
-    children();
-  }
-}
-
-module iso_enter() {
-  $key_length = 1.5;
-  $key_height = 2;
-
-  $top_tilt = 0;
-  $key_shape_type = "iso_enter";
-  $linear_extrude_shape = true;
-  $linear_extrude_height_adjustment = 19.05 * 0.5;
-  // (unit_length(1.5) - unit_length(1.25)) / 2
-  $dish_overdraw_width = 2.38125;
-
-
-  stabilized(vertical=true) {
-    children();
-  }
-}
-// kind of a catch-all at this point for any directive that doesn't fit in the other files
-
-//TODO duplicate def to not make this a special var. maybe not worth it
-unit = 19.05;
-
-module translate_u(x=0, y=0, z=0){
-  translate([x * unit, y*unit, z*unit]) children();
-}
-
-module brimmed(height = 0.2) {
-  $has_brim = true;
-  $brim_height = height;
-  children();
-}
-
-module rounded() {
-  $rounded_key = true;
-  children();
-}
-
-module inverted() {
-  $inverted_dish = true;
-  children();
-}
-
-module rotated() {
-  $stem_rotation = 90;
-  children();
-}
-
-module stabilized(mm=12, vertical = false, type="cherry") {
-  if (vertical) {
-    $stabilizer_type = type;
-    $stabilizers = [
-    [0,  mm],
-    [0, -mm]
-    ];
-
-    children();
-  } else {
-    $stabilizer_type = type;
-    $stabilizers = [
-      [mm,  0],
-      [-mm, 0]
-    ];
-
-    children();
-  }
-}
-
-module dishless() {
-  $dish_type = "no dish";
-  children();
-}
-
-module inset(val=1) {
-  $stem_inset = val;
-  children();
-}
-
-module filled() {
-  $stem_type = "filled";
-  children();
-}
-
-module blank() {
-  $stem_type = "blank";
-  children();
-}
-
-module cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
-  $stem_type = "cherry";
-  children();
-}
-
-module alps(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
-  $stem_type = "alps";
-  children();
-}
-
-module rounded_cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
-  $stem_type = "cherry_rounded";
-  children();
-}
-
-module flared_support() {
-  $support_type = "flared";
-  children();
-}
-
-module bar_support() {
-  $support_type = "bars";
-  children();
-}
-
-module flat_support() {
-  $support_type = "flat";
-  children();
-}
-
-module legend(text, position=[0,0], size=undef) {
-    font_size = size == undef ? $font_size : size;
-    $legends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
-    children();
-}
-
-module bump(depth=undef) {
-    $key_bump = true;
-    $key_bump_depth = depth == undef ? $key_bump_depth : depth;
-    children();
-}
-
-module translate_u(x=0, y=0, z=0){
-  translate([x * unit, y*unit, z*unit]) children();
-}
-
-// row 5 is commonly the top row, for whatever reason
-key_profiles = ["dcs", "oem", "sa", "g20", "dsa"];
-
-module one_single_key(profile, row, unsculpted) {
-   key_profile(profile, unsculpted ? 3 : row) cherry() key();
-}
-
-module one_row_profile(profile, unsculpted = false) {
-  rows = [5, 1, 2, 3, 4];
-  for(row = [0:len(rows)-1]) {
-    translate_u(0, -row) one_single_key(profile, rows[row], unsculpted);
-  }
-}
-
-for (p = [0:len(key_profiles)-1]) {
-  translate_u(p){
-    /* one_row_profile(key_profiles[p]); */
-  }
-}
-
-/* translate_u(0, 0) one_row_profile("oem"); */
-/* dsa_row(3) u(1) uh(1) cherry() key(); */
-
-translate_u(0, 0) sa_row(3) stepped_caps_lock() {
-  key();
-}
-
-translate_u(0, 1) sa_row(2) lshift() {
-  $stem_type = false;
-  key();
-}
-
-translate_u(0, 2) sa_row(1) spacebar() alps() {
-  $support_type = false;
-  key();
-}
-
-/* sculpted_square_shape([19,19], [0,0], 0.3);
-translate([26,0,0]) rounded_square_shape([19,19], [0,0], 0.3); */
+key();

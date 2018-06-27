@@ -8,7 +8,7 @@ include <stems/filled.scad>
 module stem(stem_type, depth, has_brim, slop){
     if (stem_type == "alps") {
       alps_stem(depth, has_brim, slop);
-    } else if (stem_type == "cherry_rounded") {
+    } else if (stem_type == "rounded_cherry") {
       rounded_cherry_stem(depth, has_brim, slop);
     } else if (stem_type == "cherry") {
       cherry_stem(depth, has_brim, slop);
