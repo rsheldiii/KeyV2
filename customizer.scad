@@ -16,17 +16,17 @@ legend = "";
 // what type of stem you want. Most people want Cherry.
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
 
-// support type. default is "flared" for easy FDM printing. to disable pass false
+// support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
-//length in units of key. A regular key is 1 unit; spacebar is usually 6.25
-$key_length = 1;
+// length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // range not working in thingiverse customizer atm [1:0.25:16]
 
-//print brim for connector to help with bed adhesion
+// print brim for connector to help with bed adhesion
 $has_brim = false;
 
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3;
+$stem_slop = 0.3; // not working in thingiverse customizer atm [0:0.01:1]
 
 // font size used for text
 $font_size = 6;
@@ -34,12 +34,14 @@ $font_size = 6;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
 
+// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
+$stabilizer_type = "disable"; // [cherry, rounded_cherry, alps, disable]
 
 /* [Advanced] */
 
 /* Key */
 // height in units of key. should remain 1 for most uses
-$key_height = 1;
+$key_height = 1.0;
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
@@ -80,11 +82,11 @@ $stem_rotation = 0;
 
 /* Stabilizers */
 
+// ternary is ONLY for customizer. it will NOT work if you're using this in
+// openSCAD, unless you're using the customizer. you should use stabilized() or
+// set the variable directly
 // array of positions of stabilizers
-$stabilizers = [[-50,0],[50,0]];
-// what type of stem you want for the stabilizers. false disables
-$stabilizer_type = false;
-
+$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
 
 /* Shape */
 
@@ -762,7 +764,7 @@ function cherry_cross(slop) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 5.5 - slop * 2 + .005],
+  [1.25 + slop / 3, 4.9 + slop / 3 + .005],
 ];
 
 module cherry_stem(depth, has_brim, slop) {
@@ -804,8 +806,8 @@ module cherry_stem(depth, has_brim, slop) {
 function cherry_cross(slop) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
-  // vertical tine
-  [1.25 + slop / 3, 5.5 - slop * 2 + .005],
+  // vertical tine. can't really afford much slop
+  [1.25 + slop / 3, 4.9 + slop / 6 + .005],
 ];
 
 module rounded_cherry_stem(depth, has_brim, slop) {
@@ -1559,17 +1561,17 @@ module example_key(){
 // what type of stem you want. Most people want Cherry.
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
 
-// support type. default is "flared" for easy FDM printing. to disable pass false
+// support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
-//length in units of key. A regular key is 1 unit; spacebar is usually 6.25
-$key_length = 1;
+// length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // range not working in thingiverse customizer atm [1:0.25:16]
 
-//print brim for connector to help with bed adhesion
+// print brim for connector to help with bed adhesion
 $has_brim = false;
 
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3;
+$stem_slop = 0.3; // not working in thingiverse customizer atm [0:0.01:1]
 
 // font size used for text
 $font_size = 6;
@@ -1577,12 +1579,14 @@ $font_size = 6;
 // invert dishing. mostly for spacebar
 $inverted_dish = false;
 
+// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
+$stabilizer_type = "disable"; // [cherry, rounded_cherry, alps, disable]
 
 /* [Advanced] */
 
 /* Key */
 // height in units of key. should remain 1 for most uses
-$key_height = 1;
+$key_height = 1.0;
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
@@ -1623,11 +1627,11 @@ $stem_rotation = 0;
 
 /* Stabilizers */
 
+// ternary is ONLY for customizer. it will NOT work if you're using this in
+// openSCAD, unless you're using the customizer. you should use stabilized() or
+// set the variable directly
 // array of positions of stabilizers
-$stabilizers = [[-50,0],[50,0]];
-// what type of stem you want for the stabilizers. false disables
-$stabilizer_type = false;
-
+$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
 
 /* Shape */
 

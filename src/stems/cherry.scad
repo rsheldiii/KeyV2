@@ -6,7 +6,7 @@ function cherry_cross(slop) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 5.5 - slop * 2 + .005],
+  [1.25 + slop / 3, 4.9 + slop / 3 + .005],
 ];
 
 module cherry_stem(depth, has_brim, slop) {
