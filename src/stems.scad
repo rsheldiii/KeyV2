@@ -14,6 +14,8 @@ module stem(stem_type, depth, has_brim, slop){
       cherry_stem(depth, has_brim, slop);
     } else if (stem_type == "filled") {
       filled_stem();
+    } else if (stem_type == "disable") {
+      children();
     } else {
       echo("Warning: unsupported $stem_type");
     }

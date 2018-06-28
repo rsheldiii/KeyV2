@@ -33,5 +33,7 @@ module sa_row(n=1) {
     $total_depth = 12.925;
     $top_tilt = 7;
     children();
+  } else {
+    children();
   }
 }

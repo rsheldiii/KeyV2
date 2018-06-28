@@ -21,9 +21,9 @@ module  dish(width, height, depth, inverted) {
     }
     else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
+    } else if ($dish_type == "disable") {
+      // else no dish
     } else {
-      // else no dish, "no dish" is the value
-      // switchted to actually diffing a cube here due to changes to stems being differenced from the dish instead of the inside
-      translate([0,0,500]) cube([width, height, 1000], center=true);
+      echo("WARN: $dish_type unsupported");
     }
 }

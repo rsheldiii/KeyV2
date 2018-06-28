@@ -30,5 +30,7 @@ module oem_row(n=1) {
     $total_depth = 9.25;
     $top_tilt = 10;
     children();
+  } else {
+    children();
   }
 }

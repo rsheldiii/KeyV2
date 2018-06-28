@@ -9,6 +9,8 @@ module supports(type, stem_type, loft, height) {
     flat(stem_type, loft, height);
   } else if (type == "bars") {
     bars(stem_type, loft, height);
+  } else if (type == "disable") {
+    children();
   } else {
     echo("Warning: unsupported $support_type");
   }

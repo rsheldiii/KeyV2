@@ -20,5 +20,9 @@ module key_profile(key_profile_type, row) {
     sa_row(row) children();
   } else if (key_profile_type == "g20") {
     g20_row(row) children();
+  } else if (key_profile_type == "disable") {
+    children();
+  } else {
+    echo("Warning: unsupported key_profile_type");
   }
 }

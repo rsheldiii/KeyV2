@@ -1,47 +1,45 @@
 // entry point for customizer script. This probably isn't useful to most people,
 // as it's just a wrapper that helps generate customizer.scad for thingiverse.
 
-/* [Key] */
+/* [Basic-Settings] */
 
-//length in units of key
+// what preset profile do you wish to use? disable if you are going to set paramters below
+key_profile = "dcs"; // [dcs, oem, dsa, sa, g20, disable]
+// what key profile row is this keycap on? 0 for disable
+row = 1; // [5,1,2,3,4,0]
+
+// What does the top of your key say?
+legend = "";
+
+/* [Basic-Settings] */
+
+// what type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+
+// support type. default is "flared" for easy FDM printing. to disable pass false
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+//length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1;
-//height in units of key. should remain 1 for most uses
-$key_height = 1;
-
-/* [Brim] */
 
 //print brim for connector to help with bed adhesion
 $has_brim = false;
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
-// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
 
-/* [Stem] */
-// What stem do you want to use?
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled]
-// how much higher the stem is than the bottom of the keycap.
-// inset stem requires support but is more accurate in some profiles
-$stem_inset = 0;
-// how many degrees to rotate the stems. useful for sideways keycaps, maybe
-$stem_rotation = 0;
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3;
-
-/* [Support] */
-
-// support type. default is "flared" for easy FDM printing. to disable pass false
-$support_type = "flared"; // [flared, bars, flat]
-
-/* [Misc] */
 
 // font size used for text
 $font_size = 6;
 
+// invert dishing. mostly for spacebar
+$inverted_dish = false;
 
-/* [Advanced Features] */
+
+/* [Advanced] */
 
 /* Key */
-
+// height in units of key. should remain 1 for most uses
+$key_height = 1;
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
@@ -74,6 +72,12 @@ $rounded_cherry_stem_d = 5.5;
 // dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+$stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+$stem_rotation = 0;
+
 /* Stabilizers */
 
 // array of positions of stabilizers
@@ -95,15 +99,13 @@ $height_slices = 1;
 /* Dish */
 
 // what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
-$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical]
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
 // how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
 $dish_depth = 1;
 // how skewed in the x direction the dish is
 $dish_skew_x = 0;
 // how skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-// invert dishing. mostly for spacebar
-$inverted_dish = false;
 // if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
 $dish_overdraw_width = 0;
 // same as width but for height
@@ -111,6 +113,8 @@ $dish_overdraw_height = 0;
 
 /* Misc */
 
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances
@@ -241,6 +245,8 @@ module dcs_row(n=1) {
     $total_depth = 6;
     $top_tilt = 16;
     children();
+  } else {
+    children();
   }
 }
 module oem_row(n=1) {
@@ -275,16 +281,16 @@ module oem_row(n=1) {
     $total_depth = 9.25;
     $top_tilt = 10;
     children();
+  } else {
+    children();
   }
 }
 module dsa_row(n=3) {
   $key_shape_type = "sculpted_square";
-  depth_raisers = [0, 3.5, 1, 0, 1, 3];
   $bottom_key_width = 18.24; // 18.4;
   $bottom_key_height = 18.24; // 18.4;
   $width_difference = 6; // 5.7;
   $height_difference = 6; // 5.7;
-  $total_depth = 8.1 + depth_raisers[n];
   $top_tilt = n == 5 ? -21 : (n-3) * 7;
   $top_skew = 0;
   $dish_type = "spherical";
@@ -297,7 +303,25 @@ module dsa_row(n=3) {
   // do you even minkowski bro
   $corner_radius = 0.25;
 
-  children();
+  depth_raisers = [0, 3.5, 1, 0, 1, 3];
+  if (n == 5) {
+    $total_depth = 8.1 + depth_raisers[n];
+    children();
+  } else if (n == 1) {
+    $total_depth = 8.1 + depth_raisers[n];
+    children();
+  } else if (n == 2) {
+    $total_depth = 8.1 + depth_raisers[n];
+    children();
+  } else if (n == 3) {
+    $total_depth = 8.1 + depth_raisers[n];
+    children();
+  } else if (n == 4) {
+    $total_depth = 8.1 + depth_raisers[n];
+    children();
+  } else {
+    children();
+  }
 }
 module sa_row(n=1) {
   $key_shape_type = "sculpted_square";
@@ -334,6 +358,8 @@ module sa_row(n=1) {
     $total_depth = 12.925;
     $top_tilt = 7;
     children();
+  } else {
+    children();
   }
 }
 module g20_row(n=3) {
@@ -341,22 +367,41 @@ module g20_row(n=3) {
   $bottom_key_height = 18.16;
   $width_difference = 2;
   $height_difference = 2;
-  $total_depth = 6 + abs((n-3) * 0.5);
   $top_tilt = 2.5;
-  $top_tilt =  n == 5 ? -18.5 : (n-3) * 7 + 2.5;
   $top_skew = 0.75;
-  $dish_type = "no dish";
+  $dish_type = "disable";
   $dish_depth = 0;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $minkowski_radius = 1.75;
-    $key_bump_depth = 0.6;
-    $key_bump_edge = 2;
+  $key_bump_depth = 0.6;
+  $key_bump_edge = 2;
   //also,
   $rounded_key = true;
 
-
-  children();
+  if (n == 5) {
+    $total_depth = 6 + abs((n-3) * 0.5);
+    $top_tilt =  -18.55;
+    children();
+  } else if (n == 1) {
+    $total_depth = 6 + abs((n-3) * 0.5);
+    $top_tilt = (n-3) * 7 + 2.5;
+    children();
+  } else if (n == 2) {
+    $total_depth = 6 + abs((n-3) * 0.5);
+    $top_tilt = (n-3) * 7 + 2.5;
+    children();
+  } else if (n == 3) {
+    $total_depth = 6 + abs((n-3) * 0.5);
+    $top_tilt = (n-3) * 7 + 2.5;
+    children();
+  } else if (n == 4) {
+    $total_depth = 6 + abs((n-3) * 0.5);
+    $top_tilt = (n-3) * 7 + 2.5;
+    children();
+  } else {
+    children();
+  }
 }
 
 // man, wouldn't it be so cool if functions were first order
@@ -371,6 +416,10 @@ module key_profile(key_profile_type, row) {
     sa_row(row) children();
   } else if (key_profile_type == "g20") {
     g20_row(row) children();
+  } else if (key_profile_type == "disable") {
+    children();
+  } else {
+    echo("Warning: unsupported key_profile_type");
   }
 }
 module spacebar() {
@@ -811,6 +860,8 @@ module stem(stem_type, depth, has_brim, slop){
       cherry_stem(depth, has_brim, slop);
     } else if (stem_type == "filled") {
       filled_stem();
+    } else if (stem_type == "disable") {
+      children();
     } else {
       echo("Warning: unsupported $stem_type");
     }
@@ -1025,10 +1076,10 @@ module  dish(width, height, depth, inverted) {
     }
     else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
+    } else if ($dish_type == "disable") {
+      // else no dish
     } else {
-      // else no dish, "no dish" is the value
-      // switchted to actually diffing a cube here due to changes to stems being differenced from the dish instead of the inside
-      translate([0,0,500]) cube([width, height, 1000], center=true);
+      echo("WARN: $dish_type unsupported");
     }
 }
 // cherry stem dimensions
@@ -1082,6 +1133,8 @@ module supports(type, stem_type, loft, height) {
     flat(stem_type, loft, height);
   } else if (type == "bars") {
     bars(stem_type, loft, height);
+  } else if (type == "disable") {
+    children();
   } else {
     echo("Warning: unsupported $support_type");
   }
@@ -1333,13 +1386,20 @@ module _dish() {
 
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
+// has physical limits, since you can't specify planes in openscad
+// maybe I should make a bounding box cube, difference that with the dish then intersect with the children
 module dished(depth_difference, inverted = false) {
   difference() {
     children();
     top_placement(depth_difference){
       difference(){
         union() {
-          translate([-500, -500]) cube(1000);
+          // this weird math here is so Customizer doesn't see a giant shape and zoom out a million miles. could just be cube(1000)
+          translate([-$key_length * unit, -$key_height * unit]) cube([
+            $key_length*2 * unit,
+            $key_height*2 * unit,
+            50
+          ]);
           if (!inverted) _dish();
         }
         if (inverted) _dish();
@@ -1352,7 +1412,7 @@ module dished(depth_difference, inverted = false) {
 // more user-friendly than top_placement
 module top_of_key(){
   // if there is a dish, we need to account for how much it digs into the top
-  dish_depth = ($dish_type == "no dish") ? 0 : $dish_depth;
+  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
   // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
   corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
 
@@ -1409,7 +1469,7 @@ module cherry_keyswitch() {
 
 //approximate (fully depressed) cherry key to check clearances
 module clearance_check() {
-  if($stem_type == "cherry" || $stem_type == "rounded_cherry"){
+  if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
     color(transparent_red){
       translate([0,0,3.6 + $stem_inset - 5]) {
         cherry_keyswitch();
@@ -1468,19 +1528,19 @@ module key(inset = false) {
   }
 
   // both stem and support are optional
-  if ($stem_type || $stabilizer_type) {
+  if ($stem_type != "disable" || $stabilizer_type != "disable") {
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type) stems_for($stabilizers, $stabilizer_type);
-        if ($stem_type) stems_for($stem_positions, $stem_type);
+        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+        if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }
   }
 
-  if ($support_type){
+  if ($support_type != "disable"){
     inside() {
       translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type) support_for($stabilizers, $stabilizer_type);
+        if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
 
         // always render stem support even if there isn't a stem.
         // rendering flat support w/no stem is much more common than a hollow keycap
@@ -1494,47 +1554,35 @@ module key(inset = false) {
 // actual full key with space carved out and keystem/stabilizer connectors
 // this is an example key with all the fixins from settings.scad
 module example_key(){
-/* [Key] */
+/* [Basic-Settings] */
 
-//length in units of key
+// what type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+
+// support type. default is "flared" for easy FDM printing. to disable pass false
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+//length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1;
-//height in units of key. should remain 1 for most uses
-$key_height = 1;
-
-/* [Brim] */
 
 //print brim for connector to help with bed adhesion
 $has_brim = false;
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
-// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
 
-/* [Stem] */
-// What stem do you want to use?
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled]
-// how much higher the stem is than the bottom of the keycap.
-// inset stem requires support but is more accurate in some profiles
-$stem_inset = 0;
-// how many degrees to rotate the stems. useful for sideways keycaps, maybe
-$stem_rotation = 0;
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3;
-
-/* [Support] */
-
-// support type. default is "flared" for easy FDM printing. to disable pass false
-$support_type = "flared"; // [flared, bars, flat]
-
-/* [Misc] */
 
 // font size used for text
 $font_size = 6;
 
+// invert dishing. mostly for spacebar
+$inverted_dish = false;
 
-/* [Advanced Features] */
+
+/* [Advanced] */
 
 /* Key */
-
+// height in units of key. should remain 1 for most uses
+$key_height = 1;
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
@@ -1567,6 +1615,12 @@ $rounded_cherry_stem_d = 5.5;
 // dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+$stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+$stem_rotation = 0;
+
 /* Stabilizers */
 
 // array of positions of stabilizers
@@ -1588,15 +1642,13 @@ $height_slices = 1;
 /* Dish */
 
 // what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
-$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical]
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
 // how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
 $dish_depth = 1;
 // how skewed in the x direction the dish is
 $dish_skew_x = 0;
 // how skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-// invert dishing. mostly for spacebar
-$inverted_dish = false;
 // if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
 $dish_overdraw_width = 0;
 // same as width but for height
@@ -1604,6 +1656,8 @@ $dish_overdraw_height = 0;
 
 /* Misc */
 
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances
@@ -1632,4 +1686,4 @@ $key_bump_edge = 0.4;
 }
 
 
-key();
+key_profile(key_profile, row) legend(legend) key();

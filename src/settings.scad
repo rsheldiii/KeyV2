@@ -1,44 +1,32 @@
-/* [Key] */
+/* [Basic-Settings] */
 
-//length in units of key
+// what type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+
+// support type. default is "flared" for easy FDM printing. to disable pass false
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+//length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1;
-//height in units of key. should remain 1 for most uses
-$key_height = 1;
-
-/* [Brim] */
 
 //print brim for connector to help with bed adhesion
 $has_brim = false;
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
-// what type of stem you want. To turn off stems pass false. "cherry", "alps", and "cherry_rounded" supported
 
-/* [Stem] */
-// What stem do you want to use?
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled]
-// how much higher the stem is than the bottom of the keycap.
-// inset stem requires support but is more accurate in some profiles
-$stem_inset = 0;
-// how many degrees to rotate the stems. useful for sideways keycaps, maybe
-$stem_rotation = 0;
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3;
-
-/* [Support] */
-
-// support type. default is "flared" for easy FDM printing. to disable pass false
-$support_type = "flared"; // [flared, bars, flat]
-
-/* [Misc] */
 
 // font size used for text
 $font_size = 6;
 
+// invert dishing. mostly for spacebar
+$inverted_dish = false;
 
-/* [Advanced Features] */
+
+/* [Advanced] */
 
 /* Key */
-
+// height in units of key. should remain 1 for most uses
+$key_height = 1;
 // keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
 $keytop_thickness = 1;
 // wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
@@ -71,6 +59,12 @@ $rounded_cherry_stem_d = 5.5;
 // dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// how much higher the stem is than the bottom of the keycap.
+// inset stem requires support but is more accurate in some profiles
+$stem_inset = 0;
+// how many degrees to rotate the stems. useful for sideways keycaps, maybe
+$stem_rotation = 0;
+
 /* Stabilizers */
 
 // array of positions of stabilizers
@@ -92,15 +86,13 @@ $height_slices = 1;
 /* Dish */
 
 // what type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
-$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical]
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
 // how deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
 $dish_depth = 1;
 // how skewed in the x direction the dish is
 $dish_skew_x = 0;
 // how skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-// invert dishing. mostly for spacebar
-$inverted_dish = false;
 // if you need the dish to extend further, you can 'overdraw' the rectangle it will hit
 $dish_overdraw_width = 0;
 // same as width but for height
@@ -108,6 +100,8 @@ $dish_overdraw_height = 0;
 
 /* Misc */
 
+// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+$brim_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances

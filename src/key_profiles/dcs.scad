@@ -30,5 +30,7 @@ module dcs_row(n=1) {
     $total_depth = 6;
     $top_tilt = 16;
     children();
+  } else {
+    children();
   }
 }

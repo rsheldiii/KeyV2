@@ -137,6 +137,8 @@ Prints from this library are still challenging, despite all efforts to the contr
 That's it, if you have any questions feel free to open an issue or leave a comment on thingiverse!
 
 ## TODO:
+ * switch dishing logic from a super large cube to a bounding box intersection
+ * update this documentation!
  * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something, to enable concave extrusions
  * replace current ISO enter shape with one that works for `skin()`
  * generate dishes via math? kind of hard, maybe later

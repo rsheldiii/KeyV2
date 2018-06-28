@@ -135,13 +135,20 @@ module _dish() {
 
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
+// has physical limits, since you can't specify planes in openscad
+// maybe I should make a bounding box cube, difference that with the dish then intersect with the children
 module dished(depth_difference, inverted = false) {
   difference() {
     children();
     top_placement(depth_difference){
       difference(){
         union() {
-          translate([-500, -500]) cube(1000);
+          // this weird math here is so Customizer doesn't see a giant shape and zoom out a million miles. could just be cube(1000)
+          translate([-$key_length * unit, -$key_height * unit]) cube([
+            $key_length*2 * unit,
+            $key_height*2 * unit,
+            50
+          ]);
           if (!inverted) _dish();
         }
         if (inverted) _dish();
@@ -154,7 +161,7 @@ module dished(depth_difference, inverted = false) {
 // more user-friendly than top_placement
 module top_of_key(){
   // if there is a dish, we need to account for how much it digs into the top
-  dish_depth = ($dish_type == "no dish") ? 0 : $dish_depth;
+  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
   // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
   corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
 
@@ -270,19 +277,19 @@ module key(inset = false) {
   }
 
   // both stem and support are optional
-  if ($stem_type || $stabilizer_type) {
+  if ($stem_type != "disable" || $stabilizer_type != "disable") {
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type) stems_for($stabilizers, $stabilizer_type);
-        if ($stem_type) stems_for($stem_positions, $stem_type);
+        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+        if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }
   }
 
-  if ($support_type){
+  if ($support_type != "disable"){
     inside() {
       translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type) support_for($stabilizers, $stabilizer_type);
+        if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
 
         // always render stem support even if there isn't a stem.
         // rendering flat support w/no stem is much more common than a hollow keycap
