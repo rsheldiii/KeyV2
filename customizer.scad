@@ -13,28 +13,27 @@ legend = "";
 
 /* [Basic-Settings] */
 
-// What type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
-
-// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
-$support_type = "flared"; // [flared, bars, flat, disable]
-
 // Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
 
-// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
-$stem_support_type = "disable"; // [brim, tines, disabled]
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3; // Not working in thingiverse customizer atm [0:0.01:1]
 
 // Font size used for text
 $font_size = 6;
 
-// Invert dishing. mostly for spacebar
+// Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
-// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
-$stabilizer_type = "disable"; // [cherry, rounded_cherry, alps, disable]
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
+$stem_support_type = "disable"; // [tines, brim, disabled]
 
 /* [Advanced] */
 
@@ -139,11 +138,14 @@ $legends = [];
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Ternary is ONLY for customizer. it will NOT work if you're using this in
-// OpenSCAD, unless you're using the customizer. you should use stabilized() or
-// Set the variable directly
+// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
+$stabilizer_type = "cherry"; // [cherry, rounded_cherry, alps, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
 // Array of positions of stabilizers
-$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
 
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
@@ -2071,28 +2073,27 @@ module key(inset = false) {
 module example_key(){
 /* [Basic-Settings] */
 
-// What type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
-
-// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
-$support_type = "flared"; // [flared, bars, flat, disable]
-
 // Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
 
-// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
-$stem_support_type = "disable"; // [brim, tines, disabled]
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3; // Not working in thingiverse customizer atm [0:0.01:1]
 
 // Font size used for text
 $font_size = 6;
 
-// Invert dishing. mostly for spacebar
+// Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
-// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
-$stabilizer_type = "disable"; // [cherry, rounded_cherry, alps, disable]
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
+$stem_support_type = "disable"; // [tines, brim, disabled]
 
 /* [Advanced] */
 
@@ -2197,11 +2198,14 @@ $legends = [];
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Ternary is ONLY for customizer. it will NOT work if you're using this in
-// OpenSCAD, unless you're using the customizer. you should use stabilized() or
-// Set the variable directly
+// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
+$stabilizer_type = "cherry"; // [cherry, rounded_cherry, alps, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
 // Array of positions of stabilizers
-$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
 
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
