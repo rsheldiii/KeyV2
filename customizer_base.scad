@@ -20,4 +20,6 @@ include <src/key_transformations.scad>
 
 use <src/key.scad>
 
-key_profile(key_profile, row) legend(legend) key();
+key_profile(key_profile, row) legend(legend) {
+  key();
+}

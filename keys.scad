@@ -15,7 +15,5 @@ include <src/key_transformations.scad>
 
 
 //$has_brim=true;
-sa_row(3) {
-  $stem_slop = 0;
+
    key();
-}

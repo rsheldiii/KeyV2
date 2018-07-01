@@ -121,29 +121,42 @@ module top_placement(depth_difference) {
 
 // just to DRY up the code
 module _dish() {
-  color(purple) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
+
+module envelope(depth_difference) {
+  s = 1.5;
+  hull(){
+    cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
+    top_placement(0.005 + depth_difference){
+      cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
+    }
+  }
+}
+
+module dished_for_show() {
+  difference(){
+    union() {
+      envelope();
+      if ($inverted_dish) top_placement(0) _dish();
+    }
+    if (!$inverted_dish) top_placement(0) _dish();
+  }
+}
+
 
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
-// has physical limits, since you can't specify planes in openscad
-// maybe I should make a bounding box cube, difference that with the dish then intersect with the children
+// creates a bounding box 1.5 times larger in width and height than the keycap.
 module dished(depth_difference, inverted = false) {
-  difference() {
+  intersection() {
     children();
-    top_placement(depth_difference){
-      difference(){
-        union() {
-          // this weird math here is so Customizer doesn't see a giant shape and zoom out a million miles. could just be cube(1000)
-          translate([-$key_length * $unit, -$key_height * $unit]) cube([
-            $key_length*2 * $unit,
-            $key_height*2 * $unit,
-            50
-          ]);
-          if (!inverted) _dish();
-        }
-        if (inverted) _dish();
+    difference(){
+      union() {
+        envelope(depth_difference);
+        if (inverted) top_placement(depth_difference) _dish();
       }
+      if (!inverted) top_placement(depth_difference) _dish();
     }
   }
 }

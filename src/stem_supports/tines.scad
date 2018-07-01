@@ -1,5 +1,5 @@
 include <../functions.scad>
-include <../cherry.scad>
+include <../stems/cherry.scad>
 
 module centered_tines(stem_support_height) {
   translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);

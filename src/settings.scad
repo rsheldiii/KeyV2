@@ -36,7 +36,7 @@ $wall_thickness = 3;
 $corner_radius = 1;
 // width of the very bottom of the key
 $bottom_key_width = 18.16;
-// height (from the front) of the very bottom of the ke
+// height (from the front) of the very bottom of the key
 $bottom_key_height = 18.16;
 // how much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
 $width_difference = 6;
@@ -51,28 +51,17 @@ $top_skew = 1.7;
 
 /* Stem */
 
-// where the stems are in relation to the center of the keycap, in units. default is one in the center
-$stem_positions = [[0,0]];
 // how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
 // diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
-// dimensions of alps stem
-$alps_stem = [4.45, 2.25];
+
 
 // how much higher the stem is than the bottom of the keycap.
 // inset stem requires support but is more accurate in some profiles
 $stem_inset = 0;
 // how many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
-
-/* Stabilizers */
-
-// ternary is ONLY for customizer. it will NOT work if you're using this in
-// openSCAD, unless you're using the customizer. you should use stabilized() or
-// set the variable directly
-// array of positions of stabilizers
-$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
 
 /* Shape */
 
@@ -119,13 +108,30 @@ $minkowski_radius = .33;
 
 /* Features */
 
-//list of legends to place on a key format: [text, halign, valign, size]
-//halign = "left" or "center" or "right"
-//valign = "top" or "center" or "bottom"
-$legends = [];
 //insert locating bump
 $key_bump = false;
 //height of the location bump from the top surface of the key
 $key_bump_depth = 0.5;
 //distance to move the bump from the front edge of the key
 $key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// ternary is ONLY for customizer. it will NOT work if you're using this in
+// openSCAD, unless you're using the customizer. you should use stabilized() or
+// set the variable directly
+// array of positions of stabilizers
+$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
+
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+// shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];

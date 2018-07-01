@@ -14,7 +14,7 @@ legend = "";
 /* [Basic-Settings] */
 
 // what type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
@@ -22,9 +22,8 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 // length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1.0; // range not working in thingiverse customizer atm [1:0.25:16]
 
-// print brim for connector to help with bed adhesion
-$has_brim = false;
-
+// supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
+$stem_support_type = "disable"; // [brim, tines, disabled]
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3; // not working in thingiverse customizer atm [0:0.01:1]
 
@@ -50,7 +49,7 @@ $wall_thickness = 3;
 $corner_radius = 1;
 // width of the very bottom of the key
 $bottom_key_width = 18.16;
-// height (from the front) of the very bottom of the ke
+// height (from the front) of the very bottom of the key
 $bottom_key_height = 18.16;
 // how much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
 $width_difference = 6;
@@ -65,28 +64,17 @@ $top_skew = 1.7;
 
 /* Stem */
 
-// where the stems are in relation to the center of the keycap, in units. default is one in the center
-$stem_positions = [[0,0]];
 // how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
 // diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
-// dimensions of alps stem
-$alps_stem = [4.45, 2.25];
+
 
 // how much higher the stem is than the bottom of the keycap.
 // inset stem requires support but is more accurate in some profiles
 $stem_inset = 0;
 // how many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
-
-/* Stabilizers */
-
-// ternary is ONLY for customizer. it will NOT work if you're using this in
-// openSCAD, unless you're using the customizer. you should use stabilized() or
-// set the variable directly
-// array of positions of stabilizers
-$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
 
 /* Shape */
 
@@ -114,8 +102,10 @@ $dish_overdraw_width = 0;
 $dish_overdraw_height = 0;
 
 /* Misc */
+// there's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
 
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+// how tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
 $stem_support_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
@@ -131,16 +121,33 @@ $minkowski_radius = .33;
 
 /* Features */
 
-//list of legends to place on a key format: [text, halign, valign, size]
-//halign = "left" or "center" or "right"
-//valign = "top" or "center" or "bottom"
-$legends = [];
 //insert locating bump
 $key_bump = false;
 //height of the location bump from the top surface of the key
 $key_bump_depth = 0.5;
 //distance to move the bump from the front edge of the key
 $key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// ternary is ONLY for customizer. it will NOT work if you're using this in
+// openSCAD, unless you're using the customizer. you should use stabilized() or
+// set the variable directly
+// array of positions of stabilizers
+$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
+
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+// shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
 
 // key width functions
 
@@ -473,7 +480,7 @@ module iso_enter() {
   $key_shape_type = "iso_enter";
   $linear_extrude_shape = true;
   $linear_extrude_height_adjustment = 19.05 * 0.5;
-  // (unit_length(1.5) - unit_length(1.25)) / 2
+  // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   $dish_overdraw_width = 2.38125;
 
 
@@ -490,8 +497,14 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
-module brimmed(height = 0.2) {
-  $has_brim = true;
+module brimmed_stem_support(height = 0.4) {
+  $stem_support_type = "brim";
+  $stem_support_height = height;
+  children();
+}
+
+module tined_stem_support(height = 0.4) {
+  $stem_support_type = "tines";
   $stem_support_height = height;
   children();
 }
@@ -532,7 +545,7 @@ module stabilized(mm=12, vertical = false, type="cherry") {
 }
 
 module dishless() {
-  $dish_type = "no dish";
+  $dish_type = "disable";
   children();
 }
 
@@ -547,7 +560,7 @@ module filled() {
 }
 
 module blank() {
-  $stem_type = "blank";
+  $stem_type = "disable";
   children();
 }
 
@@ -566,6 +579,12 @@ module alps(slop) {
 module rounded_cherry(slop) {
   $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "rounded_cherry";
+  children();
+}
+
+module box_cherry(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "box_cherry";
   children();
 }
 
@@ -608,6 +627,31 @@ module one_row_profile(profile, unsculpted = false) {
 }
 
 // files
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
 $fs=.1;
 unit = 19.05;
 
@@ -756,87 +800,264 @@ module key_shape(size, delta, progress = 0) {
     echo("Warning: unsupported $key_shape_type");
   }
 }
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
-function cherry_cross(slop) = [
+function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.9 + slop / 3 + .005],
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
 ];
 
-module cherry_stem(depth, has_brim, slop) {
-  difference(){
-    union() {
-      // outside shape
-      linear_extrude(height = depth) {
-        offset(r=1){
-          square(outer_cherry_stem(slop) - [2,2], center=true);
-        }
-      }
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
 
-      // brim, if applicable
-      if(has_brim) {
-        linear_extrude(height = $stem_support_height){
-          offset(r=1){
-            square(outer_cherry_stem(slop) + [2,2], center=true);
-          }
-        }
-      }
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-0.005]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
     }
+  }
 
-    // inside cross
-    // translation purely for aesthetic purposes, to get rid of that awful lattice
-    translate([0,0,-0.005]) {
-      linear_extrude(height = $stem_throw) {
-        square(cherry_cross(slop)[0], center=true);
-        square(cherry_cross(slop)[1], center=true);
-      }
-      // Guides to assist insertion and mitigate first layer squishing
-      for (i = cherry_cross(slop)) hull() {
-        linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
-        translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
-      }
+  // Guides to assist insertion and mitigate first layer squishing
+  if ($cherry_bevel){
+    for (i = cherry_cross(slop, extra_vertical)) hull() {
+      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
     }
   }
 }
+
+module cherry_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_cross(slop);
+  }
+}
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
-function cherry_cross(slop) = [
+function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
-  // vertical tine. can't really afford much slop
-  [1.25 + slop / 3, 4.9 + slop / 6 + .005],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
 ];
 
-module rounded_cherry_stem(depth, has_brim, slop) {
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-0.005]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+
+  // Guides to assist insertion and mitigate first layer squishing
+  if ($cherry_bevel){
+    for (i = cherry_cross(slop, extra_vertical)) hull() {
+      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+    }
+  }
+}
+
+module cherry_stem(depth, slop) {
   difference(){
-    union(){
-      cylinder(d=$rounded_cherry_stem_d, h=depth);
-      if(has_brim) {
-        cylinder(d=$rounded_cherry_stem_d * 2, h=$stem_support_height);
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_cross(slop);
+  }
+}
+
+module rounded_cherry_stem(depth, slop) {
+  difference(){
+    cylinder(d=$rounded_cherry_stem_d, h=depth);
+
+    // inside cross
+    // translation purely for aesthetic purposes, to get rid of that awful lattice
+    inside_cherry_cross(slop);
+  }
+}
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-0.005]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+
+  // Guides to assist insertion and mitigate first layer squishing
+  if ($cherry_bevel){
+    for (i = cherry_cross(slop, extra_vertical)) hull() {
+      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+    }
+  }
+}
+
+module cherry_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_cross(slop);
+  }
+}
+
+module box_cherry_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_box_cherry_stem(slop) - [2,2], center=true);
       }
     }
 
     // inside cross
-    // translation purely for aesthetic purposes, to get rid of that awful lattice
-    translate([0,0,-0.005]) {
-      linear_extrude(height = $stem_throw) {
-        square(cherry_cross(slop)[0], center=true);
-        square(cherry_cross(slop)[1], center=true);
-      }
-    }
+    inside_cherry_cross(slop);
   }
 }
 module alps_stem(depth, has_brim, slop){
-  if(has_brim) {
-    linear_extrude(height=$stem_support_height) {
-      offset(r=1){
-        square($alps_stem + [2,2], center=true);
-      }
-    }
-  }
   linear_extrude(height=depth) {
     square($alps_stem, center = true);
   }
@@ -848,24 +1069,280 @@ module filled_stem() {
   // cube. shape() works but means that you certainly couldn't render this
   // stem without the presence of the entire library
 
-  shape();
+  shape($wall_thickness);
 }
 
 
 //whole stem, alps or cherry, trimmed to fit
-module stem(stem_type, depth, has_brim, slop){
+module stem(stem_type, depth, slop){
     if (stem_type == "alps") {
-      alps_stem(depth, has_brim, slop);
-    } else if (stem_type == "rounded_cherry") {
-      rounded_cherry_stem(depth, has_brim, slop);
+      alps_stem(depth, slop);
     } else if (stem_type == "cherry") {
-      cherry_stem(depth, has_brim, slop);
+      cherry_stem(depth, slop);
+    } else if (stem_type == "rounded_cherry") {
+      rounded_cherry_stem(depth, slop);
+    } else if (stem_type == "box_cherry") {
+      box_cherry_stem(depth, slop);
     } else if (stem_type == "filled") {
       filled_stem();
     } else if (stem_type == "disable") {
       children();
     } else {
       echo("Warning: unsupported $stem_type");
+    }
+}
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-0.005]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+
+  // Guides to assist insertion and mitigate first layer squishing
+  if ($cherry_bevel){
+    for (i = cherry_cross(slop, extra_vertical)) hull() {
+      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+    }
+  }
+}
+
+module cherry_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_cross(slop);
+  }
+}
+
+module brim_support(stem_type, stem_support_height, slop) {
+  if(stem_type == "alps") {
+    linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($alps_stem + [2,2], center=true);
+      }
+    }
+  } else if (stem_type == "cherry") {
+    difference() {
+      linear_extrude(height = stem_support_height){
+        offset(r=1){
+          square(outer_cherry_stem(slop) + [2,2], center=true);
+        }
+      }
+
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "rounded_cherry") {
+    difference() {
+      cylinder(d=$rounded_cherry_stem_d * 2, h=stem_support_height);
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "box_cherry") {
+    difference() {
+      linear_extrude(height = stem_support_height){
+        offset(r=1){
+          square(outer_box_cherry_stem(slop) + [2,2], center=true);
+        }
+      }
+
+      inside_cherry_cross(slop);
+    }
+  }
+}
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-0.005]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+
+  // Guides to assist insertion and mitigate first layer squishing
+  if ($cherry_bevel){
+    for (i = cherry_cross(slop, extra_vertical)) hull() {
+      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+    }
+  }
+}
+
+module cherry_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_cross(slop);
+  }
+}
+
+module centered_tines(stem_support_height) {
+  translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
+  translate([0,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
+}
+
+module tines_support(stem_type, stem_support_height, slop) {
+  if (stem_type == "cherry") {
+    difference () {
+      union() {
+        translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
+        translate([2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
+        translate([-2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
+      }
+
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "box_cherry") {
+    difference () {
+      centered_tines(stem_support_height);
+
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "rounded_cherry") {
+    difference () {
+      centered_tines(stem_support_height);
+
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "alps"){
+    centered_tines(stem_support_height);
+  }
+}
+
+
+//whole stem, alps or cherry, trimmed to fit
+module stem_support(support_type, stem_type, stem_support_height, slop){
+    if (support_type == "brim") {
+      brim_support(stem_type, stem_support_height, slop);
+    } else if (support_type == "tines") {
+      tines_support(stem_type, stem_support_height, slop);
+    } else if (support_type == "disable") {
+      children();
+    } else {
+      echo("Warning: unsupported $stem_support_type");
     }
 }
 // from https://www.thingiverse.com/thing:1484333
@@ -1084,9 +1561,31 @@ module  dish(width, height, depth, inverted) {
       echo("WARN: $dish_type unsupported");
     }
 }
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
 // cherry stem dimensions
-// don't wanna introduce slop here so $stem_slop it is I guess
-function outer_cherry_stem() = [7.2 - $stem_slop * 2, 5.5 - $stem_slop * 2];
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.15 + slop / 3],
+  // vertical tine
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
 
 // figures out the scale factor needed to make a 45 degree wall
 function scale_for_45(height, starting_size) = (height * 2 + starting_size) / starting_size;
@@ -1104,13 +1603,22 @@ module flared(stem_type, loft, height) {
       linear_extrude(height=height, scale = alps_scale){
         square($alps_stem, center=true);
       }
+    } else if (stem_type == "box_cherry") {
+      // always render cherry if no stem type. this includes stem_type = false!
+      // this avoids a bug where the keycap is rendered filled when not desired
+      cherry_scale = [scale_for_45(height, outer_box_cherry_stem($stem_slop)[0]), scale_for_45(height, outer_box_cherry_stem($stem_slop)[1])];
+      linear_extrude(height=height, scale = cherry_scale){
+        offset(r=1){
+          square(outer_box_cherry_stem($stem_slop) - [2,2], center=true);
+        }
+      }
     } else {
       // always render cherry if no stem type. this includes stem_type = false!
       // this avoids a bug where the keycap is rendered filled when not desired
-      cherry_scale = [scale_for_45(height, outer_cherry_stem()[0]), scale_for_45(height, outer_cherry_stem()[1])];
+      cherry_scale = [scale_for_45(height, outer_cherry_stem($stem_slop)[0]), scale_for_45(height, outer_cherry_stem($stem_slop)[1])];
       linear_extrude(height=height, scale = cherry_scale){
         offset(r=1){
-          square(outer_cherry_stem() - [2,2], center=true);
+          square(outer_cherry_stem($stem_slop) - [2,2], center=true);
         }
       }
     }
@@ -1263,34 +1771,23 @@ module geodesic_sphere(r=-1, d=-1) {
 
 /* [Hidden] */
 $fs = .1;
-unit = 19.05;
-color1 = [.2667,.5882,1];
+$unit = 19.05;
+blue = [.2667,.5882,1];
 color2 = [.5412, .4784, 1];
-color3 = [.4078, .3569, .749];
-color4 = [1, .6941, .2];
+purple = [.4078, .3569, .749];
+yellow = [1, .6941, .2];
 transparent_red = [1,0,0, 0.15];
-
-// derived values. can't be variables if we want them to change when the special variables do
-
-// actual mm key width and height
-function total_key_width(delta = 0) = $bottom_key_width + unit * ($key_length - 1) - delta;
-function total_key_height(delta = 0) = $bottom_key_height + unit * ($key_height - 1) - delta;
-
-// actual mm key width and height at the top
-function top_total_key_width() = $bottom_key_width + (unit * ($key_length - 1)) - $width_difference;
-function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)) - $height_difference;
-
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference){
   dished(depth_difference, $inverted_dish) {
-    color(color1) shape_hull(thickness_difference, depth_difference, 2);
+    color(blue) shape_hull(thickness_difference, depth_difference, 2);
   }
 }
 
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
-  color(color1) minkowski(){
+  color(blue) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
     difference(){
@@ -1383,29 +1880,42 @@ module top_placement(depth_difference) {
 
 // just to DRY up the code
 module _dish() {
-  color(color3) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
+
+module envelope(depth_difference) {
+  s = 1.5;
+  hull(){
+    cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
+    top_placement(0.005 + depth_difference){
+      cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
+    }
+  }
+}
+
+module dished_for_show() {
+  difference(){
+    union() {
+      envelope();
+      if ($inverted_dish) top_placement(0) _dish();
+    }
+    if (!$inverted_dish) top_placement(0) _dish();
+  }
+}
+
 
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
-// has physical limits, since you can't specify planes in openscad
-// maybe I should make a bounding box cube, difference that with the dish then intersect with the children
+// creates a bounding box 1.5 times larger in width and height than the keycap.
 module dished(depth_difference, inverted = false) {
-  difference() {
+  intersection() {
     children();
-    top_placement(depth_difference){
-      difference(){
-        union() {
-          // this weird math here is so Customizer doesn't see a giant shape and zoom out a million miles. could just be cube(1000)
-          translate([-$key_length * unit, -$key_height * unit]) cube([
-            $key_length*2 * unit,
-            $key_height*2 * unit,
-            50
-          ]);
-          if (!inverted) _dish();
-        }
-        if (inverted) _dish();
+    difference(){
+      union() {
+        envelope(depth_difference);
+        if (inverted) top_placement(depth_difference) _dish();
       }
+      if (!inverted) top_placement(depth_difference) _dish();
     }
   }
 }
@@ -1445,13 +1955,16 @@ module keystem_positions(positions) {
 
 module support_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(color4) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
+    color(yellow) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
   }
 }
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(color4) stem(stem_type, $total_depth, $has_brim, $stem_slop);
+    color(yellow) stem(stem_type, $total_depth, $stem_slop);
+    if ($stem_support_type != "disable") {
+      color(color2) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
+    }
   }
 }
 
@@ -1559,7 +2072,7 @@ module example_key(){
 /* [Basic-Settings] */
 
 // what type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
@@ -1567,9 +2080,8 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 // length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1.0; // range not working in thingiverse customizer atm [1:0.25:16]
 
-// print brim for connector to help with bed adhesion
-$has_brim = false;
-
+// supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
+$stem_support_type = "disable"; // [brim, tines, disabled]
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3; // not working in thingiverse customizer atm [0:0.01:1]
 
@@ -1595,7 +2107,7 @@ $wall_thickness = 3;
 $corner_radius = 1;
 // width of the very bottom of the key
 $bottom_key_width = 18.16;
-// height (from the front) of the very bottom of the ke
+// height (from the front) of the very bottom of the key
 $bottom_key_height = 18.16;
 // how much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
 $width_difference = 6;
@@ -1610,28 +2122,17 @@ $top_skew = 1.7;
 
 /* Stem */
 
-// where the stems are in relation to the center of the keycap, in units. default is one in the center
-$stem_positions = [[0,0]];
 // how far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
 // diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
-// dimensions of alps stem
-$alps_stem = [4.45, 2.25];
+
 
 // how much higher the stem is than the bottom of the keycap.
 // inset stem requires support but is more accurate in some profiles
 $stem_inset = 0;
 // how many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
-
-/* Stabilizers */
-
-// ternary is ONLY for customizer. it will NOT work if you're using this in
-// openSCAD, unless you're using the customizer. you should use stabilized() or
-// set the variable directly
-// array of positions of stabilizers
-$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
 
 /* Shape */
 
@@ -1659,8 +2160,10 @@ $dish_overdraw_width = 0;
 $dish_overdraw_height = 0;
 
 /* Misc */
+// there's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
 
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
+// how tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
 $stem_support_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
@@ -1676,18 +2179,37 @@ $minkowski_radius = .33;
 
 /* Features */
 
-//list of legends to place on a key format: [text, halign, valign, size]
-//halign = "left" or "center" or "right"
-//valign = "top" or "center" or "bottom"
-$legends = [];
 //insert locating bump
 $key_bump = false;
 //height of the location bump from the top surface of the key
 $key_bump_depth = 0.5;
 //distance to move the bump from the front edge of the key
 $key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+// dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// ternary is ONLY for customizer. it will NOT work if you're using this in
+// openSCAD, unless you're using the customizer. you should use stabilized() or
+// set the variable directly
+// array of positions of stabilizers
+$stabilizers = $key_length > 5.75 ? [[-50, 0], [50, 0]] : [[-12,0],[12,0]];
+
+// where the stems are in relation to the center of the keycap, in units. default is one in the center
+// shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
   key();
 }
 
 
-key_profile(key_profile, row) legend(legend) key();
+key_profile(key_profile, row) legend(legend) {
+  key();
+}
