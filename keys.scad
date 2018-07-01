@@ -13,16 +13,9 @@ include <src/key_profiles.scad>
 include <src/key_types.scad>
 include <src/key_transformations.scad>
 
-translate_u(0, 0) sa_row(3) stepped_caps_lock() {
-  key();
-}
 
-translate_u(0, 1) sa_row(2) lshift() {
-  $stem_type = false;
-  key();
-}
-
-translate_u(0, 2) sa_row(1) spacebar() alps() {
-  $support_type = false;
-  key();
+//$has_brim=true;
+sa_row(3) {
+  $stem_slop = 0;
+   key();
 }

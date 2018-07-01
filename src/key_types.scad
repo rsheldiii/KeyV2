@@ -47,7 +47,7 @@ module iso_enter() {
   $key_shape_type = "iso_enter";
   $linear_extrude_shape = true;
   $linear_extrude_height_adjustment = 19.05 * 0.5;
-  // (unit_length(1.5) - unit_length(1.25)) / 2
+  // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   $dish_overdraw_width = 2.38125;
 
 

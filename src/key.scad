@@ -1,6 +1,8 @@
 // files
+include <functions.scad>
 include <shapes.scad>
 include <stems.scad>
+include <stem_supports.scad>
 include <dishes.scad>
 include <supports.scad>
 include <key_features.scad>
@@ -10,34 +12,23 @@ include <libraries/geodesic_sphere.scad>
 
 /* [Hidden] */
 $fs = .1;
-unit = 19.05;
-color1 = [.2667,.5882,1];
+$unit = 19.05;
+blue = [.2667,.5882,1];
 color2 = [.5412, .4784, 1];
-color3 = [.4078, .3569, .749];
-color4 = [1, .6941, .2];
+purple = [.4078, .3569, .749];
+yellow = [1, .6941, .2];
 transparent_red = [1,0,0, 0.15];
-
-// derived values. can't be variables if we want them to change when the special variables do
-
-// actual mm key width and height
-function total_key_width(delta = 0) = $bottom_key_width + unit * ($key_length - 1) - delta;
-function total_key_height(delta = 0) = $bottom_key_height + unit * ($key_height - 1) - delta;
-
-// actual mm key width and height at the top
-function top_total_key_width() = $bottom_key_width + (unit * ($key_length - 1)) - $width_difference;
-function top_total_key_height() = $bottom_key_height + (unit * ($key_height - 1)) - $height_difference;
-
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference){
   dished(depth_difference, $inverted_dish) {
-    color(color1) shape_hull(thickness_difference, depth_difference, 2);
+    color(blue) shape_hull(thickness_difference, depth_difference, 2);
   }
 }
 
 // shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
 module rounded_shape() {
-  color(color1) minkowski(){
+  color(blue) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
     difference(){
@@ -130,7 +121,7 @@ module top_placement(depth_difference) {
 
 // just to DRY up the code
 module _dish() {
-  color(color3) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  color(purple) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
 // for when you want to take the dish out of things
@@ -144,9 +135,9 @@ module dished(depth_difference, inverted = false) {
       difference(){
         union() {
           // this weird math here is so Customizer doesn't see a giant shape and zoom out a million miles. could just be cube(1000)
-          translate([-$key_length * unit, -$key_height * unit]) cube([
-            $key_length*2 * unit,
-            $key_height*2 * unit,
+          translate([-$key_length * $unit, -$key_height * $unit]) cube([
+            $key_length*2 * $unit,
+            $key_height*2 * $unit,
             50
           ]);
           if (!inverted) _dish();
@@ -192,13 +183,16 @@ module keystem_positions(positions) {
 
 module support_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(color4) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
+    color(yellow) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
   }
 }
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(color4) stem(stem_type, $total_depth, $has_brim, $stem_slop);
+    color(yellow) stem(stem_type, $total_depth, $stem_slop);
+    if ($stem_support_type != "disable") {
+      color(color2) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
+    }
   }
 }
 

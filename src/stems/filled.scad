@@ -5,5 +5,5 @@ module filled_stem() {
   // cube. shape() works but means that you certainly couldn't render this
   // stem without the presence of the entire library
 
-  shape();
+  shape($wall_thickness);
 }

@@ -116,7 +116,7 @@ $dish_overdraw_height = 0;
 /* Misc */
 
 // how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
+$stem_support_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances
@@ -492,7 +492,7 @@ module translate_u(x=0, y=0, z=0){
 
 module brimmed(height = 0.2) {
   $has_brim = true;
-  $brim_height = height;
+  $stem_support_height = height;
   children();
 }
 
@@ -779,7 +779,7 @@ module cherry_stem(depth, has_brim, slop) {
 
       // brim, if applicable
       if(has_brim) {
-        linear_extrude(height = $brim_height){
+        linear_extrude(height = $stem_support_height){
           offset(r=1){
             square(outer_cherry_stem(slop) + [2,2], center=true);
           }
@@ -815,7 +815,7 @@ module rounded_cherry_stem(depth, has_brim, slop) {
     union(){
       cylinder(d=$rounded_cherry_stem_d, h=depth);
       if(has_brim) {
-        cylinder(d=$rounded_cherry_stem_d * 2, h=$brim_height);
+        cylinder(d=$rounded_cherry_stem_d * 2, h=$stem_support_height);
       }
     }
 
@@ -831,7 +831,7 @@ module rounded_cherry_stem(depth, has_brim, slop) {
 }
 module alps_stem(depth, has_brim, slop){
   if(has_brim) {
-    linear_extrude(height=$brim_height) {
+    linear_extrude(height=$stem_support_height) {
       offset(r=1){
         square($alps_stem + [2,2], center=true);
       }
@@ -1661,7 +1661,7 @@ $dish_overdraw_height = 0;
 /* Misc */
 
 // how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
+$stem_support_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances

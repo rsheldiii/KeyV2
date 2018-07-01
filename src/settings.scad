@@ -1,7 +1,7 @@
 /* [Basic-Settings] */
 
 // what type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, filled, disable]
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
@@ -9,9 +9,8 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 // length in units of key. A regular key is 1 unit; spacebar is usually 6.25
 $key_length = 1.0; // range not working in thingiverse customizer atm [1:0.25:16]
 
-// print brim for connector to help with bed adhesion
-$has_brim = false;
-
+// supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
+$stem_support_type = "disable"; // [brim, tines, disabled]
 // the stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 $stem_slop = 0.3; // not working in thingiverse customizer atm [0:0.01:1]
 
@@ -101,9 +100,11 @@ $dish_overdraw_width = 0;
 $dish_overdraw_height = 0;
 
 /* Misc */
+// there's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
 
-// how tall in mm the brim is, if there is one. brim sits around the keystem and helps to secure it while printing.
-$brim_height = 0.4;
+// how tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = 0.4;
 // font used for text
 $font="DejaVu Sans Mono:style=Book";
 // whether or not to render fake keyswitches to check clearances
