@@ -13,12 +13,4 @@ include <src/key_profiles.scad>
 include <src/key_types.scad>
 include <src/key_transformations.scad>
 
-
-//$has_brim=true;
-
-$inverted_dish = true;
-$key_length = 6;
- dcs_row(3) {
-     $dish_type =  "sideways cylindrical";
-     key();
- }
+key();
