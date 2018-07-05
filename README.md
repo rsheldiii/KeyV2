@@ -8,21 +8,25 @@ Relevant links:
 
 ## How to run
 
+#### Thingiverse Customizer
+
+The easiest (though not the best) way to run this program is to boot it up in Thingiverse Customizer: https://www.thingiverse.com/apps/customizer/run?thing_id=2783650 Explanations of each option are provided, as well as some default variables. Twiddle the variables to see how the keycap changes!
+
+#### OpenSCAD Customizer
+
+If you find that the Thingiverse Customizer is timing out, but you're not technically inclined enough to start programming in OpenSCAD, you can look into [getting OpenSCAD's customizer working](https://github.com/rsheldiii/KeyV2/wiki/Getting-the-OpenSCAD-Customizer-working).
+
+#### OpenSCAD Proper
+
 To run this project, you will need openSCAD. you can download it here: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they are much further along than the current stable release (as of writing, 2015.03-3). However, this library has been tested down to 2015.03-3 and works well.
 
 After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the code should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set!
 
-#### Development considerations
-
-While developing can be done wholly in openSCAD (and is a great place to start if you just want to play around with the library), if you're used to more featureful editors and are doing a lot of changes, you might want to look into other alternatives.
-
-OpenSCAD has a watch mode, 'Automatic Reload and Preview', in the Design menu. With this enabled, OpenSCAD will watch for changes to the file and re-load the preview (F5) automatically. This allows you to minimize the code panel and use your own editor.
-
-If you want to forego OpenSCAD (almost) altogether, I've rigged up a gulpfile to run openscad on any changed `.scad` files at the base level of this folder, exporting their rendered object to `{filename}.scad.stl`. With this, you can skip using OpenSCAD entirely by setting up an STL viewer to watch the output file. I use [fstl](https://github.com/mkeeter/fstl) which required me to [coment out these lines](https://github.com/mkeeter/fstl/blob/master/src/window.cpp#L123-L126) before building to get rid of an error message that would pop up on load. For some reason the gulp task never renders the first time, so if that happens to you just save again and it should work fine.
+All examples below assume you are running the library this way.
 
 ## Let's Go! I wanna make a keycap!
 
-At the highest level this library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, and (some form of) OEM keycaps. `keys.scad` is meant as an entry point for everything but the most technical use; there should already be an example at the bottom to get you started! Pre-programmed key profiles can be found at the `key_profiles` directory.
+At the highest level this library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, G20 and (some form of) OEM keycaps. `keys.scad` is meant as an entry point for everything but the most technical use. Pre-programmed key profiles can be found at the `key_profiles` directory.
 
 Every key starts with defaults that are overridden by each function call. The simplest cherry key you can make would be:
 
@@ -79,6 +83,8 @@ At the base level this library should function well as a key profile design libr
 Now we're talkin!
 
 This library should be abstract enough to handle new dish types, keystems, and key shapes, in case you want to design your own Typewriter-style keycaps, support buckling spring keyboards or design some kind of triangular dished profile. `src/shapes.scad` `src/stems.scad` and `src/dishes.scad` all have a 'selector' module that should allow you to implement your own creations alongside what already exists in their constituent folders.
+
+If you're interested in this, it may help to read the [Technical Design of a keycap](https://github.com/rsheldiii/KeyV2/wiki/Technical-Design-of-a-Keycap) wiki page.
 
 Here's an example of tweaking the settings and code to make a 'stop sign' key profile:
 
@@ -137,8 +143,6 @@ Prints from this library are still challenging, despite all efforts to the contr
 That's it, if you have any questions feel free to open an issue or leave a comment on thingiverse!
 
 ## TODO:
- * switch dishing logic from a super large cube to a bounding box intersection
- * update this documentation!
  * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something, to enable concave extrusions
  * replace current ISO enter shape with one that works for `skin()`
- * generate dishes via math? kind of hard, maybe later
+ * generate dishes via math?
