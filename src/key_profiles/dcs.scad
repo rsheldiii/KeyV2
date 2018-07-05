@@ -1,4 +1,4 @@
-module dcs_row(n=1) {
+module dcs_row(n=3) {
   // names, so I don't go crazy
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
