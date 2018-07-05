@@ -16,4 +16,9 @@ include <src/key_transformations.scad>
 
 //$has_brim=true;
 
-   key();
+$inverted_dish = true;
+$key_length = 6;
+ dcs_row(3) {
+     $dish_type =  "sideways cylindrical";
+     key();
+ }

@@ -617,14 +617,10 @@ module bump(depth=undef) {
     children();
 }
 
-module one_single_key(profile, row, unsculpted) {
-   key_profile(profile, unsculpted ? 3 : row) key();
-}
-
-module one_row_profile(profile, unsculpted = false) {
+module row_profile(profile, unsculpted = false) {
   rows = [5, 1, 2, 3, 4];
   for(row = [0:len(rows)-1]) {
-    translate_u(0, -row) one_single_key(profile, rows[row], unsculpted);
+    translate_u(0, -row) key_profile(profile, unsculpted ? 3 : rows[row]);
   }
 }
 
