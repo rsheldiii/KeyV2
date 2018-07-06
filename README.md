@@ -1,5 +1,7 @@
 # Parametric Mechanical Keycap Library
 
+![Welcome!](assets/welcome.png)
+
 This library is a keycap and keyset construction library for mechanical keyboards, written in openSCAD.
 
 Relevant links:
