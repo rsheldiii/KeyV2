@@ -12,7 +12,7 @@ Relevant links:
 
 #### Thingiverse Customizer
 
-The easiest (though not the best) way to run this program is to boot it up in Thingiverse Customizer: https://www.thingiverse.com/apps/customizer/run?thing_id=2783650 Explanations of each option are provided, as well as some default variables. Twiddle the variables to see how the keycap changes!
+The easiest (though not the best) way to run this program is to boot it up in [Thingiverse's Customizer](https://www.thingiverse.com/apps/customizer/run?thing_id=2783650). Explanations of each option are provided, as well as some default variables. Twiddle the variables to see how the keycap changes!
 
 #### OpenSCAD Customizer
 
