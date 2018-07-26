@@ -49,7 +49,9 @@ sa_row(2) 2u() cherry() key();
 
 ## What if I want to customize my keycaps?
 
-There is a bevy of supporting functions to customize your keycaps. You can add a brim to more easily print the stem, switch up the stem support type, make 2x2 keycaps for a POS system, add legends, rotate stems, and more. These functions can be found in `key_profiles/`, `key_sizes.scad`, `key_transformations.scad`, and `key_types.scad` currently, and can be referenced directly in `keys.scad`.
+There is a bevy of supporting functions to customize your keycaps. You can add a brim to more easily print the stem, switch up the stem support type, make 2x2 keycaps for a POS system, add legends, rotate stems, and more. These functions can be found in `key_profiles/`, `key_sizes.scad`, `key_transformations.scad`, and `key_types.scad` currently, and can be referenced directly in `keys.scad`. For a full list of helper functions with explanations, [Check out the wiki!](https://github.com/rsheldiii/KeyV2/wiki/KeyV2-Helper-Documentation)
+
+#### Example customizations
 
 If you wanted to generate some 2u stabilized keycaps for an Ergodox for instance, you could do something like this:
 
@@ -78,9 +80,9 @@ Artisan support also supports _subtracting_ children by doing `key(inset=true) {
 
 ## What if I want to get _really_ technical?
 
-At the base level this library should function well as a key profile design library. by loading up `src/key.scad` (notice no s) you can tweak variables in `src/settings.scad` to prototype your own profiles. There are currently 44 different settings to tweak in `src/settings.scad` including width height and depth of the keycap, dish tilt, top skew, fonts, wall thickness, etc.
+At the base level this library should function well as a key profile design library. by loading up `src/key.scad` (notice no s) you can tweak variables in `src/settings.scad` to prototype your own profiles. There are currently 44 different settings to tweak in `src/settings.scad` including width height and depth of the keycap, dish tilt, top skew, fonts, wall thickness, etc. If you want to see the full list of settings, feel free to browse the file itself: https://github.com/rsheldiii/KeyV2/blob/master/src/settings.scad it has lots of comments to help you get started.
 
-### What if I want to get even more technical than that?
+### What if I want to get _even_ more technical than that?
 
 Now we're talkin!
 
@@ -88,7 +90,7 @@ This library should be abstract enough to handle new dish types, keystems, and k
 
 If you're interested in this, it may help to read the [Technical Design of a keycap](https://github.com/rsheldiii/KeyV2/wiki/Technical-Design-of-a-Keycap) wiki page.
 
-Here's an example of tweaking the settings and code to make a 'stop sign' key profile:
+Here's an example of tweaking the settings and code to make a 'stoinstancep sign' key profile:
 
 In `key_shape()` in `shapes.scad`:
 
