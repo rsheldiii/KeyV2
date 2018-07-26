@@ -6,7 +6,8 @@ module g20_row(n=3) {
   $top_tilt = 2.5;
   $top_skew = 0.75;
   $dish_type = "disable";
-  $dish_depth = 0;
+  // something weird is going on with this and legends - can't put it below 1.2 or they won't show
+  $dish_depth = 1.2;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $minkowski_radius = 1.75;

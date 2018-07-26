@@ -238,8 +238,10 @@ module clearance_check() {
 module artisan(depth) {
   top_of_key() {
     // outset legend
-    for (i=[0:len($legends)-1]) {
+    if (len($legends) > 0) {
+      for (i=[0:len($legends)-1]) {
         keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+      }
     }
     // artisan objects / outset shape legends
     children();

@@ -32,8 +32,8 @@ $inverted_dish = false;
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
-// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
-$stem_support_type = "disable"; // [tines, brim, disabled]
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
 
 /* [Advanced] */
 
@@ -224,7 +224,7 @@ module 6_25uh() {
 
 // unlike the other files with their own dedicated folders, this one doesn't
 // need a selector. I wrote one anyways for customizer support though
-module dcs_row(n=1) {
+module dcs_row(n=3) {
   // names, so I don't go crazy
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
@@ -260,7 +260,7 @@ module dcs_row(n=1) {
     children();
   }
 }
-module oem_row(n=1) {
+module oem_row(n=3) {
   $bottom_key_width = 18.05;
   $bottom_key_height = 18.05;
   $width_difference = 5.8;
@@ -334,7 +334,7 @@ module dsa_row(n=3) {
     children();
   }
 }
-module sa_row(n=1) {
+module sa_row(n=3) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.4;
   $bottom_key_height = 18.4;
@@ -381,7 +381,8 @@ module g20_row(n=3) {
   $top_tilt = 2.5;
   $top_skew = 0.75;
   $dish_type = "disable";
-  $dish_depth = 0;
+  // something weird is going on with this and legends - can't put it below 1.2 or they won't show
+  $dish_depth = 1.2;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $minkowski_radius = 1.75;
@@ -616,11 +617,35 @@ module bump(depth=undef) {
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;
     children();
 }
+module arrows(profile, rows = [4,4,4,3]) {
+  positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
+  legends = ["←", "↓", "→", "↑"];
+
+  for (i = [0:3]) {
+    translate_u(positions[i].x, positions[i].y) key_profile(profile, rows[i]) legend(legends[i]) cherry() key(true);
+  }
+}
+
+module f_cluster(profile, row=5) {
+  legends = ["F1", "F2", "F3", "F4"];
+  for (i =[0:len(legends)-1]) {
+    translate_u(i) key_profile(profile, row) cherry() legend(legends[i]) key(true);
+  }
+}
+
+module wasd(profile, rows = [2,2,2,1]) {
+  positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
+  legends = ["A", "S", "D", "W"];
+
+  for (i = [0:3]) {
+    translate_u(positions[i].x, positions[i].y) key_profile(profile, rows[i]) legend(legends[i]) cherry() key(true);
+  }
+}
 
 module row_profile(profile, unsculpted = false) {
   rows = [5, 1, 2, 3, 4];
   for(row = [0:len(rows)-1]) {
-    translate_u(0, -row) key_profile(profile, unsculpted ? 3 : rows[row]);
+    translate_u(0, -row) key_profile(profile, unsculpted ? 3 : rows[row]) children();
   }
 }
 
@@ -739,10 +764,12 @@ module side_rounded_square(size, r) {
     sh = ih / resolution;
     sw = iw / resolution;
     union() {
+      if (sr > 0) {
         translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution);
         translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution);
         translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution);
         translate([0, ih/2]) scale([sw, sr]) circle(d = resolution);
+      }
         square([iw, ih], center=true);
     }
 }
@@ -1306,7 +1333,7 @@ module tines_support(stem_type, stem_support_height, slop) {
   if (stem_type == "cherry") {
     difference () {
       union() {
-        translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
+        if ($key_length < 2) translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
         translate([2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
         translate([-2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
       }
@@ -1995,8 +2022,10 @@ module clearance_check() {
 module artisan(depth) {
   top_of_key() {
     // outset legend
-    for (i=[0:len($legends)-1]) {
+    if (len($legends) > 0) {
+      for (i=[0:len($legends)-1]) {
         keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+      }
     }
     // artisan objects / outset shape legends
     children();
@@ -2088,8 +2117,8 @@ $inverted_dish = false;
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
-// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
-$stem_support_type = "disable"; // [tines, brim, disabled]
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
 
 /* [Advanced] */
 

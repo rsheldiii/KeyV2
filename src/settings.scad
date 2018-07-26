@@ -19,8 +19,8 @@ $inverted_dish = false;
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
-// Supports for the stem, as it often comes off during printing. disabled by default, but highly reccommended.
-$stem_support_type = "disable"; // [tines, brim, disabled]
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
 
 /* [Advanced] */
 

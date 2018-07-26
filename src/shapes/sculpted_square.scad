@@ -50,10 +50,12 @@ module side_rounded_square(size, r) {
     sh = ih / resolution;
     sw = iw / resolution;
     union() {
+      if (sr > 0) {
         translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution);
         translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution);
         translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution);
         translate([0, ih/2]) scale([sw, sr]) circle(d = resolution);
+      }
         square([iw, ih], center=true);
     }
 }

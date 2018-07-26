@@ -124,10 +124,3 @@ module bump(depth=undef) {
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;
     children();
 }
-
-module row_profile(profile, unsculpted = false) {
-  rows = [5, 1, 2, 3, 4];
-  for(row = [0:len(rows)-1]) {
-    translate_u(0, -row) key_profile(profile, unsculpted ? 3 : rows[row]) children();
-  }
-}

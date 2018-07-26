@@ -1,8 +1,8 @@
 require './openscad.rb'
 require 'tempfile'
 
-ROWS = [5,1,2,3,4].freeze
-SIZES = [1].freeze # , 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25
+ROWS = [5,1,2,3,4].freeze # [5,1,2,3,4]
+SIZES = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25].freeze
 PROFILES = ['dcs', 'dsa', 'g20', 'oem', 'sa'].freeze
 
 # can't get include statements to work dynamically so we'll just use a file
