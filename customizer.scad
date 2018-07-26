@@ -620,7 +620,7 @@ module bump(depth=undef) {
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
   /* doesn't work in thingiverse customize lol */
-  /* legends = ["←", "↓", "→", "↑"]; */
+  /* legends = [UNICODE WUZ HERE]; */
 
   for (i = [0:3]) {
     translate_u(positions[i].x, positions[i].y) key_profile(profile, rows[i]) legend(legends[i]) cherry() key(true);
