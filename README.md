@@ -5,7 +5,7 @@
 This library is a keycap and keyset construction library for mechanical keyboards, written in openSCAD.
 
 Relevant links:
-* Thingiverse: https://www.thingiverse.com/thing:468651
+* Thingiverse: https://www.thingiverse.com/thing:2783650
 * Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
 
 ## How to run
@@ -20,13 +20,13 @@ If you find that the Thingiverse Customizer is timing out, but you're not techni
 
 #### OpenSCAD Proper
 
-To run this project, you will need openSCAD. you can download it here: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they are much further along than the current stable release (as of writing, 2015.03-3). However, this library has been tested down to 2015.03-3 and works well.
+First, you'll need OpenSCAD: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they are much further along than the current stable release (as of writing, 2015.03-3).
 
-After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the code should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set!
+After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the code should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set! It is possible to edit this project with an external editor by checking off Design => Automatic Reload and Preview in OpenSCAD.
 
-All examples below assume you are running the library this way.
+All examples below assume you are running the library on your computer with OpenSCAD.
 
-## Let's Go! I wanna make a keycap!
+## Let's Go! I wanna make a custom keycap!
 
 At the highest level this library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, G20 and (some form of) OEM keycaps. `keys.scad` is meant as an entry point for everything but the most technical use. Pre-programmed key profiles can be found at the `key_profiles` directory.
 
