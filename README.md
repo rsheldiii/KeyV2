@@ -58,7 +58,7 @@ If you wanted to generate some 2u stabilized keycaps for an Ergodox for instance
 ```
 legends = ["Enter", "Escape", "Tab", "Shift"];
 for(y=[0:3]) {
-  translate_u(0,y) 2u() dsa_row() stabilized() cherry() key(legends[y], inset=true);
+  translate_u(0,y) 2u() dsa_row() stabilized() cherry() key(inset=true) { keytext(legends[y], [0,0], 6); }
 }
 ```
 
