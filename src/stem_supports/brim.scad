@@ -41,7 +41,7 @@ module brim_support(stem_type, stem_support_height, slop) {
         }
       }
 
-      rotate(90) inside_cherry_cross(slop);
+      inside_cherry_cross(slop);
     }
   }
 }

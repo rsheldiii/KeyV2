@@ -125,7 +125,7 @@ $legends = [];
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Enable stabilizers. Stabilizers use their own special
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in

@@ -13,11 +13,6 @@ module inside_cherry_stabilizer_cross(slop) {
       square(cherry_cross(slop, extra_vertical)[1], center=true);
     }
   }
-
-  // Guides to assist insertion and mitigate first layer squishing
-  if ($cherry_bevel){
-
-  }
 }
 
 module cherry_stabilizer_stem(depth, slop) {
@@ -29,6 +24,6 @@ module cherry_stabilizer_stem(depth, slop) {
       }
     }
 
-    rotate(90) inside_cherry_stabilizer_cross(slop);
+    inside_cherry_stabilizer_cross(slop);
   }
 }

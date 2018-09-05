@@ -3,7 +3,7 @@ include <stems/rounded_cherry.scad>
 include <stems/box_cherry.scad>
 include <stems/alps.scad>
 include <stems/filled.scad>
-include <stems/stabilizer.scad>
+include <stems/cherry_stabilizer.scad>
 
 
 //whole stem, alps or cherry, trimmed to fit

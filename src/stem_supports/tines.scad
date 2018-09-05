@@ -25,7 +25,7 @@ module tines_support(stem_type, stem_support_height, slop) {
         translate([-1.15,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
       }
 
-      rotate(90) inside_cherry_cross(slop);
+      inside_cherry_stabilizer_cross(slop);
     }
   } else if (stem_type == "box_cherry") {
     difference () {
