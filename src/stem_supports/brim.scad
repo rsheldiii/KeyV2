@@ -8,7 +8,7 @@ module brim_support(stem_type, stem_support_height, slop) {
         square($alps_stem + [2,2], center=true);
       }
     }
-  } else if (stem_type == "cherry") {
+  } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
     difference() {
       linear_extrude(height = stem_support_height){
         offset(r=1){
@@ -28,6 +28,16 @@ module brim_support(stem_type, stem_support_height, slop) {
       linear_extrude(height = stem_support_height){
         offset(r=1){
           square(outer_box_cherry_stem(slop) + [2,2], center=true);
+        }
+      }
+
+      inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "cherry_stabilizer") {
+    difference() {
+      linear_extrude(height = stem_support_height){
+        offset(r=1){
+          square(outer_cherry_stabilizer_stem(slop) + [2,2], center=true);
         }
       }
 
