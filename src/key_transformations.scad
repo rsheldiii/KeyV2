@@ -34,9 +34,10 @@ module rotated() {
   children();
 }
 
-module stabilized(mm=12, vertical = false, type="cherry") {
+module stabilized(mm=12, vertical = false, type=undef) {
   if (vertical) {
-    $stabilizer_type = type;
+    $stabilizer_type = type ? type : $stabilizer_type ? $stabilizer_type : "costar_stabilizer";
+    echo($stabilizer_type);
     $stabilizers = [
     [0,  mm],
     [0, -mm]
@@ -44,7 +45,10 @@ module stabilized(mm=12, vertical = false, type="cherry") {
 
     children();
   } else {
-    $stabilizer_type = type;
+    echo($stabilizer_type);
+    $stabilizer_type = type ? type : $stabilizer_type ? $stabilizer_type : "costar_stabilizer";
+    echo($stabilizer_type);
+
     $stabilizers = [
       [mm,  0],
       [-mm, 0]

@@ -5,6 +5,9 @@
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 

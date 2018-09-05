@@ -92,7 +92,7 @@ $dish_overdraw_height = 0;
 $cherry_bevel = true;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
-$stem_support_height = 0.4;
+$stem_support_height = .8;
 // Font used for text
 $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
@@ -125,8 +125,8 @@ $legends = [];
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
-$stabilizer_type = "cherry"; // [cherry, rounded_cherry, alps, disable]
+// Enable stabilizers. Stabilizers use their own special
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
