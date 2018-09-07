@@ -19,6 +19,11 @@ module tined_stem_support(height = 0.4) {
   children();
 }
 
+module unsupported_stem() {
+  $stem_support_type = "disable";
+  children();
+}
+
 module rounded() {
   $rounded_key = true;
   children();
