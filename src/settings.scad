@@ -125,6 +125,9 @@ $legends = [];
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
