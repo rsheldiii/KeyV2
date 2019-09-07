@@ -178,6 +178,9 @@ $inset_legend_depth = 0.2;
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
@@ -858,6 +861,12 @@ module box_cherry(slop) {
   children();
 }
 
+module choc(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "choc";
+  children();
+}
+
 module flared_support() {
   $support_type = "flared";
   children();
@@ -924,6 +933,14 @@ module debug() {
   $quaternary_color = [0.5,0.5,0.5,0.2];
 
   %children();
+}
+
+module low_profile() {
+  /* $total_depth = 5.35; */
+  /* extra ugly hack right now to make sure we don't generate keycaps with insufficient throw */
+  /* $total_depth = ($total_depth / 2) < 6 ? 6 : $total_depth / 2; */
+  $stem_throw = 3;
+  children();
 }
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
@@ -2078,6 +2095,12 @@ module cherry_stabilizer_stem(depth, slop) {
     inside_cherry_stabilizer_cross(slop);
   }
 }
+module choc_stem(depth, slop){
+  echo("slop");
+  echo(slop);
+  translate([-5.7/2, 0, depth/2]) cube([1.2 - slop/2, 3 - slop/2, depth], center=true);
+  translate([5.7/2, 0, depth/2]) cube([1.2 - slop/2, 3 - slop/2, depth], center=true);
+}
 
 
 //whole stem, alps or cherry, trimmed to fit
@@ -2094,6 +2117,8 @@ module stem(stem_type, depth, slop){
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
       cherry_stabilizer_stem(depth, slop);
+    } else if (stem_type == "choc") {
+      choc_stem(depth, slop);
     } else if (stem_type == "disable") {
       children();
     } else {
@@ -2321,6 +2346,18 @@ module brim_support(stem_type, stem_support_height, slop) {
       }
 
       inside_cherry_cross(slop);
+    }
+  } else if(stem_type == "choc") {
+    translate([-5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
+    }
+
+    translate([5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
     }
   }
 }
@@ -2579,6 +2616,10 @@ module tines_support(stem_type, stem_support_height, slop) {
     }
   } else if (stem_type == "alps"){
     centered_tines(stem_support_height);
+  } else if (stem_type == "choc"){
+    if ($key_length < 2) translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness)+$wall_thickness/4, 0.5, $stem_support_height], center = true);
+    /* translate([-5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height($wall_thickness), $stem_support_height], center = true); */
+    /* translate([5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height($wall_thickness), $stem_support_height], center = true); */
   }
 }
 
@@ -2931,6 +2972,15 @@ module flared(stem_type, loft, height) {
         offset(r=1){
           square(outer_cherry_stabilizer_stem($stem_slop) - [2,2], center=true);
         }
+      }
+    } else if (stem_type == "choc") {
+      alps_scale = [scale_for_45(height, $choc_stem[0]), scale_for_45(height, $choc_stem[1])];
+      translate([-5.7/2,0,0]) linear_extrude(height=height, scale = alps_scale){
+        square($choc_stem - [$stem_slop/2, $stem_slop/2], center=true);
+      }
+
+      translate([5.7/2,0,0]) linear_extrude(height=height, scale = alps_scale){
+        square($choc_stem - [$stem_slop/2, $stem_slop/2], center=true);
       }
     } else {
       // always render cherry if no stem type. this includes stem_type = false!
@@ -4472,6 +4522,9 @@ $inset_legend_depth = 0.2;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
 
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]

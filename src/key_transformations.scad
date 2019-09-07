@@ -109,6 +109,12 @@ module box_cherry(slop) {
   children();
 }
 
+module choc(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "choc";
+  children();
+}
+
 module flared_support() {
   $support_type = "flared";
   children();
@@ -175,4 +181,12 @@ module debug() {
   $quaternary_color = [0.5,0.5,0.5,0.2];
 
   %children();
+}
+
+module low_profile() {
+  /* $total_depth = 5.35; */
+  /* extra ugly hack right now to make sure we don't generate keycaps with insufficient throw */
+  /* $total_depth = ($total_depth / 2) < 6 ? 6 : $total_depth / 2; */
+  $stem_throw = 3;
+  children();
 }
