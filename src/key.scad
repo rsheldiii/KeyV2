@@ -11,6 +11,7 @@ include <libraries/geodesic_sphere.scad>
 
 
 /* [Hidden] */
+SMALLEST_POSSIBLE = 1/128;
 $fs = .1;
 $unit = 19.05;
 blue = [.2667,.5882,1];
@@ -22,7 +23,7 @@ transparent_red = [1,0,0, 0.15];
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference){
   dished(depth_difference, $inverted_dish) {
-    color(blue) shape_hull(thickness_difference, depth_difference, 2);
+    color(blue) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
   }
 }
 
@@ -87,7 +88,7 @@ module shape_slice(progress, thickness_difference, depth_difference) {
 
   translate([0, skew_this_slice, depth_this_slice]) {
     rotate([tilt_this_slice,0,0]){
-      linear_extrude(height = 0.001){
+      linear_extrude(height = SMALLEST_POSSIBLE){
         key_shape(
           [
             total_key_width(thickness_difference),
@@ -128,7 +129,7 @@ module envelope(depth_difference) {
   s = 1.5;
   hull(){
     cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
-    top_placement(0.005 + depth_difference){
+    top_placement(SMALLEST_POSSIBLE + depth_difference){
       cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
     }
   }
@@ -257,7 +258,7 @@ module keytop() {
       shape(0, 0);
     }
     // translation purely for aesthetic purposes, to get rid of that awful lattice
-    translate([0,0,-0.005]) {
+    translate([0,0,-SMALLEST_POSSIBLE]) {
       shape($wall_thickness, $keytop_thickness);
     }
   }
@@ -289,7 +290,7 @@ module key(inset = false) {
   if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+        /* if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type); */
         if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }

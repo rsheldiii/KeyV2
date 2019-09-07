@@ -14,4 +14,7 @@ include <src/key_types.scad>
 include <src/key_transformations.scad>
 include <src/key_helpers.scad>
 
-key();
+sa_row(3) u(3) stabilized() {
+  /* %envelope(0); */
+  key();
+}

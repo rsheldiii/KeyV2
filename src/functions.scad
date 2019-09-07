@@ -1,3 +1,5 @@
+include <constants.scad>
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -16,7 +18,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
   [4.03 + slop, 1.15 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height

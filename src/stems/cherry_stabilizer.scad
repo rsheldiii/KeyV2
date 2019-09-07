@@ -7,7 +7,7 @@ extra_vertical = 0.6;
 module inside_cherry_stabilizer_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
