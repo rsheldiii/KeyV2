@@ -35,11 +35,12 @@ module flared(stem_type, loft, height) {
     } else if (stem_type == "choc") {
       alps_scale = [scale_for_45(height, $choc_stem[0]), scale_for_45(height, $choc_stem[1])];
       translate([-5.7/2,0,0]) linear_extrude(height=height, scale = alps_scale){
-        square($choc_stem - [$stem_slop/2, $stem_slop/2], center=true);
+        // TODO make a choc_stem() function so it can build in the slop
+        square($choc_stem - [$stem_slop/2, $stem_slop], center=true);
       }
 
       translate([5.7/2,0,0]) linear_extrude(height=height, scale = alps_scale){
-        square($choc_stem - [$stem_slop/2, $stem_slop/2], center=true);
+        square($choc_stem - [$stem_slop/2, $stem_slop], center=true);
       }
     } else {
       // always render cherry if no stem type. this includes stem_type = false!
