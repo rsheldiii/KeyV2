@@ -11,7 +11,7 @@ include <./includes.scad>
 
 
 u(1) choc() {
-  tined_stem_support() sa_row(1){
+  flared_support()  tined_stem_support() sa_row(1){
     $stem_support_height = 2;
     low_profile() {
       key();
