@@ -290,7 +290,8 @@ module key(inset = false) {
   if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
-        /* if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type); */
+        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+
         if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }
