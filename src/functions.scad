@@ -16,9 +16,9 @@ function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
