@@ -274,7 +274,7 @@ module key(inset = false) {
       keytop();
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
-      if(!inset) artisan() children();
+      if(!inset) artisan(0) children();
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
     }
