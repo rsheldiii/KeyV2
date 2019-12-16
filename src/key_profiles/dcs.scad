@@ -10,7 +10,7 @@ module dcs_row(row=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 1.75;
 
-  $top_tilt_y = column * 3;
+  $top_tilt_y = column * 3.5;
 
   // hack so you can do these in a for loop
   if (row == 5 || row == 0) {

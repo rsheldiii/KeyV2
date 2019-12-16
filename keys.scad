@@ -13,9 +13,15 @@ include <src/key_profiles.scad>
 include <src/key_types.scad>
 include <src/key_transformations.scad>
 include <src/key_helpers.scad>
-include <src/layouts.scad>
+include <src/key_layouts.scad>
 
-for (x = [1:1:5]) {
-  translate_u(0,-x) hipro_row(x) key();
-  translate_u(1,-x) sa_row(x) key();
-}
+// example key
+dcs_row(5) legend("⇪", size=9) key();
+
+// example row
+/* for (x = [0:1:4]) {
+  translate_u(0,-x) dcs_row(x) key();
+} */
+
+// example layout
+/* preonic_default("dcs"); */

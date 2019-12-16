@@ -1,9 +1,13 @@
+include <../layout.scad>
+
+// negative numbers are used for spacing
+lets_split_mapping = [
+  [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1]
+];
+
 module lets_split_default(profile) {
-  for(x = [1:1:4]) {
-    for(y=[-2.5:0.5:3]) {
-      translate_u(y > 0 ? y * 2 + 1 : y * 2,-x) key_profile(profile, x,floor(y)) {
-        key();
-      }
-    }
-  }
+  layout(lets_split_mapping, profile, row_sculpting_offset=1);
 }
