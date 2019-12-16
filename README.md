@@ -1,6 +1,6 @@
 # Parametric Mechanical Keycap Library
 
-![Welcome!](assets/welcome.png)
+![a slightly askew welcome picture](assets/welcome.png)
 
 This library is a keycap and keyset construction library for mechanical keyboards, written in openSCAD.
 
@@ -26,34 +26,37 @@ After you have openSCAD installed, you need to download the code and run it. run
 
 All examples below assume you are running the library on your computer with OpenSCAD.
 
-## Let's Go! I wanna make a custom keycap!
+## High-level overview
 
-At the highest level this library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, G20 and (some form of) OEM keycaps. `keys.scad` is meant as an entry point for everything but the most technical use. Pre-programmed key profiles can be found at the `key_profiles` directory.
+This library supports Cherry and Alps switches, and has pre-defined key profiles for SA, DSA, DCS, G20, Hi-Pro and (some form of) OEM keycaps. `keys.scad` is the entry point for everything but the most technical use. Pre-programmed key profiles can be found in the `key_profiles` directory.
 
 Every key starts with defaults that are overridden by each function call. The simplest cherry key you can make would be:
 
 ```
-cherry() key();
+key();
 ```
 ![a bog-standard cherry key](assets/example1.JPG)
 
 
-
-which is a bog-standard DCS row 5 keycap. To change key profile or make varying width keys, you can use the row and unit length functions, like so:
+which is a bog-standard DCS row 5 (number / function row) keycap. To change how the key is generated, you add predefined modifier functions like so:
 
 ```
-sa_row(2) 2u() cherry() key();
+sa_row(2) 2u() key();
 ```
+
+You can chain as many modifier functions as you like!
 
 ![a 2 unit SA row 2 cherry key](assets/example2.JPG)
 
-## What if I want to customize my keycaps?
+## Tweaking individual keycaps
 
-There is a bevy of supporting functions to customize your keycaps. You can add a brim to more easily print the stem, switch up the stem support type, make 2x2 keycaps for a POS system, add legends, rotate stems, and more. These functions can be found in `key_profiles/`, `key_sizes.scad`, `key_transformations.scad`, and `key_types.scad` currently, and can be referenced directly in `keys.scad`. For a full list of helper functions with explanations, [Check out the wiki!](https://github.com/rsheldiii/KeyV2/wiki/KeyV2-Helper-Documentation)
+There is a bevy of supporting functions to customize your keycaps. You can add a brim to more easily print the stem with `brimmed_stem_support`, make 2x2 keycaps with `2u() 2uh()`, add legends, rotate stems, and more. These functions can be found in `key_profiles/` for different keycap profiles, `key_types.scad` for predefined settings for common keys (spacebar, left shift, etc), `key_sizes.scad` for common unit sizes, and `key_transformations.scad` for everything else. For a full list of helper functions with explanations, [Check out the wiki!](https://github.com/rsheldiii/KeyV2/wiki/KeyV2-Helper-Documentation)
+
+These modifier functions don't cover everything; in that case, you may have to write some SCAD yourself.
 
 #### Example customizations
 
-If you wanted to generate some 2u stabilized keycaps for an Ergodox for instance, you could do something like this:
+Let's say you wanted to generate some 2u stabilized keycaps for an Ergodox, you could do something like this:
 
 ```
 legends = ["Enter", "Escape", "Tab", "Shift"];
@@ -80,17 +83,15 @@ Artisan support also supports _subtracting_ children by doing `key(inset=true) {
 
 ## What if I want to get _really_ technical?
 
-At the base level this library should function well as a key profile design library. by loading up `src/key.scad` (notice no s) you can tweak variables in `src/settings.scad` to prototype your own profiles. There are currently 44 different settings to tweak in `src/settings.scad` including width height and depth of the keycap, dish tilt, top skew, fonts, wall thickness, etc. If you want to see the full list of settings, feel free to browse the file itself: [settings.scad](https://github.com/rsheldiii/KeyV2/blob/master/src/settings.scad) it has lots of comments to help you get started.
-
-### What if I want to get _even_ more technical than that?
-
 Now we're talkin!
 
-This library should be abstract enough to handle new dish types, keystems, and key shapes, in case you want to design your own Typewriter-style keycaps, support buckling spring keyboards or design some kind of triangular dished profile. `src/shapes.scad` `src/stems.scad` and `src/dishes.scad` all have a 'selector' module that should allow you to implement your own creations alongside what already exists in their constituent folders.
+At the base level this project should function well as an intensive key profile design library. by loading up `src/key.scad` (notice no s) you can tweak variables in `src/settings.scad` to prototype your own profiles. `key.scad` There are currently ~~44~~ a lot of different settings to tweak in `src/settings.scad` including width height and depth of the keycap, dish tilt, top skew, fonts, wall thickness, etc. If you want to see the full list of settings, feel free to browse the file itself: [settings.scad](https://github.com/rsheldiii/KeyV2/blob/master/src/settings.scad) it has lots of comments to help you get started.
+
+This library should also be abstract enough to handle new dish types, keystems, key layouts, key profiles, and key shapes, in case you want to design your own Typewriter-style keycaps, support buckling spring keyboards or design some kind of triangular dished profile. `src/shapes.scad` `src/stems.scad` and `src/dishes.scad` all have a 'selector' module that should allow you to implement your own creations alongside what already exists in their constituent folders.
 
 If you're interested in this, it may help to read the [Technical Design of a keycap](https://github.com/rsheldiii/KeyV2/wiki/Technical-Design-of-a-Keycap) wiki page.
 
-Here's an example of tweaking the settings and code to make a 'stoinstancep sign' key profile:
+Here's an example of tweaking the settings and code to make a 'stop sign' key profile:
 
 In `key_shape()` in `shapes.scad`:
 
@@ -150,3 +151,7 @@ That's it, if you have any questions feel free to open an issue or leave a comme
  * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something, to enable concave extrusions
  * replace current ISO enter shape with one that works for `skin()`
  * generate dishes via math?
+
+## Contributions welcome
+
+ My lists of key profiles and layouts are not exhaustive at all, if you want to contribute feel free to make a PR with your changes and we can work together on getting it merged!
