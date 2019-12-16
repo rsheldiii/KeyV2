@@ -7,19 +7,22 @@ include <key_profiles/oem.scad>
 include <key_profiles/dsa.scad>
 include <key_profiles/sa.scad>
 include <key_profiles/g20.scad>
+include <key_profiles/hipro.scad>
 
 // man, wouldn't it be so cool if functions were first order
-module key_profile(key_profile_type, row) {
+module key_profile(key_profile_type, row, column=0) {
   if (key_profile_type == "dcs") {
-    dcs_row(row) children();
+    dcs_row(row, column) children();
   } else if (key_profile_type == "oem") {
-    oem_row(row) children();
+    oem_row(row, column) children();
   } else if (key_profile_type == "dsa") {
-    dsa_row(row) children();
+    dsa_row(row, column) children();
   } else if (key_profile_type == "sa") {
-    sa_row(row) children();
+    sa_row(row, column) children();
   } else if (key_profile_type == "g20") {
-    g20_row(row) children();
+    g20_row(row, column) children();
+  } else if (key_profile_type == "hipro") {
+    hipro_row(row, column) children();
   } else if (key_profile_type == "disable") {
     children();
   } else {

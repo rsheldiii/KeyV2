@@ -17,7 +17,7 @@ module sa_row(n=3) {
   // making a super-sculpted top row (or bottom row!) would be real easy
   // bottom row would just be 13 tilt and 14.89 total depth
   // top row would be something new entirely - 18 tilt maybe?
-  if (n == 1 || n == 5){
+  if (n == 1){
     $total_depth = 14.89;
     $top_tilt = -13;
     children();
