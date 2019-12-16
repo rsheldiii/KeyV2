@@ -1,4 +1,4 @@
-module g20_row(n=3) {
+module g20_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
   $width_difference = 2;
@@ -16,25 +16,24 @@ module g20_row(n=3) {
   //also,
   $rounded_key = true;
 
-  if (n == 5) {
-    $total_depth = 6 + abs((n-3) * 0.5);
+  $top_tilt_y = column * 3;
+  $total_depth = 6 + abs((row-3) * 0.5);
+
+  if (row == 5 || row == 0) {
+
     $top_tilt =  -18.55;
     children();
-  } else if (n == 1) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 1) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 2) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 2) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 3) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 3) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 4) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 4) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
   } else {
     children();

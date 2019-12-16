@@ -15,6 +15,9 @@ $font_size = 6;
 // Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = true;
+
 
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
@@ -45,8 +48,15 @@ $height_difference = 4;
 $total_depth = 11.5;
 // The tilt of the dish in degrees. divided by key height
 $top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
 // How skewed towards the back the top is (0 for center)
 $top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
 
 /* Stem */
 

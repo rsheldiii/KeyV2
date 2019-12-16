@@ -1,4 +1,4 @@
-module dcs_row(n=3) {
+module dcs_row(row=3, column=0) {
   // names, so I don't go crazy
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
@@ -10,23 +10,26 @@ module dcs_row(n=3) {
   $dish_skew_y = 0;
   $top_skew = 1.75;
 
-  if (n == 5) {
+  $top_tilt_y = column * 3;
+
+  // hack so you can do these in a for loop
+  if (row == 5 || row == 0) {
     $total_depth = 11.5;
     $top_tilt = -6;
     children();
-  } else if (n == 1) {
+  } else if (row == 1) {
     $total_depth = 8.5;
     $top_tilt = -1;
     children();
-  } else if (n == 2) {
+  } else if (row == 2) {
     $total_depth = 7.5;
     $top_tilt = 3;
     children();
-  } else if (n == 3) {
+  } else if (row == 3) {
     $total_depth = 6;
     $top_tilt = 7;
     children();
-  } else if (n == 4) {
+  } else if (row == 4) {
     $total_depth = 6;
     $top_tilt = 16;
     children();

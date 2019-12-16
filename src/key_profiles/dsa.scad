@@ -1,10 +1,10 @@
-module dsa_row(n=3) {
+module dsa_row(row=3, column = 0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.24; // 18.4;
   $bottom_key_height = 18.24; // 18.4;
   $width_difference = 6; // 5.7;
   $height_difference = 6; // 5.7;
-  $top_tilt = n == 5 ? -21 : (n-3) * 7;
+  $top_tilt = row == 5 ? -21 : (row-3) * 7;
   $top_skew = 0;
   $dish_type = "spherical";
   $dish_depth = 1.2;
@@ -12,25 +12,25 @@ module dsa_row(n=3) {
   $dish_skew_y = 0;
   $height_slices = 10;
   $enable_side_sculpting = true;
-  // might wanna change this if you don't minkowski
-  // do you even minkowski bro
   $corner_radius = 0.25;
 
+  $top_tilt_y = column * 3;
+
   depth_raisers = [0, 3.5, 1, 0, 1, 3];
-  if (n == 5) {
-    $total_depth = 8.1 + depth_raisers[n];
+  if (row == 5) {
+    $total_depth = 8.1 + depth_raisers[row];
     children();
-  } else if (n == 1) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 1) {
+    $total_depth = 8.1 + depth_raisers[row];
     children();
-  } else if (n == 2) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 2) {
+    $total_depth = 8.1 + depth_raisers[row];
     children();
-  } else if (n == 3) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 3) {
+    $total_depth = 8.1 + depth_raisers[row];
     children();
-  } else if (n == 4) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 4) {
+    $total_depth = 8.1 + depth_raisers[row];
     children();
   } else {
     children();

@@ -83,11 +83,15 @@ module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0)
 
 module shape_slice(progress, thickness_difference, depth_difference) {
   skew_this_slice = $top_skew * progress;
-  depth_this_slice = ($total_depth - depth_difference) * progress;
-  tilt_this_slice = -$top_tilt / $key_height * progress;
+  x_skew_this_slice = $top_skew_x * progress;
 
-  translate([0, skew_this_slice, depth_this_slice]) {
-    rotate([tilt_this_slice,0,0]){
+  depth_this_slice = ($total_depth - depth_difference) * progress;
+
+  tilt_this_slice = -$top_tilt / $key_height * progress;
+  y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0;
+
+  translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
+    rotate([tilt_this_slice,y_tilt_this_slice,0]){
       linear_extrude(height = SMALLEST_POSSIBLE){
         key_shape(
           [
@@ -113,8 +117,12 @@ module inside() {
 
 // put something at the top of the key, with no adjustments for dishing
 module top_placement(depth_difference) {
-  translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-    rotate([-$top_tilt / $key_height,0,0]){
+  top_tilt_by_height = -$top_tilt / $key_height;
+  top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
+
+
+  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
+    rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
       children();
     }
   }
