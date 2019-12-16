@@ -16,7 +16,7 @@ $font_size = 6;
 $inverted_dish = false;
 
 // set this to true if you are making double sculpted keycaps
-$double_sculpted = true;
+$double_sculpted = false;
 
 
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
