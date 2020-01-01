@@ -1,3 +1,5 @@
+include <../libraries/rounded_rectangle_profile.scad>
+
 module rounded_square_shape(size, delta, progress, center = true) {
     width = size[0];
     height = size[1];
@@ -20,3 +22,8 @@ module rounded_square_shape(size, delta, progress, center = true) {
       );
     }
 }
+
+// for skin
+
+function skin_rounded_square(size, delta, progress) =
+  rounded_rectangle_profile(size - (delta * progress), fn=36, r=$corner_radius);

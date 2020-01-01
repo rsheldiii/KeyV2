@@ -1,4 +1,7 @@
 include <../functions.scad>
+// TODO this define doesn't do anything besides tell me I used flat() in this file
+// is it better than not having it at all?
+include <./flat.scad>
 
 // figures out the scale factor needed to make a 45 degree wall
 function scale_for_45(height, starting_size) = (height * 2 + starting_size) / starting_size;
@@ -6,6 +9,11 @@ function scale_for_45(height, starting_size) = (height * 2 + starting_size) / st
 // complicated since we want the different stems to work well
 // also kind of messy... oh well
 module flared(stem_type, loft, height) {
+  // flat support. straight flat support has a tendency to shear off; flared support
+  // all the way to the top has a tendency to warp the outside of the keycap.
+  // hopefully the compromise is both
+  flat(stem_type, loft + height/4, height);
+
   translate([0,0,loft]){
     if (stem_type == "rounded_cherry") {
       linear_extrude(height=height, scale = scale_for_45(height, $rounded_cherry_stem_d)){

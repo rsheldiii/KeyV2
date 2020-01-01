@@ -17,6 +17,9 @@ $inverted_dish = false;
 
 // set this to true if you are making double sculpted keycaps
 $double_sculpted = false;
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
 
 
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
@@ -24,6 +27,10 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
 $stem_support_type = "tines"; // [tines, brim, disabled]
+
+// enable to have stem support extend past the keycap bottom, to (hopefully) the next
+// keycap. only works on tines right now
+$extra_long_stem_support = false;
 
 /* [Advanced] */
 
@@ -110,6 +117,10 @@ $clearance_check = false;
 // Use linear_extrude instead of hull slices to make the shape of the key
 // Should be faster, also required for concave shapes
 $linear_extrude_shape = false;
+
+// brand new, more correct, hopefully faster, lots more work
+// warns in trajectory.scad but it looks benign
+$skin_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -131,6 +142,10 @@ $key_bump_edge = 0.4;
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];

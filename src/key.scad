@@ -9,6 +9,12 @@ include <key_features.scad>
 
 include <libraries/geodesic_sphere.scad>
 
+// for skin hulls
+use <libraries/scad-utils/transformations.scad>
+use <libraries/scad-utils/lists.scad>
+use <libraries/scad-utils/shapes.scad>
+use <libraries/skin.scad>
+
 
 /* [Hidden] */
 SMALLEST_POSSIBLE = 1/128;
@@ -27,8 +33,25 @@ module shape(thickness_difference, depth_difference){
   }
 }
 
-// shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
+// shape of the key but with soft, rounded edges. no longer includes dish
+// randomly doesnt work sometimes
+// the dish doesn't _quite_ reach as far as it should
 module rounded_shape() {
+  dished(-$minkowski_radius, $inverted_dish) {
+    color(blue) minkowski(){
+      // half minkowski in the z direction
+      color(blue) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
+      /* cube($minkowski_radius); */
+      sphere(r=$minkowski_radius, $fn=48);
+    }
+  }
+  /* %envelope(); */
+}
+
+// this function is more correct, but takes _forever_
+// the main difference is minkowski happens after dishing, meaning the dish is
+// also minkowski'd
+/* module rounded_shape() {
   color(blue) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
@@ -39,7 +62,8 @@ module rounded_shape() {
       }
     }
   }
-}
+} */
+
 
 
 // basic key shape, no dish, no inside
@@ -48,13 +72,49 @@ module rounded_shape() {
 // extra_slices is a hack to make inverted dishes still work
 module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
   render() {
-    if ($linear_extrude_shape) {
+    if ($skin_extrude_shape) {
+      skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
+    } else if ($linear_extrude_shape) {
       linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
     } else {
       hull_shape_hull(thickness_difference, depth_difference, extra_slices);
     }
   }
 }
+
+// use skin() instead of successive hulls. much more correct, and looks faster
+// too, in most cases. successive hull relies on overlapping faces which are
+// not good. But, skin works on vertex sets instead of shapes, which makes it
+// a lot more difficult to use
+module skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0 ) {
+  skin([
+    for (index = [0:$height_slices + extra_slices])
+      let(
+        progress = (index / $height_slices),
+        skew_this_slice = $top_skew * progress,
+        x_skew_this_slice = $top_skew_x * progress,
+        depth_this_slice = ($total_depth - depth_difference) * progress,
+        tilt_this_slice = -$top_tilt / $key_height * progress,
+        y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0
+      )
+      skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice)
+  ]);
+}
+
+function skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice) =
+  transform(
+    translation([x_skew_this_slice,skew_this_slice,depth_this_slice]),
+    transform(
+      rotation([tilt_this_slice,y_tilt_this_slice,0]),
+        skin_key_shape([
+          total_key_width(thickness_difference),
+          total_key_height(thickness_difference),
+          ],
+          [$width_difference, $height_difference],
+          progress
+        )
+    )
+  );
 
 // corollary is hull_shape_hull
 // extra_slices unused, only to match argument signatures
@@ -66,7 +126,10 @@ module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_s
   translate([0,$linear_extrude_height_adjustment,0]){
     linear_extrude(height = height, scale = [width_scale, height_scale]) {
         translate([0,-$linear_extrude_height_adjustment,0]){
-        key_shape(total_key_width(thickness_difference), total_key_height(thickness_difference));
+        key_shape(
+          [total_key_width(thickness_difference), total_key_height(thickness_difference)],
+          [$width_difference, $height_difference]
+        );
       }
     }
   }
@@ -120,7 +183,6 @@ module top_placement(depth_difference) {
   top_tilt_by_height = -$top_tilt / $key_height;
   top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
 
-
   translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
     rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
       children();
@@ -133,7 +195,7 @@ module _dish() {
   dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
-module envelope(depth_difference) {
+module envelope(depth_difference=0) {
   s = 1.5;
   hull(){
     cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
@@ -243,8 +305,7 @@ module clearance_check() {
   }
 }
 
-// legends / artisan support
-module artisan(depth) {
+module legends(depth) {
   top_of_key() {
     // outset legend
     if (len($legends) > 0) {
@@ -252,6 +313,12 @@ module artisan(depth) {
         keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
       }
     }
+  }
+}
+
+// legends / artisan support
+module artisan(depth) {
+  top_of_key() {
     // artisan objects / outset shape legends
     children();
   }
@@ -283,12 +350,14 @@ module key(inset = false) {
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
       if(!inset) artisan(0) children();
+      if($outset_legends) legends(0);
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
     }
 
     // subtractive objects at the top of the key
     if (inset) artisan(0.3) children();
+    if(!$outset_legends) legends(0.3);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch
     if ($clearance_check) clearance_check();
