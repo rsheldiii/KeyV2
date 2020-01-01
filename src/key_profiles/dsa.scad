@@ -14,7 +14,7 @@ module dsa_row(row=3, column = 0) {
   $enable_side_sculpting = true;
   $corner_radius = 0.25;
 
-  $top_tilt_y = column * 3;
+  $top_tilt_y = column * 3 * $double_sculpt_modifier;
 
   depth_raisers = [0, 3.5, 1, 0, 1, 3];
   if (row == 5) {

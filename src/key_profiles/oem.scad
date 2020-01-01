@@ -10,7 +10,7 @@ module oem_row(row=3) {
   $top_skew = 1.75;
   $stem_inset = 1.2;
 
-  $top_tilt_y = column * 3;
+  $top_tilt_y = column * 3 * $double_sculpt_modifier;
 
   if (row == 5 || row == 0) {
     $total_depth = 11.2;
