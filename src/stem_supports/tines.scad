@@ -19,8 +19,8 @@ module centered_tines(stem_support_height) {
 }
 
 module tines_support(stem_type, stem_support_height, slop) {
-  extra_height = $extra_long_stem_support ? ($unit - total_key_height()) + 0.1 : 0; // fudge
-  extra_width = $extra_long_stem_support ? ($unit - total_key_width()) + 0.1 : 0;
+  extra_height = $extra_long_stem_support ? ($unit - total_key_height()) + 0.1 : -$wall_thickness/4; // fudge
+  extra_width = $extra_long_stem_support ? ($unit - total_key_width()) + 0.1 : -$wall_thickness/4;
 
   if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
     difference () {
