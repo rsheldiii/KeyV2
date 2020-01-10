@@ -32,6 +32,6 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }

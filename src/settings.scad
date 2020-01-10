@@ -7,7 +7,10 @@ $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3; // Not working in thingiverse customizer atm [0:0.01:1]
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
 
 // Font size used for text
 $font_size = 6;
@@ -16,7 +19,7 @@ $font_size = 6;
 $inverted_dish = false;
 
 // set this to true if you are making double sculpted keycaps
-$double_sculpted = false;
+$double_sculpted = true;
 // change aggressiveness of double sculpting
 // this is the radius of the cylinder the keytops are placed on
 $double_sculpt_radius = 200;
