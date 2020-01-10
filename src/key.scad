@@ -179,11 +179,13 @@ module inside() {
 }
 
 // put something at the top of the key, with no adjustments for dishing
-module top_placement(depth_difference) {
+module top_placement(depth_difference=0) {
   top_tilt_by_height = -$top_tilt / $key_height;
   top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
 
-  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
+  minkowski_height = $rounded_key ? $minkowski_radius : 0;
+
+  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference + minkowski_height/2]){
     rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
       children();
     }

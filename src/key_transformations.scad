@@ -131,3 +131,12 @@ module bump(depth=undef) {
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;
     children();
 }
+
+// kinda dirty, but it works
+// might not work great with fully sculpted profiles yet
+module upside_down() {
+  // $top_tilt*2 because top_placement rotates by top_tilt for us
+  top_placement() rotate([180+$top_tilt*2,0,0]) {
+    children();
+  }
+}
