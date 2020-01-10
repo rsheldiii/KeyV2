@@ -205,6 +205,7 @@ module envelope(depth_difference=0) {
   }
 }
 
+// I think this is unused
 module dished_for_show() {
   difference(){
     union() {
@@ -219,7 +220,7 @@ module dished_for_show() {
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
 // creates a bounding box 1.5 times larger in width and height than the keycap.
-module dished(depth_difference, inverted = false) {
+module dished(depth_difference = 0, inverted = false) {
   intersection() {
     children();
     difference(){
@@ -356,8 +357,8 @@ module key(inset = false) {
     }
 
     // subtractive objects at the top of the key
-    if (inset) artisan(0.3) children();
-    if(!$outset_legends) legends(0.3);
+    if (inset) artisan($inset_legend_depth) children();
+    if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch
     if ($clearance_check) clearance_check();
