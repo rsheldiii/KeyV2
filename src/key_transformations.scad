@@ -141,7 +141,8 @@ module bump(depth=undef) {
 // might not work great with fully sculpted profiles yet
 module upside_down() {
   // $top_tilt*2 because top_placement rotates by top_tilt for us
-  top_placement() rotate([180+$top_tilt*2,0,0]) {
+  // first rotate 180 to get the keycaps to face the same direction
+  rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
     children();
   }
 }
