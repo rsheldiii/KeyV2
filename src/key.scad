@@ -192,6 +192,25 @@ module top_placement(depth_difference=0) {
   }
 }
 
+module front_placement() {
+  // all this math is to take top skew and tilt into account
+  // we need to find the new effective height and depth of the top, front lip
+  // of the keycap to find the angle so we can rotate things correctly into place
+  total_depth_difference = sin(-$top_tilt) * (top_total_key_height()/2);
+  total_height_difference = $top_skew + (1 - cos(-$top_tilt)) * (top_total_key_height()/2);
+
+  angle = atan2(($total_depth - total_depth_difference), ($height_difference/2 + total_height_difference));
+  hypotenuse = ($total_depth -total_depth_difference) / sin(angle);
+
+  translate([0,-total_key_height()/2,0]) {
+    rotate([-(90-angle), 0, 0]) {
+      translate([0,0,hypotenuse/2]){
+        children();
+      }
+    }
+  }
+}
+
 // just to DRY up the code
 module _dish() {
   dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
@@ -309,11 +328,21 @@ module clearance_check() {
 }
 
 module legends(depth) {
-  top_of_key() {
-    // outset legend
-    if (len($legends) > 0) {
-      for (i=[0:len($legends)-1]) {
-        keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+  if ($front_print_legends) {
+    front_placement() {
+      if (len($legends) > 0) {
+        for (i=[0:len($legends)-1]) {
+          rotate([90,0,0]) keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+        }
+      }
+    }
+  } else {
+    top_of_key() {
+      // outset legend
+      if (len($legends) > 0) {
+        for (i=[0:len($legends)-1]) {
+          keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+        }
       }
     }
   }

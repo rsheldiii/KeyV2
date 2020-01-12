@@ -151,7 +151,7 @@ $legends = [];
 $outset_legends = false;
 
 // how recessed inset legends / artisans are from the top of the key
-$inset_legend_depth = 0.3;
+$inset_legend_depth = 0.2;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
