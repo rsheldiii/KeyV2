@@ -150,6 +150,9 @@ $legends = [];
 // broken off from artisan support since who wants outset legends?
 $outset_legends = false;
 
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
 // how recessed inset legends / artisans are from the top of the key
 $inset_legend_depth = 0.2;
 
