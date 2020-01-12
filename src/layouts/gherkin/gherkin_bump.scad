@@ -16,5 +16,7 @@ gherkin_bump_legends = [
 ];
 
 module gherkin_bump_layout(profile, row_sculpting_offset=1, column_override=undef) {
-  layout(gherkin_bump_mapping, profile, legends=gherkin_bump_legends, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave");
+  layout(gherkin_bump_mapping, profile, legends=gherkin_bump_legends, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") {
+    children();
+  };
 }
