@@ -14,23 +14,24 @@ module dsa_row(row=3, column = 0) {
   $enable_side_sculpting = true;
   $corner_radius = 0.25;
 
-  $top_tilt_y = column * 3 * $double_sculpt_modifier;
+  $top_tilt_y = side_tilt(column);
+  extra_height = extra_side_tilt_height(column);
 
   depth_raisers = [0, 3.5, 1, 0, 1, 3];
-  if (row == 5) {
-    $total_depth = 8.1 + depth_raisers[row];
+  if (row < 1 || row > 4) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else if (row == 1) {
-    $total_depth = 8.1 + depth_raisers[row];
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else if (row == 2) {
-    $total_depth = 8.1 + depth_raisers[row];
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else if (row == 3) {
-    $total_depth = 8.1 + depth_raisers[row];
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else if (row == 4) {
-    $total_depth = 8.1 + depth_raisers[row];
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else {
     children();

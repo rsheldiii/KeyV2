@@ -6,7 +6,7 @@ function abs_sum(list, x=0) =
     abs_sum([for (x = [1: len(list) - 1]) list[x]], x+abs(list[0]));
 
 function 2hands(index, total) = ((index+0.5) % (total/2)) - (total/4);
-function cresting_wave(index, total, mod=5) = (index < total/2) ? (((index + 0.5) / total)*mod) : -(mod - ((index + 0.5) / total * mod));
+function cresting_wave(index, total, mod=4) = (index < total/2) ? (((index + 0.5) / total)*mod) : -(mod - ((index + 0.5) / total * mod));
 function 1hand(index, total) = (index % (total)) - (total/2);
 
 
@@ -38,15 +38,45 @@ module layout(list, profile="dcs", legends=undef, row_sculpting_offset=0, row_ov
         translate_u(column_distance - (key_length/2), -row) {
           key_profile(profile, row_sculpting, column_value) u(key_length) legend(legends ? legends[row][column] : "") cherry() { // (row+4) % 5 + 1
             if (key_length == 6.25) {
-              spacebar() key();
+              spacebar() {
+                if ($children) {
+                  children();
+                } else {
+                  key();
+                }
+              }
             } else if (key_length == 2.25) {
-              lshift() key();
+              lshift() {
+                if ($children) {
+                  children();
+                } else {
+                  key();
+                }
+              }
             } else if (key_length == 2) {
-              backspace() key();
+              backspace() {
+                if ($children) {
+                  children();
+                } else {
+                  key();
+                }
+              }
             } else if (key_length == 2.75) {
-              rshift() key();
+              rshift() {
+                if ($children) {
+                  children();
+                } else {
+                  key();
+                }
+              }
             } else {
-              key();
+              {
+                if ($children) {
+                  children();
+                } else {
+                  key();
+                }
+              }
             }
           }
         }

@@ -7,6 +7,11 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
+module no_stem_support() {
+  $stem_support_type = "disable";
+  children();
+}
+
 module brimmed_stem_support(height = 0.4) {
   $stem_support_type = "brim";
   $stem_support_height = height;
@@ -136,7 +141,8 @@ module bump(depth=undef) {
 // might not work great with fully sculpted profiles yet
 module upside_down() {
   // $top_tilt*2 because top_placement rotates by top_tilt for us
-  top_placement() rotate([180+$top_tilt*2,0,0]) {
+  // first rotate 180 to get the keycaps to face the same direction
+  rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
     children();
   }
 }
