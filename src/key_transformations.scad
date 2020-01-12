@@ -7,6 +7,11 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
+module no_stem_support() {
+  $stem_support_type = "disable";
+  children();
+}
+
 module brimmed_stem_support(height = 0.4) {
   $stem_support_type = "brim";
   $stem_support_height = height;
