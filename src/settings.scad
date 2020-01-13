@@ -19,7 +19,7 @@ $font_size = 6;
 $inverted_dish = false;
 
 // set this to true if you are making double sculpted keycaps
-$double_sculpted = true;
+$double_sculpted = false;
 // change aggressiveness of double sculpting
 // this is the radius of the cylinder the keytops are placed on
 $double_sculpt_radius = 200;
