@@ -8,5 +8,5 @@ gherkin_mapping = [
 ];
 
 module gherkin_default(profile) {
-  layout(gherkin_mapping, profile, row_sculpting_offset=1);
+  layout(gherkin_mapping, profile, row_sculpting_offset=1) children();
 }

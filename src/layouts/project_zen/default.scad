@@ -14,6 +14,6 @@ project_zen_thumbs = [
 ];
 
 module project_zen_default(profile) {
-  layout(project_zen_main, profile);
-  translate_u(4.5,-5) layout(project_zen_thumbs, profile, row_override=3);
+  layout(project_zen_main, profile) children();
+  translate_u(4.5,-5) layout(project_zen_thumbs, profile, row_override=3) children();
 }

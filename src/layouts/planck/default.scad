@@ -11,5 +11,5 @@ planck_layout_mapping = [
 ];
 
 module planck_default(profile) {
-  layout(planck_layout_mapping, profile, row_sculpting_offset=1);
+  layout(planck_layout_mapping, profile, row_sculpting_offset=1) children();
 }

@@ -9,5 +9,5 @@ preonic_layout_mapping = [
 ];
 
 module preonic_default(profile, column_sculpt_profile="2hands") {
-  layout(preonic_layout_mapping, profile, column_sculpt_profile=column_sculpt_profile);
+  layout(preonic_layout_mapping, profile, column_sculpt_profile=column_sculpt_profile) children();
 }
