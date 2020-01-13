@@ -21,8 +21,10 @@ module grid_row(row=3, column = 0) {
   //also,
   /* $rounded_key = true; */
 
-  $top_tilt_y = column * 3 * $double_sculpt_modifier;
-  $total_depth = 6 + abs((row-3) * 0.5);
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  $total_depth = 6 + abs((row-3) * 0.5) + extra_height;
 
   if (row == 5 || row == 0) {
     /* $top_tilt =  -18.55; */

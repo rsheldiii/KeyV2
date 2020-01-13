@@ -18,7 +18,7 @@ module hipro_row(row=3, column=0) {
   $corner_radius = 0.25;
 
   $top_tilt_y = side_tilt(column);
-  extra_height = extra_side_tilt_height(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   if (row <= 1){
     $total_depth = 13.7 + extra_height;

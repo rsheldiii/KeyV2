@@ -9,5 +9,5 @@ lets_split_mapping = [
 ];
 
 module lets_split_default(profile) {
-  layout(lets_split_mapping, profile, row_sculpting_offset=1);
+  layout(lets_split_mapping, profile, row_sculpting_offset=1) children();
 }

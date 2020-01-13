@@ -17,7 +17,7 @@ module g20_row(row=3, column = 0) {
   $rounded_key = true;
 
   $top_tilt_y = side_tilt(column);
-  extra_height = extra_side_tilt_height(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   $total_depth = 6 + abs((row-3) * 0.5) + extra_height;
 

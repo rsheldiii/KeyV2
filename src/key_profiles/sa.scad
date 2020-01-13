@@ -18,7 +18,7 @@ module sa_row(n=3, column=0) {
   /* $rounded_key = true; */
 
   $top_tilt_y = side_tilt(column);
-  extra_height = extra_side_tilt_height(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   // 5th row is usually unsculpted or the same as the row below it
   // making a super-sculpted top row (or bottom row!) would be real easy

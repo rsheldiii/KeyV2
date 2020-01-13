@@ -15,7 +15,7 @@ module dsa_row(row=3, column = 0) {
   $corner_radius = 0.25;
 
   $top_tilt_y = side_tilt(column);
-  extra_height = extra_side_tilt_height(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   depth_raisers = [0, 3.5, 1, 0, 1, 3];
   if (row < 1 || row > 4) {

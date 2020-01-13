@@ -11,7 +11,7 @@ module dcs_row(row=3, column=0) {
   $top_skew = 1.75;
 
   $top_tilt_y = side_tilt(column);
-  extra_height = extra_side_tilt_height(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   // this dish depth should match the depth of the uberdishing in fully sculpted mode
   // but it doesn't, and it's very slight for any reasonable double sculpting
