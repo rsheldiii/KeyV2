@@ -140,6 +140,9 @@ module bump(depth=undef) {
 // kinda dirty, but it works
 // might not work great with fully sculpted profiles yet
 module upside_down() {
+  if ($stem_inner_slop != 0) {
+    echo("it is recommended you set inner stem slop to 0 when you use upside_down()");
+  }
   // $top_tilt*2 because top_placement rotates by top_tilt for us
   // first rotate 180 to get the keycaps to face the same direction
   rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
