@@ -22,7 +22,7 @@ One current limitation of `skin()` is that I suck at math and can't translate [r
 
 ## Printing upside down
 
-still in beta, but using `upside_down()` in a method chain will rotate keycaps to be upside down. This makes the stem print better and requires no support, but generally the top of the keycap comes out worse - unless it is flat.
+still in beta, but using `upside_down()` in a method chain will rotate keycaps to be upside down. This makes the stem print better and requires no support, but generally the top of the keycap comes out worse - unless it is flat. Worth noting that you can probably set `$stem_inner_slop` to 0 if you print upside down - elephant's foot is the largest contributor to stems not fitting correctly.
 
 ### "doubleshot" letters with a regular printer
 
