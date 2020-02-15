@@ -13,3 +13,5 @@ include <layouts/project_zen/default.scad>
 include <layouts/60_percent/default.scad>
 include <layouts/gherkin/default.scad>
 include <layouts/gherkin/gherkin_bump.scad>
+
+include <layouts/dactyl_manuform/4x6.scad>
