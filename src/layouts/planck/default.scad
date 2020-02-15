@@ -10,6 +10,6 @@ planck_layout_mapping = [
   [1, 1, 1, 1, 1, 0, 2, 0, 1, 1, 1, 1, 1]
 ];
 
-module planck_default(profile) {
-  layout(planck_layout_mapping, profile, row_sculpting_offset=1) children();
+module planck_default(profile, column_sculpt_profile="2hands") {
+  layout(planck_layout_mapping, profile, row_sculpting_offset=1, column_sculpt_profile=column_sculpt_profile) children();
 }
