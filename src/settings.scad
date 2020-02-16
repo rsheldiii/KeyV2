@@ -146,6 +146,15 @@ $key_bump_edge = 0.4;
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
 
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends_front = [];
+
+//print both top and front legends
+$legends_dual = false;
+
 // make legends outset instead of inset.
 // broken off from artisan support since who wants outset legends?
 $outset_legends = false;

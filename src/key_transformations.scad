@@ -131,6 +131,12 @@ module legend(text, position=[0,0], size=undef) {
     children();
 }
 
+module legend_front(text, position=[0,0], size=undef) {
+    font_size = size == undef ? $font_size : size;
+    $legends_front = [for(L=[$legends_front, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
 module bump(depth=undef) {
     $key_bump = true;
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;
