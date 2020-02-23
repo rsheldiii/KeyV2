@@ -327,7 +327,7 @@ module clearance_check() {
   }
 }
 
-module legends(depth) {
+module legends(depth=0) {
   if ($front_print_legends) {
     front_placement() {
       if (len($legends) > 0) {
