@@ -46,7 +46,7 @@ simple_layout(preonic_default_layout) {
         key();
 
         // this generates separate legends for the keys
-        /* legend(preonic_default_legends[$row][$column]) legends($inset_legend_depth); */
+        /* legend(preonic_default_legends[$row][$column]) legends(); */
       }
     }
   }
