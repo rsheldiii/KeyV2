@@ -39,7 +39,7 @@ simple_layout(preonic_default_layout) {
       union() {
         // uncomment when prototyping for faster prototypes!
         /* $dish_type = "disable"; */
-        $stem_support_type = "disable";
+        /* $stem_support_type = "disable"; */
 
         // here's where the magic happens and we actually add the extra column height
         $total_depth = $total_depth + extra_column_height[$column];
