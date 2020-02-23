@@ -19,7 +19,7 @@ $double_sculpt_radius = 200;
 // This is the exact column stagger from the dactyl transposed onto the
 // rows of the preonic default layout. the second array is for modifying the
 // values up or down - making all the 0's -1's would make each key 1mm lower
-// for instance.
+// for instance. I'd suggest going as low as you can without cutting off any stems
 extra_column_height = [5.64, 5.64, 0, -3, 0, 0, 0, 0, 0, -3, 0, 5.64, 5.64] + [0,0,0,0,0,0,0,0,0,0,0,0,0];
 // required for double_sculpted_column
 row_length = len(preonic_default_layout[0]);
