@@ -27,7 +27,7 @@ yellow = [1, .6941, .2];
 transparent_red = [1,0,0, 0.15];
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
-module shape(thickness_difference, depth_difference){
+module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
     color(blue) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
   }
