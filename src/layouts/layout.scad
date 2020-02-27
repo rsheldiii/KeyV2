@@ -37,6 +37,9 @@ module layout(list, profile="dcs", legends=undef, legends_front=undef, row_sculp
       if (key_length >= 1) {
         translate_u(column_distance - (key_length/2), -row) {
           key_profile(profile, row_sculpting, column_value) u(key_length) legend(legends ? legends[row][column] : "") legend_front(legends_front ? legends_front[row][column] : "") cherry() { // (row+4) % 5 + 1
+          $row = row;
+          $column = column;
+          
             if (key_length == 6.25) {
               spacebar() {
                 if ($children) {
