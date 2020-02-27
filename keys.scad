@@ -5,15 +5,8 @@
 // without having to rely on this file. Unfortunately that means setting tons of
 // special variables, but that's a limitation of SCAD we have to work around
 
-use <src/key.scad>
+include <./includes.scad>
 
-include <src/settings.scad>
-include <src/key_sizes.scad>
-include <src/key_profiles.scad>
-include <src/key_types.scad>
-include <src/key_transformations.scad>
-include <src/key_helpers.scad>
-include <src/key_layouts.scad>
 
 // example key
 dcs_row(5) legend("⇪", size=9) key();

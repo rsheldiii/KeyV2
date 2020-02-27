@@ -22,7 +22,7 @@ function double_sculpted_column(column, row_length, column_sculpt_profile) =
 
 module layout(list, profile="dcs", legends=undef, legends_front=undef, row_sculpting_offset=0, row_override=undef, column_sculpt_profile="2hands", column_override=undef) {
   for (row = [0:len(list)-1]){
-    echo("**ROW**:", row);
+    /* echo("**ROW**:", row); */
     row_length = len(list[row]);
 
     for(column = column_override ? column_override : [0:len(list[row])-1]) {
@@ -31,15 +31,16 @@ module layout(list, profile="dcs", legends=undef, legends_front=undef, row_sculp
       column_value = double_sculpted_column(column, row_length, column_sculpt_profile);
       column_distance = abs_sum([for (x = [0 : column]) list[row][x]]);
 
-      echo("\t**COLUMN**", "column_value", column_value, "column_distance", column_distance);
+      /* echo("\t**COLUMN**", "column_value", column_value, "column_distance", column_distance); */
 
       // supports negative values for nonexistent keys
       if (key_length >= 1) {
         translate_u(column_distance - (key_length/2), -row) {
+        
           key_profile(profile, row_sculpting, column_value) u(key_length) legend(legends ? legends[row][column] : "") legend_front(legends_front ? legends_front[row][column] : "") cherry() { // (row+4) % 5 + 1
           $row = row;
           $column = column;
-          
+
             if (key_length == 6.25) {
               spacebar() {
                 if ($children) {
@@ -80,6 +81,40 @@ module layout(list, profile="dcs", legends=undef, legends_front=undef, row_sculp
                   key();
                 }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+module simple_layout(list) {
+  for (row = [0:len(list)-1]){
+    /* echo("**ROW**:", row); */
+    for(column = [0:len(list[row])-1]) {
+      key_length = list[row][column];
+      column_distance = abs_sum([for (x = [0 : column]) list[row][x]]);
+
+      /* echo("\t**COLUMN**", "column_value", column_value, "column_distance", column_distance); */
+
+      // supports negative values for nonexistent keys
+      if (key_length >= 1) {
+        translate_u(column_distance - (key_length/2), -row) {
+          u(key_length) { // (row+4) % 5 + 1
+            $row = row;
+            $column = column;
+
+            if (key_length == 6.25) {
+              spacebar() children();
+            } else if (key_length == 2.25) {
+              lshift() children();
+            } else if (key_length == 2) {
+              backspace() children();
+            } else if (key_length == 2.75) {
+              rshift() children();
+            } else {
+              children();
             }
           }
         }

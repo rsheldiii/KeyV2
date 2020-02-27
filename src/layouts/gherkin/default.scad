@@ -1,7 +1,7 @@
 include <../layout.scad>
 
 // negative numbers are used for spacing
-gherkin_mapping = [
+gherkin_default_layout = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -14,5 +14,5 @@ gherkin_default_legends = [
 ];
 
 module gherkin_default(profile) {
-  layout(gherkin_mapping, profile, legends=gherkin_default_legends, row_sculpting_offset=1, row_override=3) children();
+  layout(gherkin_default_layout, profile, legends=gherkin_default_legends, row_sculpting_offset=1, row_override=3) children();
 }
