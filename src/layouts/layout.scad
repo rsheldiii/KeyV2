@@ -88,6 +88,11 @@ module layout(list, profile="dcs", legends=undef, row_sculpting_offset=0, row_ov
   }
 }
 
+// much simpler, decoupled layout function
+// requires more setup - it only does what is in the layout array, which is translate
+// and key length. you have to do row / column profile yourself and always pass
+// children()
+// this is probably the way we'll go forward
 module simple_layout(list) {
   for (row = [0:len(list)-1]){
     /* echo("**ROW**:", row); */
