@@ -19,13 +19,11 @@ module switch_hole() {
   cube(14, center=true);
 }
 
-
 module plate(layout_object) {
   difference() {
     hull() {
       simple_layout(layout_object) unit_corners();
     }
-
     simple_layout(layout_object) switch_hole();
   }
 }
