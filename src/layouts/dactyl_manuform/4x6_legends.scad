@@ -26,7 +26,7 @@ dactyl_manuform_4x6_main_legends = [
   ["", "", "CAPS", "T(1)", "", "", "", "", "", "T(2)", "]}", "", ""]
 ];
 
-dactyl_manuform_4x6_main_legends_front = [
+dactyl_manuform_4x6_main_front_legends = [
   ["F1", "F2", "F3", "F4", "F5", "F6", "", "F7", "F8", "F9", "F10", "F11", "F12"],
   ["", "", "", "", "", "PGUP", "", "", "UP", "", "", "", ""],
   ["", "", "", "", "", "PGDN", "", "LFT", "DWN", "RHT", "", "", ""],
@@ -39,7 +39,7 @@ dactyl_manuform_4x6_thumbs_l_legends = [
   ["", "MEH", "T(2)"]
 ];
 
-dactyl_manuform_4x6_thumbs_l_legends_front = [
+dactyl_manuform_4x6_thumbs_l_front_legends = [
   ["", ""],
   ["", "PSC", "LCMD"],
   ["", "", "TEMP"]
@@ -51,14 +51,14 @@ dactyl_manuform_4x6_thumbs_r_legends = [
   ["", "T(1)", "PST"]
 ];
 
-dactyl_manuform_4x6_thumbs_r_legends_front = [
+dactyl_manuform_4x6_thumbs_r_front_legends = [
   ["", ""],
   ["", "", ""],
   ["", "TEMP", ""]
 ];
 
 module dactyl_manuform_4x6_legends(profile, row_sculpting_offset=1, column_override=undef) {
-  layout(dactyl_manuform_4x6_main, profile, legends=dactyl_manuform_4x6_main_legends, legends_front=dactyl_manuform_4x6_main_legends_front, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
-  translate_u(3,-5) rotate([0,0,25]) layout(dactyl_manuform_4x6_thumbs_l, profile, legends=dactyl_manuform_4x6_thumbs_l_legends, legends_front=dactyl_manuform_4x6_thumbs_l_legends_front, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
-  translate_u(7.75,-3.95) rotate([0,0,-25]) layout(dactyl_manuform_4x6_thumbs_r, profile, legends=dactyl_manuform_4x6_thumbs_r_legends, legends_front=dactyl_manuform_4x6_thumbs_r_legends_front, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
+  layout(dactyl_manuform_4x6_main, profile, legends=dactyl_manuform_4x6_main_legends, front_legends=dactyl_manuform_4x6_main_front_legends, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
+  translate_u(3,-5) rotate([0,0,25]) layout(dactyl_manuform_4x6_thumbs_l, profile, legends=dactyl_manuform_4x6_thumbs_l_legends, front_legends=dactyl_manuform_4x6_thumbs_l_front_legends, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
+  translate_u(7.75,-3.95) rotate([0,0,-25]) layout(dactyl_manuform_4x6_thumbs_r, profile, legends=dactyl_manuform_4x6_thumbs_r_legends, front_legends=dactyl_manuform_4x6_thumbs_r_front_legends, row_sculpting_offset=row_sculpting_offset, column_override=column_override, column_sculpt_profile="cresting_wave") children();
 }

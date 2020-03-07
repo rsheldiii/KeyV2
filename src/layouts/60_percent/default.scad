@@ -1,6 +1,6 @@
 include <../layout.scad>
 
-60_percent = [
+60_percent_default_layout = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,2],
   [1.5,1,1,1,1,1,1,1,1,1,1,1,1,1.5],
   [1.75,1,1,1,1,1,1,1,1,1,1,1,2.25],
@@ -17,5 +17,5 @@ include <../layout.scad>
 ];
 
 module 60_percent_default(profile) {
-  layout(60_percent, profile, 60_percent_legends) children();
+  layout(60_percent_default_layout, profile, 60_percent_legends) children();
 }

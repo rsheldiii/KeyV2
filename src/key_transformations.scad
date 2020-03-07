@@ -131,9 +131,9 @@ module legend(text, position=[0,0], size=undef) {
     children();
 }
 
-module legend_front(text, position=[0,0], size=undef) {
+module front_legend(text, position=[0,0], size=undef) {
     font_size = size == undef ? $font_size : size;
-    $legends_front = [for(L=[$legends_front, [[text, position, font_size]]], a=L) a];
+    $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
     children();
 }
 

@@ -150,10 +150,7 @@ $legends = [];
 //halign = "left" or "center" or "right"
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
-$legends_front = [];
-
-//print both top and front legends
-$legends_dual = false;
+$front_legends = [];
 
 // make legends outset instead of inset.
 // broken off from artisan support since who wants outset legends?

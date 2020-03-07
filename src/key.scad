@@ -329,38 +329,21 @@ module clearance_check() {
 
 module legends(depth=0) {
 
-  if ($legends_dual) {
+  if (len($front_legends) > 0) {
     front_placement() {
-      if (len($legends_front) > 0) {
-        for (i=[0:len($legends_front)-1]) {
-          rotate([90,0,0]) keytext($legends_front[i][0], $legends_front[i][1], $legends_front[i][2], depth);
-  		}
-	  }
-	}
+      if (len($front_legends) > 0) {
+        for (i=[0:len($front_legends)-1]) {
+          rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
+  		  }
+	    } 
+    }
+  }
+  if (len($legends) > 0) {
     top_of_key() {
       // outset legend
       if (len($legends) > 0) {
         for (i=[0:len($legends)-1]) {
           keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-        }
-	  }
-	}
-  } else {
-  	if ($front_print_legends) {
-      front_placement() {
-      	if (len($legends) > 0) {
-          for (i=[0:len($legends)-1]) {
-            rotate([90,0,0]) keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-          }
-        }
-      }
-    } else {
-      top_of_key() {
-        // outset legend
-        if (len($legends) > 0) {
-          for (i=[0:len($legends)-1]) {
-            keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-          }
         }
       }
     }
