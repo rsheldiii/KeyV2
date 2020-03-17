@@ -14,4 +14,7 @@ include <layouts/60_percent/default.scad>
 include <layouts/gherkin/default.scad>
 include <layouts/gherkin/gherkin_bump.scad>
 
+include <layouts/dactyl_manuform/4x6.scad>
+include <layouts/dactyl_manuform/4x6_legends.scad>
+
 include <layouts/plate.scad>

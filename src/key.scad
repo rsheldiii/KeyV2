@@ -328,15 +328,17 @@ module clearance_check() {
 }
 
 module legends(depth=0) {
-  if ($front_print_legends) {
+
+  if (len($front_legends) > 0) {
     front_placement() {
-      if (len($legends) > 0) {
-        for (i=[0:len($legends)-1]) {
-          rotate([90,0,0]) keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-        }
-      }
+      if (len($front_legends) > 0) {
+        for (i=[0:len($front_legends)-1]) {
+          rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
+  		  }
+	    } 
     }
-  } else {
+  }
+  if (len($legends) > 0) {
     top_of_key() {
       // outset legend
       if (len($legends) > 0) {
