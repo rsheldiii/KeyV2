@@ -107,11 +107,12 @@ function skin_shape_slice(progress, thickness_difference, skew_this_slice, x_ske
     transform(
       rotation([tilt_this_slice,y_tilt_this_slice,0]),
         skin_key_shape([
-          total_key_width(thickness_difference),
-          total_key_height(thickness_difference),
+          total_key_width(0),
+          total_key_height(0),
           ],
           [$width_difference, $height_difference],
-          progress
+          progress,
+          thickness_difference
         )
     )
   );
