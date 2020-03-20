@@ -1,26 +1,20 @@
 include <../libraries/rounded_rectangle_profile.scad>
 
 module rounded_square_shape(size, delta, progress, center = true) {
-    width = size[0];
-    height = size[1];
+  offset(r=$corner_radius){
+    square_shape([size.x - $corner_radius*2, size.y - $corner_radius*2], delta, progress);
+  }
+}
 
-    width_difference = delta[0];
-    height_difference = delta[1];
-
-    // computed values for this slice
-    extra_width_this_slice = (width_difference) * progress;
-    extra_height_this_slice = (height_difference) * progress;
-    extra_corner_radius_this_slice = ($corner_radius);
-
-    offset(r=extra_corner_radius_this_slice){
-      square(
-        [
-          width - extra_width_this_slice - extra_corner_radius_this_slice * 2,
-          height - extra_height_this_slice - extra_corner_radius_this_slice * 2
-        ],
-        center=center
-      );
-    }
+module square_shape(size, delta, progress) {
+  alpha = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+  gamma = ($width_difference * alpha) / ($total_depth+alpha);
+  polygon(points=[
+    [-size.x /2 + delta.x * progress/2 , -size.y / 2 + delta.y * progress/2],
+    [size.x / 2 - delta.x * progress/2,-size.y / 2 + delta.y * progress/2],
+    [size.x / 2 - delta.x * progress/2 + gamma * progress, size.y / 2 - delta.y * progress/2],
+    [-size.x / 2 + delta.x * progress/2 - gamma * progress, size.y / 2 - delta.y * progress/2]
+  ]);
 }
 
 // for skin
