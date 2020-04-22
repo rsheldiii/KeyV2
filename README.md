@@ -7,6 +7,7 @@ This library is a keycap and keyset construction library for mechanical keyboard
 Relevant links:
 * Thingiverse: https://www.thingiverse.com/thing:2783650
 * Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
+* Buy me a coffee: https://ko-fi.com/rsheldiii, but only if you want to!
 
 ## How to run
 
