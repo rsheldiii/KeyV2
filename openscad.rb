@@ -5,12 +5,10 @@ module OpenSCAD
 
     Dir.chdir File.dirname(filename)
     lines = lines.flat_map do |line|
+      # please note we do not implement `use` at all
       if line =~ /(include|use)\s*<(.*)>/
         # File.readlines("./#{$2}")
         expand("./#{$2}")
-      # in lieu of actually implementing `use`, we can just cull this final line from key.scad
-      elsif line =~ /example\_key\(\);/
-        ""
       else
         line
       end

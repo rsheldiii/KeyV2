@@ -336,7 +336,7 @@ module legends(depth=0) {
         for (i=[0:len($front_legends)-1]) {
           rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
   		  }
-	    } 
+	    }
     }
   }
   if (len($legends) > 0) {
@@ -430,4 +430,6 @@ module example_key(){
   key();
 }
 
-example_key();
+if (!$using_customizer) {
+  example_key();
+}
