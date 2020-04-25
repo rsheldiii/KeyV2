@@ -25,13 +25,13 @@ All examples below assume you are running the library on your computer with Open
 
 If you're not technically inclined enough to start programming in OpenSCAD (it's easier than you think), you can look into [getting OpenSCAD's customizer working](https://github.com/rsheldiii/KeyV2/wiki/Getting-the-OpenSCAD-Customizer-working).
 
-The customizer is not always kept up to date, so be prepared.
+`customizer.scad` is auto-generated from the other files in this repository due to a quirk with how OpenSCAD shows customizer settings. It should be perpetually kept up to date, but there may be some bugs. feel free to open an issue if you find one!
 
 #### Thingiverse Customizer
 
-The easiest (though not the best) way to run this program is to boot it up in [Thingiverse's Customizer](https://www.thingiverse.com/apps/customizer/run?thing_id=2783650). Explanations of each option are provided, as well as some default variables. Twiddle the variables to see how the keycap changes!
+The easiest and buggiest way to run this program is to boot it up in [Thingiverse's Customizer](https://www.thingiverse.com/apps/customizer/run?thing_id=2783650). Explanations of each option are provided, as well as some default variables. Twiddle the variables to see how the keycap changes!
 
-Similar to the OpenSCAD customizer, this customizer is not always kept up to date.
+Unfortunately I don't think I can update the Thingiverse customizer without breaking it, so you don't get all the cool new features I've been developing over the past couple years.
 
 ## High-level overview
 
