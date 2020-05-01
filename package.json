@@ -23,9 +23,9 @@
   "dependencies": {
     "gulp-changed": "^3.2.0",
     "gulp-changed-in-place": "^2.3.0",
-    "gulp-shell": "^0.6.5"
+    "gulp-shell": "^0.8.0"
   },
   "devDependencies": {
-    "gulp": "github:gulpjs/gulp#4.0"
+    "gulp": "4.0.2"
   }
 }
