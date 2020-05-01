@@ -18,6 +18,9 @@ module key_shape(size, delta, progress = 0) {
     sculpted_square_shape(size, delta, progress);
   } else if ($key_shape_type == "rounded_square") {
     rounded_square_shape(size, delta, progress);
+  } else if ($key_shape_type == "flat_sided_square") {
+    // rounded_square_shape handles this
+    rounded_square_shape(size, delta, progress);
   } else if ($key_shape_type == "square") {
     square_shape(size, delta, progress);
   } else if ($key_shape_type == "oblong") {

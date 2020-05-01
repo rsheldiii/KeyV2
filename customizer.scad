@@ -809,6 +809,14 @@ module upside_down() {
     children();
   }
 }
+
+module sideways() {
+  $key_shape_type = "flat_sided_square";
+  $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
+  extra_y_rotation = atan2($width_difference/2,$total_depth);
+  translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
+  rotate([0,90 + extra_y_rotation ,0]) children();
+}
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
   legends = ["←", "↓", "→", "↑"];
@@ -875,6 +883,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 $fs=.1;
 unit = 19.05;
 
@@ -1063,34 +1079,85 @@ function sign_y(i,n) =
 	0;
 
 module rounded_square_shape(size, delta, progress, center = true) {
-    width = size[0];
-    height = size[1];
-
-    width_difference = delta[0];
-    height_difference = delta[1];
-
-    // computed values for this slice
-    extra_width_this_slice = (width_difference) * progress;
-    extra_height_this_slice = (height_difference) * progress;
-    extra_corner_radius_this_slice = ($corner_radius);
-
-    offset(r=extra_corner_radius_this_slice){
-      square(
-        [
-          width - extra_width_this_slice - extra_corner_radius_this_slice * 2,
-          height - extra_height_this_slice - extra_corner_radius_this_slice * 2
-        ],
-        center=center
-      );
-    }
+  offset(r=$corner_radius){
+    square_shape([size.x - $corner_radius*2, size.y - $corner_radius*2], delta, progress);
+  }
 }
 
 // for skin
 
 function skin_rounded_square(size, delta, progress) =
   rounded_rectangle_profile(size - (delta * progress), fn=36, r=$corner_radius);
+SMALLEST_POSSIBLE = 1/128;
+
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// we do this weird key_shape_type check here because rounded_square uses
+// square_shape, and we want flat sides to work for that too.
+// could be refactored, idk
 module square_shape(size, delta, progress){
-  square(size - delta * progress, center = true);
+  if ($key_shape_type == "flat_sided_square") {
+    flat_sided_square_shape(size, delta,progress);
+  } else {
+    square(size - delta * progress, center = true);
+  }
+}
+/*
+[-size.x /2,-size.y / 2],
+[size.x / 2,-size.y / 2],
+[size.x / 2, size.y / 2],
+[-size.x / 2, size.y / 2] */
+
+// for side-printed keycaps. Any amount of top tilt (on a keycap with a smaller
+// top than bottom) makes the left and right side of the keycap convex. This
+// shape makes the sides flat by making the top a trapezoid.
+// This obviously doesn't work with rounded sides at all
+module flat_sided_square_shape(size, delta, progress) {
+  polygon(points=[
+    [(-size.x + (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2, (-size.y + delta.y * progress)/2],
+    [(size.x - (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2,(-size.y + delta.y * progress)/2],
+    [(size.x - (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2],
+    [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
+  ]);
 }
 module oblong_shape(size, delta, progress) {
   // .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
@@ -1114,6 +1181,9 @@ module key_shape(size, delta, progress = 0) {
   } else if ($key_shape_type == "sculpted_square") {
     sculpted_square_shape(size, delta, progress);
   } else if ($key_shape_type == "rounded_square") {
+    rounded_square_shape(size, delta, progress);
+  } else if ($key_shape_type == "flat_sided_square") {
+    // rounded_square_shape handles this
     rounded_square_shape(size, delta, progress);
   } else if ($key_shape_type == "square") {
     square_shape(size, delta, progress);
@@ -1166,6 +1236,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1236,6 +1314,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1270,6 +1356,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1350,6 +1444,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1384,6 +1486,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1483,6 +1593,14 @@ function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
 
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -1567,6 +1685,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1601,6 +1727,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1716,6 +1850,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1750,6 +1892,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -2134,6 +2284,14 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
 function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 // TODO this define doesn't do anything besides tell me I used flat() in this file
 // is it better than not having it at all?
 module flat(stem_type, loft, height) {
