@@ -155,3 +155,11 @@ module upside_down() {
     children();
   }
 }
+
+module sideways() {
+  $key_shape_type = "flat_sided_square";
+  $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
+  extra_y_rotation = atan2($width_difference/2,$total_depth);
+  translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
+  rotate([0,90 + extra_y_rotation ,0]) children();
+}

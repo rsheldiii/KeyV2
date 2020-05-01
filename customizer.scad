@@ -20,7 +20,10 @@ $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3; // Not working in thingiverse customizer atm [0:0.01:1]
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
 
 // Font size used for text
 $font_size = 6;
@@ -28,12 +31,22 @@ $font_size = 6;
 // Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
 
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
 $stem_support_type = "tines"; // [tines, brim, disabled]
+
+// enable to have stem support extend past the keycap bottom, to (hopefully) the next
+// keycap. only works on tines right now
+$extra_long_stem_support = false;
 
 /* [Advanced] */
 
@@ -58,8 +71,15 @@ $height_difference = 4;
 $total_depth = 11.5;
 // The tilt of the dish in degrees. divided by key height
 $top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
 // How skewed towards the back the top is (0 for center)
 $top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
 
 /* Stem */
 
@@ -105,7 +125,7 @@ $dish_overdraw_height = 0;
 $cherry_bevel = true;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
-$stem_support_height = 0.4;
+$stem_support_height = .8;
 // Font used for text
 $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
@@ -113,6 +133,10 @@ $clearance_check = false;
 // Use linear_extrude instead of hull slices to make the shape of the key
 // Should be faster, also required for concave shapes
 $linear_extrude_shape = false;
+
+// brand new, more correct, hopefully faster, lots more work
+// warns in trajectory.scad but it looks benign
+$skin_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -135,11 +159,27 @@ $key_bump_edge = 0.4;
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
 
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
-$stabilizer_type = "cherry"; // [cherry, rounded_cherry, alps, disable]
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
@@ -224,43 +264,54 @@ module 6_25uh() {
 
 // unlike the other files with their own dedicated folders, this one doesn't
 // need a selector. I wrote one anyways for customizer support though
-module dcs_row(n=3) {
-  // names, so I don't go crazy
+module dcs_row(row=3, column=0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
   $width_difference = 6;
   $height_difference = 4;
   $dish_type = "cylindrical";
-  $dish_depth = 1;
+  $dish_depth = 0.5;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 1.75;
 
-  if (n == 5) {
-    $total_depth = 11.5;
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  // this dish depth should match the depth of the uberdishing in fully sculpted mode
+  // but it doesn't, and it's very slight for any reasonable double sculpting
+  /* $dish_depth = $double_sculpt_radius - sin(acos(top_total_key_width()/2 /$double_sculpt_radius)) * $double_sculpt_radius; */
+
+  /* echo("DISH DEPTH", $dish_depth, "column", column); */
+
+  // 5/0 is a hack so you can do these in a for loop
+  if (row == 5 || row == 0) {
+    $total_depth = 11.5 + extra_height;
     $top_tilt = -6;
+
     children();
-  } else if (n == 1) {
-    $total_depth = 8.5;
+  } else if (row == 1) {
+    $total_depth = 8.5 + extra_height;
     $top_tilt = -1;
+
     children();
-  } else if (n == 2) {
-    $total_depth = 7.5;
+  } else if (row == 2) {
+    $total_depth = 7.5 + extra_height;
     $top_tilt = 3;
     children();
-  } else if (n == 3) {
-    $total_depth = 6;
+  } else if (row == 3) {
+    $total_depth = 6 + extra_height;
     $top_tilt = 7;
     children();
-  } else if (n == 4) {
-    $total_depth = 6;
+  } else if (row == 4) {
+    $total_depth = 6 + extra_height;
     $top_tilt = 16;
     children();
   } else {
     children();
   }
 }
-module oem_row(n=3) {
+module oem_row(row=3, column = 0) {
   $bottom_key_width = 18.05;
   $bottom_key_height = 18.05;
   $width_difference = 5.8;
@@ -272,37 +323,40 @@ module oem_row(n=3) {
   $top_skew = 1.75;
   $stem_inset = 1.2;
 
-  if (n == 5) {
-    $total_depth = 11.2;
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  if (row == 5 || row == 0) {
+    $total_depth = 11.2 + extra_height;
     $top_tilt = -3;
     children();
-  } else if (n == 1) {
-    $total_depth = 9.45;
+  } else if (row == 1) {
+    $total_depth = 9.45 + extra_height;
     $top_tilt = 1;
     children();
-  } else if (n == 2) {
-    $total_depth = 9;
+  } else if (row == 2) {
+    $total_depth = 9 + extra_height;
     $top_tilt = 6;
     children();
-  } else if (n == 3) {
-    $total_depth = 9.25;
+  } else if (row == 3) {
+    $total_depth = 9.25 + extra_height;
     $top_tilt = 9;
     children();
-  } else if (n == 4) {
-    $total_depth = 9.25;
+  } else if (row == 4) {
+    $total_depth = 9.25 + extra_height;
     $top_tilt = 10;
     children();
   } else {
     children();
   }
 }
-module dsa_row(n=3) {
+module dsa_row(row=3, column = 0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.24; // 18.4;
   $bottom_key_height = 18.24; // 18.4;
   $width_difference = 6; // 5.7;
   $height_difference = 6; // 5.7;
-  $top_tilt = n == 5 ? -21 : (n-3) * 7;
+  $top_tilt = row == 5 ? -21 : (row-3) * 7;
   $top_skew = 0;
   $dish_type = "spherical";
   $dish_depth = 1.2;
@@ -310,31 +364,32 @@ module dsa_row(n=3) {
   $dish_skew_y = 0;
   $height_slices = 10;
   $enable_side_sculpting = true;
-  // might wanna change this if you don't minkowski
-  // do you even minkowski bro
   $corner_radius = 0.25;
 
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
   depth_raisers = [0, 3.5, 1, 0, 1, 3];
-  if (n == 5) {
-    $total_depth = 8.1 + depth_raisers[n];
+  if (row < 1 || row > 4) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
-  } else if (n == 1) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 1) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
-  } else if (n == 2) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 2) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
-  } else if (n == 3) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 3) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
-  } else if (n == 4) {
-    $total_depth = 8.1 + depth_raisers[n];
+  } else if (row == 4) {
+    $total_depth = 8.1 + depth_raisers[row] + extra_height;
     children();
   } else {
     children();
   }
 }
-module sa_row(n=3) {
+module sa_row(n=3, column=0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.4;
   $bottom_key_height = 18.4;
@@ -349,31 +404,40 @@ module sa_row(n=3) {
   // might wanna change this if you don't minkowski
   // do you even minkowski bro
   $corner_radius = 0.25;
+
+  // this is _incredibly_ intensive
+  /* $rounded_key = true; */
+
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
   // 5th row is usually unsculpted or the same as the row below it
   // making a super-sculpted top row (or bottom row!) would be real easy
   // bottom row would just be 13 tilt and 14.89 total depth
   // top row would be something new entirely - 18 tilt maybe?
-  if (n == 1 || n == 5){
-    $total_depth = 14.89;
+  if (n <= 1){
+    $total_depth = 14.89 + extra_height;
     $top_tilt = -13;
     children();
   } else if (n == 2) {
-    $total_depth = 12.925;
+    $total_depth = 12.925 + extra_height;
     $top_tilt = -7;
     children();
-  } else if (n == 3 || n == 5) {
-    $total_depth = 12.5;
+  } else if (n == 3) {
+    $total_depth = 12.5 + extra_height;
     $top_tilt = 0;
     children();
   } else if (n == 4){
-    $total_depth = 12.925;
+    $total_depth = 12.925 + extra_height;
     $top_tilt = 7;
     children();
   } else {
+    $total_depth = 12.5 + extra_height;
+    $top_tilt = 0;
     children();
   }
 }
-module g20_row(n=3) {
+module g20_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
   $width_difference = 2;
@@ -391,25 +455,116 @@ module g20_row(n=3) {
   //also,
   $rounded_key = true;
 
-  if (n == 5) {
-    $total_depth = 6 + abs((n-3) * 0.5);
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  $total_depth = 6 + abs((row-3) * 0.5) + extra_height;
+
+  if (row == 5 || row == 0) {
+
     $top_tilt =  -18.55;
     children();
-  } else if (n == 1) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 1) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 2) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 2) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 3) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 3) {
+    $top_tilt = (row-3) * 7 + 2.5;
     children();
-  } else if (n == 4) {
-    $total_depth = 6 + abs((n-3) * 0.5);
-    $top_tilt = (n-3) * 7 + 2.5;
+  } else if (row == 4) {
+    $top_tilt = (row-3) * 7 + 2.5;
+    children();
+  } else {
+    children();
+  }
+}
+// my own measurements
+module hipro_row(row=3, column=0) {
+  $key_shape_type = "sculpted_square";
+
+  $bottom_key_width = 18.35;
+  $bottom_key_height = 18.17;
+
+  $width_difference = ($bottom_key_width - 12.3);
+  $height_difference = ($bottom_key_height - 12.65);
+  $dish_type = "spherical";
+  $dish_depth = 0.75;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 0;
+  $height_slices = 10;
+  // might wanna change this if you don't minkowski
+  // do you even minkowski bro
+  $corner_radius = 0.25;
+
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  if (row <= 1){
+    $total_depth = 13.7 + extra_height;
+    // TODO I didn't change these yet
+    $top_tilt = -13;
+    children();
+  } else if (row == 2) {
+    $total_depth = 11.1 + extra_height;
+    $top_tilt = -7;
+    children();
+  } else if (row == 3) {
+    $total_depth = 11.1 + extra_height;
+    $top_tilt = 7;
+    children();
+  } else if (row == 4 || row == 5){
+    $total_depth = 12.25 + extra_height;
+    $top_tilt = 13;
+    children();
+  } else {
+    children();
+  }
+}
+module grid_row(row=3, column = 0) {
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = 0.2;
+  $height_difference = 0.2;
+  $top_tilt = 0;
+  $top_skew = 0;
+  $dish_type = "old spherical";
+  // something weird is going on with this and legends - can't put it below 1.2 or they won't show
+  $dish_depth = 1;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+
+  $linear_extrude_shape = true;
+
+
+  $dish_overdraw_width = -8;
+  $dish_overdraw_height = -8;
+
+  $minkowski_radius = 0.5;
+  //also,
+  /* $rounded_key = true; */
+
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  $total_depth = 6 + abs((row-3) * 0.5) + extra_height;
+
+  if (row == 5 || row == 0) {
+    /* $top_tilt =  -18.55; */
+    children();
+  } else if (row == 1) {
+    /* $top_tilt = (row-3) * 7 + 2.5; */
+    children();
+  } else if (row == 2) {
+    /* $top_tilt = (row-3) * 7 + 2.5; */
+    children();
+  } else if (row == 3) {
+    /* $top_tilt = (row-3) * 7 + 2.5; */
+    children();
+  } else if (row == 4) {
+    /* $top_tilt = (row-3) * 7 + 2.5; */
     children();
   } else {
     children();
@@ -417,17 +572,21 @@ module g20_row(n=3) {
 }
 
 // man, wouldn't it be so cool if functions were first order
-module key_profile(key_profile_type, row) {
+module key_profile(key_profile_type, row, column=0) {
   if (key_profile_type == "dcs") {
-    dcs_row(row) children();
+    dcs_row(row, column) children();
   } else if (key_profile_type == "oem") {
-    oem_row(row) children();
+    oem_row(row, column) children();
   } else if (key_profile_type == "dsa") {
-    dsa_row(row) children();
+    dsa_row(row, column) children();
   } else if (key_profile_type == "sa") {
-    sa_row(row) children();
+    sa_row(row, column) children();
   } else if (key_profile_type == "g20") {
-    g20_row(row) children();
+    g20_row(row, column) children();
+  } else if (key_profile_type == "hipro") {
+    hipro_row(row, column) children();
+  } else if (key_profile_type == "grid") {
+    grid_row(row, column) children();
   } else if (key_profile_type == "disable") {
     children();
   } else {
@@ -480,8 +639,9 @@ module iso_enter() {
   $key_height = 2;
 
   $top_tilt = 0;
+  $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
-  $linear_extrude_shape = true;
+  /* $linear_extrude_shape = true; */
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   $dish_overdraw_width = 2.38125;
@@ -500,6 +660,11 @@ module translate_u(x=0, y=0, z=0){
   translate([x * unit, y*unit, z*unit]) children();
 }
 
+module no_stem_support() {
+  $stem_support_type = "disable";
+  children();
+}
+
 module brimmed_stem_support(height = 0.4) {
   $stem_support_type = "brim";
   $stem_support_height = height;
@@ -509,6 +674,11 @@ module brimmed_stem_support(height = 0.4) {
 module tined_stem_support(height = 0.4) {
   $stem_support_type = "tines";
   $stem_support_height = height;
+  children();
+}
+
+module unsupported_stem() {
+  $stem_support_type = "disable";
   children();
 }
 
@@ -527,9 +697,9 @@ module rotated() {
   children();
 }
 
-module stabilized(mm=12, vertical = false, type="cherry") {
+module stabilized(mm=12, vertical = false, type=undef) {
   if (vertical) {
-    $stabilizer_type = type;
+    $stabilizer_type = (type ? type : ($stabilizer_type ? $stabilizer_type : "costar_stabilizer"));
     $stabilizers = [
     [0,  mm],
     [0, -mm]
@@ -537,7 +707,9 @@ module stabilized(mm=12, vertical = false, type="cherry") {
 
     children();
   } else {
-    $stabilizer_type = type;
+    $stabilizer_type = (type ? type : ($stabilizer_type ? $stabilizer_type : "costar_stabilizer"));
+
+
     $stabilizers = [
       [mm,  0],
       [-mm, 0]
@@ -612,15 +784,41 @@ module legend(text, position=[0,0], size=undef) {
     children();
 }
 
+module front_legend(text, position=[0,0], size=undef) {
+    font_size = size == undef ? $font_size : size;
+    $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
 module bump(depth=undef) {
     $key_bump = true;
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;
     children();
 }
+
+// kinda dirty, but it works
+// might not work great with fully sculpted profiles yet
+module upside_down() {
+  if ($stem_inner_slop != 0) {
+    echo("it is recommended you set inner stem slop to 0 when you use upside_down()");
+  }
+  // $top_tilt*2 because top_placement rotates by top_tilt for us
+  // first rotate 180 to get the keycaps to face the same direction
+  rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
+    children();
+  }
+}
+
+module sideways() {
+  $key_shape_type = "flat_sided_square";
+  $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
+  extra_y_rotation = atan2($width_difference/2,$total_depth);
+  translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
+  rotate([0,90 + extra_y_rotation ,0]) children();
+}
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
-  /* doesn't work in thingiverse customize lol */
-  /* legends = [UNICODE WUZ HERE]; */
+  legends = ["←", "↓", "→", "↑"];
 
   for (i = [0:3]) {
     translate_u(positions[i].x, positions[i].y) key_profile(profile, rows[i]) legend(legends[i]) cherry() key(true);
@@ -651,6 +849,8 @@ module row_profile(profile, unsculpted = false) {
 }
 
 // files
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -658,15 +858,18 @@ module row_profile(profile, unsculpted = false) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -676,15 +879,28 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 $fs=.1;
 unit = 19.05;
 
 // corollary is rounded_square
 // NOT 3D
+function unit_length(length) = unit * (length - 1) + 18.16;
+
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
-  function unit_length(length) = unit * (length - 1) + 18.16;
 
 
   // in order to make the ISO keycap shape generic, we are going to express the
@@ -713,6 +929,44 @@ module ISO_enter_shape(size, delta, progress){
     }
   }
 }
+
+function iso_enter_vertices(width, height, width_ratio, height_ratio, wd, hd) = [
+  [                   0-wd,                     0-hd], // top right
+  [                   0-wd,               -height+hd], // bottom right
+  [-width * width_ratio+wd,               -height+hd], // bottom left
+  [-width * width_ratio+wd,-height * height_ratio+hd], // inner middle point
+  [              -width+wd,-height * height_ratio+hd], // outer middle point
+  [              -width+wd,                     0-hd]  // top left
+] + [
+  [(width * width_ratio)/2, height/2 ],
+  [(width * width_ratio)/2, height/2 ],
+  [(width * width_ratio)/2, height/2 ],
+  [(width * width_ratio)/2, height/2 ],
+  [(width * width_ratio)/2, height/2 ],
+  [(width * width_ratio)/2, height/2 ]
+];
+
+// no rounding on the corners at all
+function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
+  iso_enter_vertices(size.x, size.y, unit_length(1.25) / unit_length(1.5), unit_length(1) / unit_length(2), thickness_difference/2 + delta.x * progress/2, thickness_difference/2 + delta.y * progress/2);
+function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
+	for (index = [0:fn-1])
+		let(a = index/fn*360)
+			r * [cos(a), sin(a)]
+			+ sign_x(index, fn) * [size[0]/2-r,0]
+			+ sign_y(index, fn) * [0,size[1]/2-r]
+];
+
+function sign_x(i,n) =
+	i < n/4 || i > n-n/4  ?  1 :
+	i > n/4 && i < n-n/4  ? -1 :
+	0;
+
+function sign_y(i,n) =
+	i > 0 && i < n/2  ?  1 :
+	i > n/2 ? -1 :
+	0;
+
 // rounded square shape with additional sculpting functions to better approximate
 
 // When sculpting sides, how much in should the tops come
@@ -757,6 +1011,38 @@ module sculpted_square_shape(size, delta, progress) {
   }
 }
 
+// fudging the hell out of this, I don't remember what the negative-offset-positive-offset was doing in the module above
+// also no 'bowed' square shape for now
+function skin_sculpted_square_shape(size, delta, progress) =
+  let(
+    width = size[0],
+    height = size[1],
+
+    width_difference = delta[0],
+    height_difference = delta[1],
+    // makes the sides bow
+    extra_side_size =  side_sculpting(progress),
+    // makes the rounded corners of the keycap grow larger as they move upwards
+    extra_corner_size = corner_sculpting(progress),
+
+    // computed values for this slice
+    extra_width_this_slice = (width_difference - extra_side_size) * progress,
+    extra_height_this_slice = (height_difference - extra_side_size) * progress,
+    extra_corner_radius_this_slice = ($corner_radius + extra_corner_size),
+
+    square_size = [
+      width - extra_width_this_slice,
+      height - extra_height_this_slice
+    ]
+  ) rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=36, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
+
+  /* offset(r = extra_corner_radius_this_slice) {
+    offset(r = -extra_corner_radius_this_slice) {
+      side_rounded_square(square_size, r = $more_side_sculpting_factor * progress);
+    }
+  } */
+
+
 module side_rounded_square(size, r) {
     iw = size.x - 2 * r;
     ih = size.y - 2 * r;
@@ -774,30 +1060,104 @@ module side_rounded_square(size, r) {
         square([iw, ih], center=true);
     }
 }
+function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
+	for (index = [0:fn-1])
+		let(a = index/fn*360)
+			r * [cos(a), sin(a)]
+			+ sign_x(index, fn) * [size[0]/2-r,0]
+			+ sign_y(index, fn) * [0,size[1]/2-r]
+];
+
+function sign_x(i,n) =
+	i < n/4 || i > n-n/4  ?  1 :
+	i > n/4 && i < n-n/4  ? -1 :
+	0;
+
+function sign_y(i,n) =
+	i > 0 && i < n/2  ?  1 :
+	i > n/2 ? -1 :
+	0;
+
 module rounded_square_shape(size, delta, progress, center = true) {
-    width = size[0];
-    height = size[1];
-
-    width_difference = delta[0];
-    height_difference = delta[1];
-
-    // computed values for this slice
-    extra_width_this_slice = (width_difference) * progress;
-    extra_height_this_slice = (height_difference) * progress;
-    extra_corner_radius_this_slice = ($corner_radius);
-
-    offset(r=extra_corner_radius_this_slice){
-      square(
-        [
-          width - extra_width_this_slice - extra_corner_radius_this_slice * 2,
-          height - extra_height_this_slice - extra_corner_radius_this_slice * 2
-        ],
-        center=center
-      );
-    }
+  offset(r=$corner_radius){
+    square_shape([size.x - $corner_radius*2, size.y - $corner_radius*2], delta, progress);
+  }
 }
+
+// for skin
+
+function skin_rounded_square(size, delta, progress) =
+  rounded_rectangle_profile(size - (delta * progress), fn=36, r=$corner_radius);
+SMALLEST_POSSIBLE = 1/128;
+
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// we do this weird key_shape_type check here because rounded_square uses
+// square_shape, and we want flat sides to work for that too.
+// could be refactored, idk
 module square_shape(size, delta, progress){
-  square(size - delta * progress, center = true);
+  if ($key_shape_type == "flat_sided_square") {
+    flat_sided_square_shape(size, delta,progress);
+  } else {
+    square(size - delta * progress, center = true);
+  }
+}
+/*
+[-size.x /2,-size.y / 2],
+[size.x / 2,-size.y / 2],
+[size.x / 2, size.y / 2],
+[-size.x / 2, size.y / 2] */
+
+// for side-printed keycaps. Any amount of top tilt (on a keycap with a smaller
+// top than bottom) makes the left and right side of the keycap convex. This
+// shape makes the sides flat by making the top a trapezoid.
+// This obviously doesn't work with rounded sides at all
+module flat_sided_square_shape(size, delta, progress) {
+  polygon(points=[
+    [(-size.x + (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2, (-size.y + delta.y * progress)/2],
+    [(size.x - (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2,(-size.y + delta.y * progress)/2],
+    [(size.x - (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2],
+    [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
+  ]);
 }
 module oblong_shape(size, delta, progress) {
   // .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
@@ -811,12 +1171,19 @@ module oblong_shape(size, delta, progress) {
   }
 }
 
+// size: at progress 0, the shape is supposed to be this size
+// delta: at progress 1, the keycap is supposed to be size - delta
+// progress: how far along the transition you are.
+// it's not always linear - specifically sculpted_square
 module key_shape(size, delta, progress = 0) {
   if ($key_shape_type == "iso_enter") {
     ISO_enter_shape(size, delta, progress);
   } else if ($key_shape_type == "sculpted_square") {
     sculpted_square_shape(size, delta, progress);
   } else if ($key_shape_type == "rounded_square") {
+    rounded_square_shape(size, delta, progress);
+  } else if ($key_shape_type == "flat_sided_square") {
+    // rounded_square_shape handles this
     rounded_square_shape(size, delta, progress);
   } else if ($key_shape_type == "square") {
     square_shape(size, delta, progress);
@@ -826,6 +1193,17 @@ module key_shape(size, delta, progress = 0) {
     echo("Warning: unsupported $key_shape_type");
   }
 }
+
+function skin_key_shape(size, delta, progress = 0, thickness_difference) =
+  $key_shape_type == "rounded_square" ?
+    skin_rounded_square(size, delta, progress) :
+    $key_shape_type == "sculpted_square" ?
+      skin_sculpted_square_shape(size, delta, progress) :
+    $key_shape_type == "iso_enter" ?
+      skin_iso_enter_shape(size, delta, progress, thickness_difference) :
+      echo("Warning: unsupported $key_shape_type for skin shape. disable skin_extrude_shape or pick a new shape");
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -833,15 +1211,18 @@ module key_shape(size, delta, progress = 0) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -852,6 +1233,18 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
 
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -859,7 +1252,7 @@ extra_vertical = 0.6;
 module inside_cherry_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
@@ -884,9 +1277,11 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -894,15 +1289,18 @@ module cherry_stem(depth, slop) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -912,6 +1310,20 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -919,15 +1331,18 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -937,6 +1352,18 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -945,7 +1372,7 @@ extra_vertical = 0.6;
 module inside_cherry_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
@@ -970,7 +1397,7 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
 
@@ -983,6 +1410,8 @@ module rounded_cherry_stem(depth, slop) {
     inside_cherry_cross(slop);
   }
 }
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -990,15 +1419,18 @@ module rounded_cherry_stem(depth, slop) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1008,6 +1440,20 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1015,15 +1461,18 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1033,6 +1482,18 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1041,7 +1502,7 @@ extra_vertical = 0.6;
 module inside_cherry_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
@@ -1066,7 +1527,7 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
 
@@ -1097,13 +1558,83 @@ module filled_stem() {
 
   shape($wall_thickness);
 }
+SMALLEST_POSSIBLE = 1/128;
+
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// extra length to the vertical tine of the inside cherry cross
+// splits the stem into halves - allows easier fitment
+extra_vertical = 0.6;
+
+module inside_cherry_stabilizer_cross(slop) {
+  // inside cross
+  // translation purely for aesthetic purposes, to get rid of that awful lattice
+  translate([0,0,-SMALLEST_POSSIBLE]) {
+    linear_extrude(height = $stem_throw) {
+      square(cherry_cross(slop, extra_vertical)[0], center=true);
+      square(cherry_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+}
+
+module cherry_stabilizer_stem(depth, slop) {
+  difference(){
+    // outside shape
+    linear_extrude(height = depth) {
+      offset(r=1){
+        square(outer_cherry_stabilizer_stem(slop) - [2,2], center=true);
+      }
+    }
+
+    inside_cherry_stabilizer_cross(slop);
+  }
+}
 
 
 //whole stem, alps or cherry, trimmed to fit
 module stem(stem_type, depth, slop){
     if (stem_type == "alps") {
       alps_stem(depth, slop);
-    } else if (stem_type == "cherry") {
+    } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
       cherry_stem(depth, slop);
     } else if (stem_type == "rounded_cherry") {
       rounded_cherry_stem(depth, slop);
@@ -1111,12 +1642,17 @@ module stem(stem_type, depth, slop){
       box_cherry_stem(depth, slop);
     } else if (stem_type == "filled") {
       filled_stem();
+    } else if (stem_type == "cherry_stabilizer") {
+      cherry_stabilizer_stem(depth, slop);
     } else if (stem_type == "disable") {
       children();
     } else {
-      echo("Warning: unsupported $stem_type");
+      echo("Warning: unsupported $stem_type: ");
+      echo(stem_type);
     }
 }
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1124,15 +1660,18 @@ module stem(stem_type, depth, slop){
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1142,6 +1681,20 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1149,15 +1702,18 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1167,6 +1723,18 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1175,7 +1743,7 @@ extra_vertical = 0.6;
 module inside_cherry_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
@@ -1200,7 +1768,7 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
 
@@ -1211,7 +1779,7 @@ module brim_support(stem_type, stem_support_height, slop) {
         square($alps_stem + [2,2], center=true);
       }
     }
-  } else if (stem_type == "cherry") {
+  } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
     difference() {
       linear_extrude(height = stem_support_height){
         offset(r=1){
@@ -1236,8 +1804,20 @@ module brim_support(stem_type, stem_support_height, slop) {
 
       inside_cherry_cross(slop);
     }
+  } else if (stem_type == "cherry_stabilizer") {
+    difference() {
+      linear_extrude(height = stem_support_height){
+        offset(r=1){
+          square(outer_cherry_stabilizer_stem(slop) + [2,2], center=true);
+        }
+      }
+
+      inside_cherry_cross(slop);
+    }
   }
 }
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1245,15 +1825,18 @@ module brim_support(stem_type, stem_support_height, slop) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1263,6 +1846,20 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1270,15 +1867,18 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1288,6 +1888,18 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 // actual mm key width and height at the top
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1296,7 +1908,7 @@ extra_vertical = 0.6;
 module inside_cherry_cross(slop) {
   // inside cross
   // translation purely for aesthetic purposes, to get rid of that awful lattice
-  translate([0,0,-0.005]) {
+  translate([0,0,-SMALLEST_POSSIBLE]) {
     linear_extrude(height = $stem_throw) {
       square(cherry_cross(slop, extra_vertical)[0], center=true);
       square(cherry_cross(slop, extra_vertical)[1], center=true);
@@ -1321,25 +1933,71 @@ module cherry_stem(depth, slop) {
       }
     }
 
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
 
 module centered_tines(stem_support_height) {
-  translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
-  translate([0,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
+  if ($key_length < 2) {
+    translate([0,0,$stem_support_height / 2]) {
+      cube([total_key_width(), 0.5, $stem_support_height], center = true);
+    }
+  }
+
+  translate([0,0,$stem_support_height / 2]) {
+    cube([
+      1,
+      total_key_height(),
+      $stem_support_height
+    ],
+    center = true);
+  }
 }
 
 module tines_support(stem_type, stem_support_height, slop) {
-  if (stem_type == "cherry") {
+  extra_height = $extra_long_stem_support ? ($unit - total_key_height()) + 0.1 : -$wall_thickness/4; // fudge
+  extra_width = $extra_long_stem_support ? ($unit - total_key_width()) + 0.1 : -$wall_thickness/4;
+
+  if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
     difference () {
       union() {
-        if ($key_length < 2) translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness), 1, $stem_support_height], center = true);
-        translate([2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
-        translate([-2,0,$stem_support_height / 2]) cube([1, total_key_height($wall_thickness), $stem_support_height], center = true);
+        if ($key_length < 2) {
+          translate([0,0,$stem_support_height / 2]) {
+            cube([
+              total_key_width() + extra_width*2,
+              0.5,
+              $stem_support_height
+            ], center = true);
+          }
+        }
+
+        // 2 vertical tines holding either side of the cruciform
+        for (x = [1.15, -1.15]) {
+          translate([x,0,$stem_support_height / 2]) {
+            cube([
+              0.5,
+              total_key_height() + extra_height*2, // this is to extend past
+              $stem_support_height
+            ], center = true);
+          }
+        }
       }
 
       inside_cherry_cross(slop);
+    }
+  } else if (stem_type == "cherry_stabilizer") {
+    difference () {
+      for (x = [1.15, -1.15]) {
+        translate([x,0,$stem_support_height / 2]) {
+          cube([
+            1,
+            total_key_height($wall_thickness),
+            $stem_support_height
+          ], center = true);
+        }
+      }
+
+      inside_cherry_stabilizer_cross(slop);
     }
   } else if (stem_type == "box_cherry") {
     difference () {
@@ -1564,6 +2222,9 @@ module spherical_dish(width, height, depth, inverted){
     }
   }
 }
+module flat_dish(width, height, depth, inverted){
+  cube([width + 100,height + 100, depth], center=true);
+}
 
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
@@ -1581,12 +2242,16 @@ module  dish(width, height, depth, inverted) {
     }
     else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
+    } else if ($dish_type == "flat") {
+      flat_dish(width, height, depth, inverted);
     } else if ($dish_type == "disable") {
       // else no dish
     } else {
       echo("WARN: $dish_type unsupported");
     }
 }
+SMALLEST_POSSIBLE = 1/128;
+
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1594,15 +2259,18 @@ module  dish(width, height, depth, inverted) {
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
 // box (kailh) switches have a bit less to work with
 function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
 
 // .005 purely for aesthetics, to get rid of that ugly crosshatch
 function cherry_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [4.03 + slop, 1.15 + slop / 3],
+  [4.03 + slop, 1.25 + slop / 3],
   // vertical tine
-  [1.25 + slop / 3, 4.23 + extra_vertical + slop / 3 + .005],
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
 // actual mm key width and height
@@ -1613,12 +2281,36 @@ function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height
 function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
 function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
 
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+// TODO this define doesn't do anything besides tell me I used flat() in this file
+// is it better than not having it at all?
+module flat(stem_type, loft, height) {
+  translate([0,0,loft + 500]){
+    cube(1000, center=true);
+  }
+}
+
 // figures out the scale factor needed to make a 45 degree wall
 function scale_for_45(height, starting_size) = (height * 2 + starting_size) / starting_size;
 
 // complicated since we want the different stems to work well
 // also kind of messy... oh well
 module flared(stem_type, loft, height) {
+  // flat support. straight flat support has a tendency to shear off; flared support
+  // all the way to the top has a tendency to warp the outside of the keycap.
+  // hopefully the compromise is both
+  flat(stem_type, loft + height/4, height);
+
   translate([0,0,loft]){
     if (stem_type == "rounded_cherry") {
       linear_extrude(height=height, scale = scale_for_45(height, $rounded_cherry_stem_d)){
@@ -1636,6 +2328,13 @@ module flared(stem_type, loft, height) {
       linear_extrude(height=height, scale = cherry_scale){
         offset(r=1){
           square(outer_box_cherry_stem($stem_slop) - [2,2], center=true);
+        }
+      }
+    } else if (stem_type == "cherry_stabilizer") {
+      cherry_scale = [scale_for_45(height, outer_cherry_stabilizer_stem($stem_slop)[0]), scale_for_45(height, outer_cherry_stabilizer_stem($stem_slop)[1])];
+      linear_extrude(height=height, scale = cherry_scale){
+        offset(r=1){
+          square(outer_cherry_stabilizer_stem($stem_slop) - [2,2], center=true);
         }
       }
     } else {
@@ -1794,8 +2493,1715 @@ module geodesic_sphere(r=-1, d=-1) {
   polyhedron(points=subdiv_icos[0], faces=subdiv_icos[1]);
 }
 
+// for skin hulls
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// so3
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+
+function rodrigues_so3_exp(w, A, B) = [
+[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
+[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
+[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
+];
+
+function so3_exp(w) = so3_exp_rad(w/180*PI);
+function so3_exp_rad(w) =
+combine_so3_exp(w,
+  w*w < 1e-8
+  ? so3_exp_1(w*w)
+  : w*w < 1e-6
+    ? so3_exp_2(w*w)
+    : so3_exp_3(w*w));
+
+function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
+
+// Taylor series expansions close to 0
+function so3_exp_1(theta_sq) = [
+  1 - 1/6*theta_sq,
+  0.5
+];
+
+function so3_exp_2(theta_sq) = [
+  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
+  0.5 - 0.25/6 * theta_sq
+];
+
+function so3_exp_3_0(theta_deg, inv_theta) = [
+  sin(theta_deg) * inv_theta,
+  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
+];
+
+function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
+
+
+function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
+
+function so3_ln(m) = 180/PI*so3_ln_rad(m);
+function so3_ln_rad(m) = so3_ln_0(m,
+  cos_angle = rot_cos_angle(m),
+  preliminary_result = rot_axis_part(m));
+
+function so3_ln_0(m, cos_angle, preliminary_result) =
+so3_ln_1(m, cos_angle, preliminary_result,
+  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
+
+function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
+  cos_angle > sqrt(1/2)
+  ? sin_angle_abs > 0
+    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
+    : preliminary_result
+  : cos_angle > -sqrt(1/2)
+    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
+    : so3_get_symmetric_part_rotation(
+        preliminary_result,
+        m,
+        angle = PI - asin(sin_angle_abs)*PI/180,
+        d0 = m[0][0] - cos_angle,
+        d1 = m[1][1] - cos_angle,
+        d2 = m[2][2] - cos_angle
+      );
+
+function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
+so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
+
+function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
+  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
+
+function so3_largest_column(m, d0, d1, d2) =
+    d0*d0 > d1*d1 && d0*d0 > d2*d2
+    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
+    : d1*d1 > d2*d2
+      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
+      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
+
+__so3_test = [12,-125,110];
+echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
+
+function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
+
+// [A,B,t]
+function se3_exp_1(t,w) = concat(
+  so3_exp_1(w*w),
+  [t + 0.5 * cross(w,t)]
+);
+
+function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
+function se3_exp_2_0(t,w,theta_sq) =
+se3_exp_23(
+  so3_exp_2(theta_sq),
+  C = (1.0 - theta_sq/20) / 6,
+  t=t,w=w);
+
+function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
+
+function se3_exp_3_0(t,w,theta_deg,inv_theta) =
+se3_exp_23(
+  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
+  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
+  t=t,w=w);
+
+function se3_exp_23(AB,C,t,w) =
+[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
+
+function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
+
+function se3_exp_0(t,w) =
+combine_se3_exp(w,
+// Evaluate by Taylor expansion when near 0
+  w*w < 1e-8
+  ? se3_exp_1(t,w)
+  : w*w < 1e-6
+    ? se3_exp_2(t,w)
+    : se3_exp_3(t,w)
+);
+
+function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
+function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
+
+function se3_ln_rad(m) = se3_ln_0(m,
+  rot = so3_ln_rad(rotation_part(m)));
+function se3_ln_0(m,rot) = se3_ln_1(m,rot,
+  theta = sqrt(rot*rot));
+function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
+  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
+  halfrotator = so3_exp_rad(rot * -.5));
+function se3_ln_2(m,rot,theta,shtot,halfrotator) =
+concat( (halfrotator * translation_part(m) -
+  (theta > 0.001
+  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
+  : rot * ((translation_part(m) * rot)/24)
+  )) / (2 * shtot), rot);
+
+__se3_test = [20,-40,60,-80,100,-120];
+echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// List helpers
+
+/*!
+  Flattens a list one level:
+
+  flatten([[0,1],[2,3]]) => [0,1,2,3]
+*/
+function flatten(list) = [ for (i = list, v = i) v ];
+
+
+/*!
+  Creates a list from a range:
+
+  range([0:2:6]) => [0,2,4,6]
+*/
+function range(r) = [ for(x=r) x ];
+
+/*!
+  Reverses a list:
+
+  reverse([1,2,3]) => [3,2,1]
+*/
+function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
+
+/*!
+  Extracts a subarray from index begin (inclusive) to end (exclusive)
+  FIXME: Change name to use list instead of array?
+
+  subarray([1,2,3,4], 1, 2) => [2,3]
+*/
+function subarray(list,begin=0,end=-1) = [
+    let(end = end < 0 ? len(list) : end)
+      for (i = [begin : 1 : end-1])
+        list[i]
+];
+
+/*!
+  Returns a copy of a list with the element at index i set to x
+
+  set([1,2,3,4], 2, 5) => [1,2,5,4]
+*/
+function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
+
+/*!
+  Remove element from the list by index.
+  remove([4,3,2,1],1) => [4,2,1]
+*/
+function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
+
+/*!
+  Creates a rotation matrix
+
+  xyz = euler angles = rz * ry * rx
+  axis = rotation_axis * rotation_angle
+*/
+function rotation(xyz=undef, axis=undef) =
+  xyz != undef && axis != undef ? undef :
+  xyz == undef  ? se3_exp([0,0,0,axis[0],axis[1],axis[2]]) :
+  len(xyz) == undef ? rotation(axis=[0,0,xyz]) :
+  (len(xyz) >= 3 ? rotation(axis=[0,0,xyz[2]]) : identity4()) *
+  (len(xyz) >= 2 ? rotation(axis=[0,xyz[1],0]) : identity4()) *
+  (len(xyz) >= 1 ? rotation(axis=[xyz[0],0,0]) : identity4());
+
+/*!
+  Creates a scaling matrix
+*/
+function scaling(v) = [
+  [v[0],0,0,0],
+  [0,v[1],0,0],
+  [0,0,v[2],0],
+  [0,0,0,1],
+];
+
+/*!
+  Creates a translation matrix
+*/
+function translation(v) = [
+  [1,0,0,v[0]],
+  [0,1,0,v[1]],
+  [0,0,1,v[2]],
+  [0,0,0,1],
+];
+
+// Convert between cartesian and homogenous coordinates
+function project(x) = subarray(x,end=len(x)-1) / x[len(x)-1];
+
+function transform(m, list) = [for (p=list) project(m * vec4(p))];
+function to_3d(list) = [ for(v = list) vec3(v) ];
+// List helpers
+
+/*!
+  Flattens a list one level:
+
+  flatten([[0,1],[2,3]]) => [0,1,2,3]
+*/
+function flatten(list) = [ for (i = list, v = i) v ];
+
+
+/*!
+  Creates a list from a range:
+
+  range([0:2:6]) => [0,2,4,6]
+*/
+function range(r) = [ for(x=r) x ];
+
+/*!
+  Reverses a list:
+
+  reverse([1,2,3]) => [3,2,1]
+*/
+function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
+
+/*!
+  Extracts a subarray from index begin (inclusive) to end (exclusive)
+  FIXME: Change name to use list instead of array?
+
+  subarray([1,2,3,4], 1, 2) => [2,3]
+*/
+function subarray(list,begin=0,end=-1) = [
+    let(end = end < 0 ? len(list) : end)
+      for (i = [begin : 1 : end-1])
+        list[i]
+];
+
+/*!
+  Returns a copy of a list with the element at index i set to x
+
+  set([1,2,3,4], 2, 5) => [1,2,5,4]
+*/
+function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
+
+/*!
+  Remove element from the list by index.
+  remove([4,3,2,1],1) => [4,2,1]
+*/
+function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
+function square(size) = [[-size,-size], [-size,size], [size,size], [size,-size]] / 2;
+
+function circle(r) = [for (i=[0:$fn-1]) let (a=i*360/$fn) r * [cos(a), sin(a)]];
+
+function regular(r, n) = circle(r, $fn=n);
+
+function rectangle_profile(size=[1,1]) = [
+  // The first point is the anchor point, put it on the point corresponding to [cos(0),sin(0)]
+  [ size[0]/2,  0],
+  [ size[0]/2,  size[1]/2],
+  [-size[0]/2,  size[1]/2],
+  [-size[0]/2, -size[1]/2],
+  [ size[0]/2, -size[1]/2],
+];
+
+// FIXME: Move rectangle and rounded rectangle from extrusion
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// so3
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+
+function rodrigues_so3_exp(w, A, B) = [
+[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
+[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
+[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
+];
+
+function so3_exp(w) = so3_exp_rad(w/180*PI);
+function so3_exp_rad(w) =
+combine_so3_exp(w,
+  w*w < 1e-8
+  ? so3_exp_1(w*w)
+  : w*w < 1e-6
+    ? so3_exp_2(w*w)
+    : so3_exp_3(w*w));
+
+function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
+
+// Taylor series expansions close to 0
+function so3_exp_1(theta_sq) = [
+  1 - 1/6*theta_sq,
+  0.5
+];
+
+function so3_exp_2(theta_sq) = [
+  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
+  0.5 - 0.25/6 * theta_sq
+];
+
+function so3_exp_3_0(theta_deg, inv_theta) = [
+  sin(theta_deg) * inv_theta,
+  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
+];
+
+function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
+
+
+function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
+
+function so3_ln(m) = 180/PI*so3_ln_rad(m);
+function so3_ln_rad(m) = so3_ln_0(m,
+  cos_angle = rot_cos_angle(m),
+  preliminary_result = rot_axis_part(m));
+
+function so3_ln_0(m, cos_angle, preliminary_result) =
+so3_ln_1(m, cos_angle, preliminary_result,
+  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
+
+function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
+  cos_angle > sqrt(1/2)
+  ? sin_angle_abs > 0
+    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
+    : preliminary_result
+  : cos_angle > -sqrt(1/2)
+    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
+    : so3_get_symmetric_part_rotation(
+        preliminary_result,
+        m,
+        angle = PI - asin(sin_angle_abs)*PI/180,
+        d0 = m[0][0] - cos_angle,
+        d1 = m[1][1] - cos_angle,
+        d2 = m[2][2] - cos_angle
+      );
+
+function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
+so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
+
+function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
+  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
+
+function so3_largest_column(m, d0, d1, d2) =
+    d0*d0 > d1*d1 && d0*d0 > d2*d2
+    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
+    : d1*d1 > d2*d2
+      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
+      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
+
+__so3_test = [12,-125,110];
+echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
+
+function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
+
+// [A,B,t]
+function se3_exp_1(t,w) = concat(
+  so3_exp_1(w*w),
+  [t + 0.5 * cross(w,t)]
+);
+
+function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
+function se3_exp_2_0(t,w,theta_sq) =
+se3_exp_23(
+  so3_exp_2(theta_sq),
+  C = (1.0 - theta_sq/20) / 6,
+  t=t,w=w);
+
+function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
+
+function se3_exp_3_0(t,w,theta_deg,inv_theta) =
+se3_exp_23(
+  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
+  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
+  t=t,w=w);
+
+function se3_exp_23(AB,C,t,w) =
+[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
+
+function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
+
+function se3_exp_0(t,w) =
+combine_se3_exp(w,
+// Evaluate by Taylor expansion when near 0
+  w*w < 1e-8
+  ? se3_exp_1(t,w)
+  : w*w < 1e-6
+    ? se3_exp_2(t,w)
+    : se3_exp_3(t,w)
+);
+
+function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
+function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
+
+function se3_ln_rad(m) = se3_ln_0(m,
+  rot = so3_ln_rad(rotation_part(m)));
+function se3_ln_0(m,rot) = se3_ln_1(m,rot,
+  theta = sqrt(rot*rot));
+function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
+  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
+  halfrotator = so3_exp_rad(rot * -.5));
+function se3_ln_2(m,rot,theta,shtot,halfrotator) =
+concat( (halfrotator * translation_part(m) -
+  (theta > 0.001
+  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
+  : rot * ((translation_part(m) * rot)/24)
+  )) / (2 * shtot), rot);
+
+__se3_test = [20,-40,60,-80,100,-120];
+echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// List helpers
+
+/*!
+  Flattens a list one level:
+
+  flatten([[0,1],[2,3]]) => [0,1,2,3]
+*/
+function flatten(list) = [ for (i = list, v = i) v ];
+
+
+/*!
+  Creates a list from a range:
+
+  range([0:2:6]) => [0,2,4,6]
+*/
+function range(r) = [ for(x=r) x ];
+
+/*!
+  Reverses a list:
+
+  reverse([1,2,3]) => [3,2,1]
+*/
+function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
+
+/*!
+  Extracts a subarray from index begin (inclusive) to end (exclusive)
+  FIXME: Change name to use list instead of array?
+
+  subarray([1,2,3,4], 1, 2) => [2,3]
+*/
+function subarray(list,begin=0,end=-1) = [
+    let(end = end < 0 ? len(list) : end)
+      for (i = [begin : 1 : end-1])
+        list[i]
+];
+
+/*!
+  Returns a copy of a list with the element at index i set to x
+
+  set([1,2,3,4], 2, 5) => [1,2,5,4]
+*/
+function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
+
+/*!
+  Remove element from the list by index.
+  remove([4,3,2,1],1) => [4,2,1]
+*/
+function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
+
+/*!
+  Creates a rotation matrix
+
+  xyz = euler angles = rz * ry * rx
+  axis = rotation_axis * rotation_angle
+*/
+function rotation(xyz=undef, axis=undef) =
+  xyz != undef && axis != undef ? undef :
+  xyz == undef  ? se3_exp([0,0,0,axis[0],axis[1],axis[2]]) :
+  len(xyz) == undef ? rotation(axis=[0,0,xyz]) :
+  (len(xyz) >= 3 ? rotation(axis=[0,0,xyz[2]]) : identity4()) *
+  (len(xyz) >= 2 ? rotation(axis=[0,xyz[1],0]) : identity4()) *
+  (len(xyz) >= 1 ? rotation(axis=[xyz[0],0,0]) : identity4());
+
+/*!
+  Creates a scaling matrix
+*/
+function scaling(v) = [
+  [v[0],0,0,0],
+  [0,v[1],0,0],
+  [0,0,v[2],0],
+  [0,0,0,1],
+];
+
+/*!
+  Creates a translation matrix
+*/
+function translation(v) = [
+  [1,0,0,v[0]],
+  [0,1,0,v[1]],
+  [0,0,1,v[2]],
+  [0,0,0,1],
+];
+
+// Convert between cartesian and homogenous coordinates
+function project(x) = subarray(x,end=len(x)-1) / x[len(x)-1];
+
+function transform(m, list) = [for (p=list) project(m * vec4(p))];
+function to_3d(list) = [ for(v = list) vec3(v) ];
+// List helpers
+
+/*!
+  Flattens a list one level:
+
+  flatten([[0,1],[2,3]]) => [0,1,2,3]
+*/
+function flatten(list) = [ for (i = list, v = i) v ];
+
+
+/*!
+  Creates a list from a range:
+
+  range([0:2:6]) => [0,2,4,6]
+*/
+function range(r) = [ for(x=r) x ];
+
+/*!
+  Reverses a list:
+
+  reverse([1,2,3]) => [3,2,1]
+*/
+function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
+
+/*!
+  Extracts a subarray from index begin (inclusive) to end (exclusive)
+  FIXME: Change name to use list instead of array?
+
+  subarray([1,2,3,4], 1, 2) => [2,3]
+*/
+function subarray(list,begin=0,end=-1) = [
+    let(end = end < 0 ? len(list) : end)
+      for (i = [begin : 1 : end-1])
+        list[i]
+];
+
+/*!
+  Returns a copy of a list with the element at index i set to x
+
+  set([1,2,3,4], 2, 5) => [1,2,5,4]
+*/
+function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
+
+/*!
+  Remove element from the list by index.
+  remove([4,3,2,1],1) => [4,2,1]
+*/
+function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
+
+// Skin a set of profiles with a polyhedral mesh
+module skin(profiles, loop=false /* unimplemented */) {
+  P = max_len(profiles);
+  N = len(profiles);
+
+  profiles = [
+    for (p = profiles)
+      for (pp = augment_profile(to_3d(p),P))
+        pp
+  ];
+
+  function quad(i,P,o) = [[o+i, o+i+P, o+i%P+P+1], [o+i, o+i%P+P+1, o+i%P+1]];
+
+  function profile_triangles(tindex) = [
+    for (index = [0:P-1])
+      let (qs = quad(index+1, P, P*(tindex-1)-1))
+        for (q = qs) q
+  ];
+
+    triangles = [
+    for(index = [1:N-1])
+          for(t = profile_triangles(index))
+        t
+  ];
+
+  start_cap = [range([0:P-1])];
+  end_cap   = [range([P*N-1 : -1 : P*(N-1)])];
+
+  polyhedron(convexity=2, points=profiles, faces=concat(start_cap, triangles, end_cap));
+}
+
+// Augments the profile with steiner points making the total number of vertices n
+function augment_profile(profile, n) =
+  subdivide(profile,insert_extra_vertices_0([profile_lengths(profile),dup(0,len(profile))],n-len(profile))[1]);
+
+function subdivide(profile,subdivisions) = let (N=len(profile)) [
+  for (i = [0:N-1])
+    let(n = len(subdivisions)>0 ? subdivisions[i] : subdivisions)
+      for (p = interpolate(profile[i],profile[(i+1)%N],n+1))
+        p
+];
+
+function interpolate(a,b,subdivisions) = [
+  for (index = [0:subdivisions-1])
+    let(t = index/subdivisions)
+      a*(1-t)+b*t
+];
+
+function distribute_extra_vertex(lengths_count,ma_=-1) = ma_<0 ? distribute_extra_vertex(lengths_count, max_element(lengths_count[0])) :
+  concat([set(lengths_count[0],ma_,lengths_count[0][ma_] * (lengths_count[1][ma_]+1) / (lengths_count[1][ma_]+2))], [increment(lengths_count[1],max_element(lengths_count[0]),1)]);
+
+function insert_extra_vertices_0(lengths_count,n_extra) = n_extra <= 0 ? lengths_count :
+  insert_extra_vertices_0(distribute_extra_vertex(lengths_count),n_extra-1);
+
+// Find the index of the maximum element of arr
+function max_element(arr,ma_,ma_i_=-1,i_=0) = i_ >= len(arr) ? ma_i_ :
+  i_ == 0 || arr[i_] > ma_ ? max_element(arr,arr[i_],i_,i_+1) : max_element(arr,ma_,ma_i_,i_+1);
+
+function max_len(arr) = max([for (i=arr) len(i)]);
+
+function increment(arr,i,x=1) = set(arr,i,arr[i]+x);
+
+function profile_lengths(profile) = [
+  for (i = [0:len(profile)-1])
+    profile_segment_length(profile,i)
+];
+
+function profile_segment_length(profile,i) = norm(profile[(i+1)%len(profile)] - profile[i]);
+
+// Generates an array with n copies of value (default 0)
+function dup(value=0,n) = [for (i = [1:n]) value];
+
+
+
+
+
+
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// so3
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+
+function rodrigues_so3_exp(w, A, B) = [
+[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
+[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
+[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
+];
+
+function so3_exp(w) = so3_exp_rad(w/180*PI);
+function so3_exp_rad(w) =
+combine_so3_exp(w,
+  w*w < 1e-8
+  ? so3_exp_1(w*w)
+  : w*w < 1e-6
+    ? so3_exp_2(w*w)
+    : so3_exp_3(w*w));
+
+function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
+
+// Taylor series expansions close to 0
+function so3_exp_1(theta_sq) = [
+  1 - 1/6*theta_sq,
+  0.5
+];
+
+function so3_exp_2(theta_sq) = [
+  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
+  0.5 - 0.25/6 * theta_sq
+];
+
+function so3_exp_3_0(theta_deg, inv_theta) = [
+  sin(theta_deg) * inv_theta,
+  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
+];
+
+function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
+
+
+function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
+
+function so3_ln(m) = 180/PI*so3_ln_rad(m);
+function so3_ln_rad(m) = so3_ln_0(m,
+  cos_angle = rot_cos_angle(m),
+  preliminary_result = rot_axis_part(m));
+
+function so3_ln_0(m, cos_angle, preliminary_result) =
+so3_ln_1(m, cos_angle, preliminary_result,
+  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
+
+function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
+  cos_angle > sqrt(1/2)
+  ? sin_angle_abs > 0
+    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
+    : preliminary_result
+  : cos_angle > -sqrt(1/2)
+    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
+    : so3_get_symmetric_part_rotation(
+        preliminary_result,
+        m,
+        angle = PI - asin(sin_angle_abs)*PI/180,
+        d0 = m[0][0] - cos_angle,
+        d1 = m[1][1] - cos_angle,
+        d2 = m[2][2] - cos_angle
+      );
+
+function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
+so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
+
+function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
+  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
+
+function so3_largest_column(m, d0, d1, d2) =
+    d0*d0 > d1*d1 && d0*d0 > d2*d2
+    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
+    : d1*d1 > d2*d2
+      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
+      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
+
+__so3_test = [12,-125,110];
+echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
+
+function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
+
+// [A,B,t]
+function se3_exp_1(t,w) = concat(
+  so3_exp_1(w*w),
+  [t + 0.5 * cross(w,t)]
+);
+
+function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
+function se3_exp_2_0(t,w,theta_sq) =
+se3_exp_23(
+  so3_exp_2(theta_sq),
+  C = (1.0 - theta_sq/20) / 6,
+  t=t,w=w);
+
+function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
+
+function se3_exp_3_0(t,w,theta_deg,inv_theta) =
+se3_exp_23(
+  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
+  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
+  t=t,w=w);
+
+function se3_exp_23(AB,C,t,w) =
+[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
+
+function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
+
+function se3_exp_0(t,w) =
+combine_se3_exp(w,
+// Evaluate by Taylor expansion when near 0
+  w*w < 1e-8
+  ? se3_exp_1(t,w)
+  : w*w < 1e-6
+    ? se3_exp_2(t,w)
+    : se3_exp_3(t,w)
+);
+
+function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
+function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
+
+function se3_ln_rad(m) = se3_ln_0(m,
+  rot = so3_ln_rad(rotation_part(m)));
+function se3_ln_0(m,rot) = se3_ln_1(m,rot,
+  theta = sqrt(rot*rot));
+function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
+  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
+  halfrotator = so3_exp_rad(rot * -.5));
+function se3_ln_2(m,rot,theta,shtot,halfrotator) =
+concat( (halfrotator * translation_part(m) -
+  (theta > 0.001
+  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
+  : rot * ((translation_part(m) * rot)/24)
+  )) / (2 * shtot), rot);
+
+__se3_test = [20,-40,60,-80,100,-120];
+echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// List helpers
+
+/*!
+  Flattens a list one level:
+
+  flatten([[0,1],[2,3]]) => [0,1,2,3]
+*/
+function flatten(list) = [ for (i = list, v = i) v ];
+
+
+/*!
+  Creates a list from a range:
+
+  range([0:2:6]) => [0,2,4,6]
+*/
+function range(r) = [ for(x=r) x ];
+
+/*!
+  Reverses a list:
+
+  reverse([1,2,3]) => [3,2,1]
+*/
+function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
+
+/*!
+  Extracts a subarray from index begin (inclusive) to end (exclusive)
+  FIXME: Change name to use list instead of array?
+
+  subarray([1,2,3,4], 1, 2) => [2,3]
+*/
+function subarray(list,begin=0,end=-1) = [
+    let(end = end < 0 ? len(list) : end)
+      for (i = [begin : 1 : end-1])
+        list[i]
+];
+
+/*!
+  Returns a copy of a list with the element at index i set to x
+
+  set([1,2,3,4], 2, 5) => [1,2,5,4]
+*/
+function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
+
+/*!
+  Remove element from the list by index.
+  remove([4,3,2,1],1) => [4,2,1]
+*/
+function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
+
+/*!
+  Creates a rotation matrix
+
+  xyz = euler angles = rz * ry * rx
+  axis = rotation_axis * rotation_angle
+*/
+function rotation(xyz=undef, axis=undef) =
+  xyz != undef && axis != undef ? undef :
+  xyz == undef  ? se3_exp([0,0,0,axis[0],axis[1],axis[2]]) :
+  len(xyz) == undef ? rotation(axis=[0,0,xyz]) :
+  (len(xyz) >= 3 ? rotation(axis=[0,0,xyz[2]]) : identity4()) *
+  (len(xyz) >= 2 ? rotation(axis=[0,xyz[1],0]) : identity4()) *
+  (len(xyz) >= 1 ? rotation(axis=[xyz[0],0,0]) : identity4());
+
+/*!
+  Creates a scaling matrix
+*/
+function scaling(v) = [
+  [v[0],0,0,0],
+  [0,v[1],0,0],
+  [0,0,v[2],0],
+  [0,0,0,1],
+];
+
+/*!
+  Creates a translation matrix
+*/
+function translation(v) = [
+  [1,0,0,v[0]],
+  [0,1,0,v[1]],
+  [0,0,1,v[2]],
+  [0,0,0,1],
+];
+
+// Convert between cartesian and homogenous coordinates
+function project(x) = subarray(x,end=len(x)-1) / x[len(x)-1];
+
+function transform(m, list) = [for (p=list) project(m * vec4(p))];
+function to_3d(list) = [ for(v = list) vec3(v) ];
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+// so3
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+
+function rodrigues_so3_exp(w, A, B) = [
+[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
+[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
+[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
+];
+
+function so3_exp(w) = so3_exp_rad(w/180*PI);
+function so3_exp_rad(w) =
+combine_so3_exp(w,
+  w*w < 1e-8
+  ? so3_exp_1(w*w)
+  : w*w < 1e-6
+    ? so3_exp_2(w*w)
+    : so3_exp_3(w*w));
+
+function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
+
+// Taylor series expansions close to 0
+function so3_exp_1(theta_sq) = [
+  1 - 1/6*theta_sq,
+  0.5
+];
+
+function so3_exp_2(theta_sq) = [
+  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
+  0.5 - 0.25/6 * theta_sq
+];
+
+function so3_exp_3_0(theta_deg, inv_theta) = [
+  sin(theta_deg) * inv_theta,
+  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
+];
+
+function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
+
+
+function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
+
+function so3_ln(m) = 180/PI*so3_ln_rad(m);
+function so3_ln_rad(m) = so3_ln_0(m,
+  cos_angle = rot_cos_angle(m),
+  preliminary_result = rot_axis_part(m));
+
+function so3_ln_0(m, cos_angle, preliminary_result) =
+so3_ln_1(m, cos_angle, preliminary_result,
+  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
+
+function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
+  cos_angle > sqrt(1/2)
+  ? sin_angle_abs > 0
+    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
+    : preliminary_result
+  : cos_angle > -sqrt(1/2)
+    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
+    : so3_get_symmetric_part_rotation(
+        preliminary_result,
+        m,
+        angle = PI - asin(sin_angle_abs)*PI/180,
+        d0 = m[0][0] - cos_angle,
+        d1 = m[1][1] - cos_angle,
+        d2 = m[2][2] - cos_angle
+      );
+
+function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
+so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
+
+function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
+  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
+
+function so3_largest_column(m, d0, d1, d2) =
+    d0*d0 > d1*d1 && d0*d0 > d2*d2
+    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
+    : d1*d1 > d2*d2
+      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
+      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
+
+__so3_test = [12,-125,110];
+echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
+
+function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
+
+// [A,B,t]
+function se3_exp_1(t,w) = concat(
+  so3_exp_1(w*w),
+  [t + 0.5 * cross(w,t)]
+);
+
+function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
+function se3_exp_2_0(t,w,theta_sq) =
+se3_exp_23(
+  so3_exp_2(theta_sq),
+  C = (1.0 - theta_sq/20) / 6,
+  t=t,w=w);
+
+function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
+
+function se3_exp_3_0(t,w,theta_deg,inv_theta) =
+se3_exp_23(
+  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
+  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
+  t=t,w=w);
+
+function se3_exp_23(AB,C,t,w) =
+[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
+
+function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
+
+function se3_exp_0(t,w) =
+combine_se3_exp(w,
+// Evaluate by Taylor expansion when near 0
+  w*w < 1e-8
+  ? se3_exp_1(t,w)
+  : w*w < 1e-6
+    ? se3_exp_2(t,w)
+    : se3_exp_3(t,w)
+);
+
+function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
+function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
+
+function se3_ln_rad(m) = se3_ln_0(m,
+  rot = so3_ln_rad(rotation_part(m)));
+function se3_ln_0(m,rot) = se3_ln_1(m,rot,
+  theta = sqrt(rot*rot));
+function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
+  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
+  halfrotator = so3_exp_rad(rot * -.5));
+function se3_ln_2(m,rot,theta,shtot,halfrotator) =
+concat( (halfrotator * translation_part(m) -
+  (theta > 0.001
+  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
+  : rot * ((translation_part(m) * rot)/24)
+  )) / (2 * shtot), rot);
+
+__se3_test = [20,-40,60,-80,100,-120];
+echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
+
+function left_multiply(a,bs,i_=0) = i_ >= len(bs) ? [] :
+  concat([
+    a * bs[i_]
+  ], left_multiply(a,bs,i_+1));
+
+
+function right_multiply(as,b,i_=0) = i_ >= len(as) ? [] :
+  concat([
+    as[i_] * b
+  ], right_multiply(as,b,i_+1));
+
+function quantize_trajectory(trajectory,step=undef,start_position=0,steps=undef,i_=0,length_=undef) =
+  length_ == undef ? quantize_trajectory(
+    trajectory=trajectory,
+    start_position=(step==undef?norm(take3(trajectory))/steps*start_position:start_position),
+    length_=norm(take3(trajectory)),
+    step=step,steps=steps,i_=i_) :
+  (steps==undef?start_position > length_:i_>=steps) ? [] :
+  concat([
+  // if steps is defined, ignore start_position
+    se3_exp(trajectory*(steps==undef ? start_position/length_
+                                         : i_/(steps>1?steps-1:1)))
+  ], quantize_trajectory(trajectory=trajectory,step=step,start_position=(steps==undef?start_position+step:start_position),steps=steps,i_=i_+1,length_=length_));
+
+function close_trajectory_loop(trajectories) = concat(trajectories,[se3_ln(invert_rt(trajectories_end_position(trajectories)))]);
+
+function quantize_trajectories(trajectories,step=undef,start_position=0,steps=undef,loop=false,last_=identity4(),i_=0,current_length_=undef,j_=0) =
+    // due to quantization differences, the last step may be missed. In that case, add it:
+  loop==true ? quantize_trajectories(
+    trajectories=close_trajectory_loop(trajectories),
+    step=step,
+    start_position = start_position,
+    steps=steps,
+    loop=false,
+    last_=last_,
+    i_=i_,
+    current_length_=current_length_,
+    j_=j_) :
+  i_ >= len(trajectories) ? (j_ < steps ? [last_] : []) :
+  current_length_ == undef ?
+  quantize_trajectories(
+    trajectories=trajectories,
+    step = (step == undef ? trajectories_length(trajectories) / steps : step),
+    start_position = (step == undef ? start_position * trajectories_length(trajectories) / steps : start_position),
+    steps=steps,
+    loop=loop,
+    last_=last_,
+    i_=i_,
+    current_length_=norm(take3(trajectories[i_])),
+    j_=j_) :
+  concat(
+    left_multiply(last_,quantize_trajectory(
+      trajectory=trajectories[i_],
+      start_position=start_position,
+      step=step)),
+  quantize_trajectories(
+    trajectories=trajectories,
+    step=step,
+    start_position = start_position > current_length_
+      ? start_position - current_length_
+      : step - ((current_length_-start_position) % step),
+    steps=steps,
+    loop=loop,
+      last_=last_ * se3_exp(trajectories[i_]),
+      i_=i_+1,
+    current_length_ = undef,
+    j_=j_+len(
+
+    quantize_trajectory(
+      trajectory=trajectories[i_],
+      start_position=start_position,
+      step=step
+
+    ))
+  ))
+;
+
+
+function trajectories_length(trajectories, i_=0) = i_ >= len(trajectories) ? 0
+  : norm(take3(trajectories[i_])) + trajectories_length(trajectories,i_+1);
+
+
+function trajectories_end_position(rt,i_=0,last_=identity4()) =
+  i_ >= len(rt) ? last_ :
+  trajectories_end_position(rt, i_+1, last_ * se3_exp(rt[i_]));
+// so3
+
+// very minimal set of linalg functions needed by so3, se3 etc.
+
+// cross and norm are builtins
+//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
+//function norm(v) = sqrt(v*v);
+
+function vec3(p) = len(p) < 3 ? concat(p,0) : p;
+function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
+function unit(v) = v/norm(v);
+
+function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
+function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+
+function take3(v) = [v[0],v[1],v[2]];
+function tail3(v) = [v[3],v[4],v[5]];
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
+function rot_cos_angle(m) = (rot_trace(m)-1)/2;
+
+function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
+function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
+function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
+function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
+                           [m[0][1],m[1][1],m[2][1],m[3][1]],
+                           [m[0][2],m[1][2],m[2][2],m[3][2]],
+                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
+function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
+function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
+
+// Hadamard product of n-dimensional arrays
+function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
+
+function rodrigues_so3_exp(w, A, B) = [
+[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
+[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
+[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
+];
+
+function so3_exp(w) = so3_exp_rad(w/180*PI);
+function so3_exp_rad(w) =
+combine_so3_exp(w,
+  w*w < 1e-8
+  ? so3_exp_1(w*w)
+  : w*w < 1e-6
+    ? so3_exp_2(w*w)
+    : so3_exp_3(w*w));
+
+function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
+
+// Taylor series expansions close to 0
+function so3_exp_1(theta_sq) = [
+  1 - 1/6*theta_sq,
+  0.5
+];
+
+function so3_exp_2(theta_sq) = [
+  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
+  0.5 - 0.25/6 * theta_sq
+];
+
+function so3_exp_3_0(theta_deg, inv_theta) = [
+  sin(theta_deg) * inv_theta,
+  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
+];
+
+function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
+
+
+function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
+
+function so3_ln(m) = 180/PI*so3_ln_rad(m);
+function so3_ln_rad(m) = so3_ln_0(m,
+  cos_angle = rot_cos_angle(m),
+  preliminary_result = rot_axis_part(m));
+
+function so3_ln_0(m, cos_angle, preliminary_result) =
+so3_ln_1(m, cos_angle, preliminary_result,
+  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
+
+function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
+  cos_angle > sqrt(1/2)
+  ? sin_angle_abs > 0
+    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
+    : preliminary_result
+  : cos_angle > -sqrt(1/2)
+    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
+    : so3_get_symmetric_part_rotation(
+        preliminary_result,
+        m,
+        angle = PI - asin(sin_angle_abs)*PI/180,
+        d0 = m[0][0] - cos_angle,
+        d1 = m[1][1] - cos_angle,
+        d2 = m[2][2] - cos_angle
+      );
+
+function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
+so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
+
+function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
+  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
+
+function so3_largest_column(m, d0, d1, d2) =
+    d0*d0 > d1*d1 && d0*d0 > d2*d2
+    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
+    : d1*d1 > d2*d2
+      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
+      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
+
+__so3_test = [12,-125,110];
+echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
+
+function val(a=undef,default=undef) = a == undef ? default : a;
+function vec_is_undef(x,index_=0) = index_ >= len(x) ? true :
+is_undef(x[index_]) && vec_is_undef(x,index_+1);
+
+function is_undef(x) = len(x) > 0 ? vec_is_undef(x) : x == undef;
+// Either a or b, but not both
+function either(a,b,default=undef) = is_undef(a) ? (is_undef(b) ? default : b) : is_undef(b) ? a : undef;
+
+function translationv(left=undef,right=undef,up=undef,down=undef,forward=undef,backward=undef,translation=undef) =
+translationv_2(
+  x = either(up,-down),
+  y = either(right,-left),
+  z = either(forward,-backward),
+  translation = translation);
+
+function translationv_2(x,y,z,translation) =
+  x == undef && y == undef && z == undef ? translation :
+  is_undef(translation) ? [val(x,0),val(y,0),val(z,0)]
+  : undef;
+
+function rotationv(pitch=undef,yaw=undef,roll=undef,rotation=undef) =
+  rotation == undef ? [val(yaw,0),val(pitch,0),val(roll,0)] :
+  pitch == undef && yaw == undef && roll == undef ? rotation :
+  undef;
+
+function trajectory(
+  left=undef,    right=undef,
+  up=undef,      down=undef,
+  forward=undef, backward=undef,
+  translation=undef,
+
+    pitch=undef,
+    yaw=undef,
+    roll=undef,
+    rotation=undef
+) = concat(
+  translationv(left=left,right=right,up=up,down=down,forward=forward,backward=backward,translation=translation),
+  rotationv(pitch=pitch,yaw=yaw,roll=roll,rotation=rotation)
+);
+
+function rotationm(rotation=undef,pitch=undef,yaw=undef,roll=undef) = so3_exp(rotationv(rotation=rotation,pitch=pitch,yaw=yaw,roll=roll));
+function square(size) = [[-size,-size], [-size,size], [size,size], [size,-size]] / 2;
+
+function circle(r) = [for (i=[0:$fn-1]) let (a=i*360/$fn) r * [cos(a), sin(a)]];
+
+function regular(r, n) = circle(r, $fn=n);
+
+function rectangle_profile(size=[1,1]) = [
+  // The first point is the anchor point, put it on the point corresponding to [cos(0),sin(0)]
+  [ size[0]/2,  0],
+  [ size[0]/2,  size[1]/2],
+  [-size[0]/2,  size[1]/2],
+  [-size[0]/2, -size[1]/2],
+  [ size[0]/2, -size[1]/2],
+];
+
+// FIXME: Move rectangle and rounded rectangle from extrusion
+
+module fakeISOEnter(thickness_difference = 0){
+    // 1u is the space taken upy by a 1u keycap.
+    // unit is the space taken up by a unit space for a keycap.
+    // formula is 1u + unit *(length - 1)
+
+    // t is all modifications to the polygon array
+    t = thickness_difference/2 - (19.02 - 18.16);
+
+    function unit(length) = 19.02 * length;
+
+    pointArray = [
+        [19.05 * (-.5)  + t,      19.05 * (-1)  + t],
+        [19.05 * (0.5)  - t,      19.05 * (-1)  + t],
+        [19.05 * (0.5)  - t,      19.05 * (1)  - t],
+        [19.05 * (-0.75) + t,      19.05 * (1)  - t],
+        [19.05 * (-0.75) + t,      19.05 * (0)  + t],
+        [19.05 * (-0.5) + t,      19.05 * (0)  + t]
+    ];
+
+
+  /*translate([unit(-.5), unit(-1) + 0.86]){*/
+    minkowski() {
+            circle($corner_radius, $fn=20);
+            offset(r=-$corner_radius * 2, $fn=20) polygon(points=pointArray);
+          }
+  /*}*/
+}
+
+function isoEnter() = [
+        [19.05 * (-.5)  + (19.02 - 18.16),      19.05 * (-1)  + (19.02 - 18.16)],
+        [19.05 * (0.5)  - (19.02 - 18.16),      19.05 * (-1)  + (19.02 - 18.16)],
+        [19.05 * (0.5)  - (19.02 - 18.16),      19.05 * (1)  - (19.02 - 18.16)],
+        [19.05 * (-0.75) + (19.02 - 18.16),      19.05 * (1)  - (19.02 - 18.16)],
+        [19.05 * (-0.75) + (19.02 - 18.16),      19.05 * (0)  + (19.02 - 18.16)],
+        [19.05 * (-0.5) + (19.02 - 18.16),      19.05 * (0)  + (19.02 - 18.16)]
+    ];
+
+
+path_definition = [
+trajectory(forward = 10, roll  =  0),
+];
+
+// sweep
+path = quantize_trajectories(path_definition, steps=100);
+
+// skin
+myLen = len(path)-1;
+trans = [ for (i=[0:len(path)-1]) transform(path[i], isoEnter()) ];
+
+translate([0,10,0])
+  skin(trans);
+
 
 /* [Hidden] */
+SMALLEST_POSSIBLE = 1/128;
 $fs = .1;
 $unit = 19.05;
 blue = [.2667,.5882,1];
@@ -1805,14 +4211,31 @@ yellow = [1, .6941, .2];
 transparent_red = [1,0,0, 0.15];
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
-module shape(thickness_difference, depth_difference){
+module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
-    color(blue) shape_hull(thickness_difference, depth_difference, 2);
+    color(blue) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
   }
 }
 
-// shape of the key but with soft, rounded edges. much more realistic, MUCH more complex. orders of magnitude more complex
+// shape of the key but with soft, rounded edges. no longer includes dish
+// randomly doesnt work sometimes
+// the dish doesn't _quite_ reach as far as it should
 module rounded_shape() {
+  dished(-$minkowski_radius, $inverted_dish) {
+    color(blue) minkowski(){
+      // half minkowski in the z direction
+      color(blue) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
+      /* cube($minkowski_radius); */
+      sphere(r=$minkowski_radius, $fn=48);
+    }
+  }
+  /* %envelope(); */
+}
+
+// this function is more correct, but takes _forever_
+// the main difference is minkowski happens after dishing, meaning the dish is
+// also minkowski'd
+/* module rounded_shape() {
   color(blue) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
@@ -1823,7 +4246,8 @@ module rounded_shape() {
       }
     }
   }
-}
+} */
+
 
 
 // basic key shape, no dish, no inside
@@ -1832,13 +4256,50 @@ module rounded_shape() {
 // extra_slices is a hack to make inverted dishes still work
 module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
   render() {
-    if ($linear_extrude_shape) {
+    if ($skin_extrude_shape) {
+      skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
+    } else if ($linear_extrude_shape) {
       linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
     } else {
       hull_shape_hull(thickness_difference, depth_difference, extra_slices);
     }
   }
 }
+
+// use skin() instead of successive hulls. much more correct, and looks faster
+// too, in most cases. successive hull relies on overlapping faces which are
+// not good. But, skin works on vertex sets instead of shapes, which makes it
+// a lot more difficult to use
+module skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0 ) {
+  skin([
+    for (index = [0:$height_slices + extra_slices])
+      let(
+        progress = (index / $height_slices),
+        skew_this_slice = $top_skew * progress,
+        x_skew_this_slice = $top_skew_x * progress,
+        depth_this_slice = ($total_depth - depth_difference) * progress,
+        tilt_this_slice = -$top_tilt / $key_height * progress,
+        y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0
+      )
+      skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice)
+  ]);
+}
+
+function skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice) =
+  transform(
+    translation([x_skew_this_slice,skew_this_slice,depth_this_slice]),
+    transform(
+      rotation([tilt_this_slice,y_tilt_this_slice,0]),
+        skin_key_shape([
+          total_key_width(0),
+          total_key_height(0),
+          ],
+          [$width_difference, $height_difference],
+          progress,
+          thickness_difference
+        )
+    )
+  );
 
 // corollary is hull_shape_hull
 // extra_slices unused, only to match argument signatures
@@ -1850,7 +4311,10 @@ module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_s
   translate([0,$linear_extrude_height_adjustment,0]){
     linear_extrude(height = height, scale = [width_scale, height_scale]) {
         translate([0,-$linear_extrude_height_adjustment,0]){
-        key_shape(total_key_width(thickness_difference), total_key_height(thickness_difference));
+        key_shape(
+          [total_key_width(thickness_difference), total_key_height(thickness_difference)],
+          [$width_difference, $height_difference]
+        );
       }
     }
   }
@@ -1867,12 +4331,16 @@ module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0)
 
 module shape_slice(progress, thickness_difference, depth_difference) {
   skew_this_slice = $top_skew * progress;
-  depth_this_slice = ($total_depth - depth_difference) * progress;
-  tilt_this_slice = -$top_tilt / $key_height * progress;
+  x_skew_this_slice = $top_skew_x * progress;
 
-  translate([0, skew_this_slice, depth_this_slice]) {
-    rotate([tilt_this_slice,0,0]){
-      linear_extrude(height = 0.001){
+  depth_this_slice = ($total_depth - depth_difference) * progress;
+
+  tilt_this_slice = -$top_tilt / $key_height * progress;
+  y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0;
+
+  translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
+    rotate([tilt_this_slice,y_tilt_this_slice,0]){
+      linear_extrude(height = SMALLEST_POSSIBLE){
         key_shape(
           [
             total_key_width(thickness_difference),
@@ -1896,10 +4364,34 @@ module inside() {
 }
 
 // put something at the top of the key, with no adjustments for dishing
-module top_placement(depth_difference) {
-  translate([$dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
-    rotate([-$top_tilt / $key_height,0,0]){
+module top_placement(depth_difference=0) {
+  top_tilt_by_height = -$top_tilt / $key_height;
+  top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
+
+  minkowski_height = $rounded_key ? $minkowski_radius : 0;
+
+  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference + minkowski_height/2]){
+    rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
       children();
+    }
+  }
+}
+
+module front_placement() {
+  // all this math is to take top skew and tilt into account
+  // we need to find the new effective height and depth of the top, front lip
+  // of the keycap to find the angle so we can rotate things correctly into place
+  total_depth_difference = sin(-$top_tilt) * (top_total_key_height()/2);
+  total_height_difference = $top_skew + (1 - cos(-$top_tilt)) * (top_total_key_height()/2);
+
+  angle = atan2(($total_depth - total_depth_difference), ($height_difference/2 + total_height_difference));
+  hypotenuse = ($total_depth -total_depth_difference) / sin(angle);
+
+  translate([0,-total_key_height()/2,0]) {
+    rotate([-(90-angle), 0, 0]) {
+      translate([0,0,hypotenuse/2]){
+        children();
+      }
     }
   }
 }
@@ -1909,16 +4401,17 @@ module _dish() {
   dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
-module envelope(depth_difference) {
+module envelope(depth_difference=0) {
   s = 1.5;
   hull(){
     cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
-    top_placement(0.005 + depth_difference){
+    top_placement(SMALLEST_POSSIBLE + depth_difference){
       cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
     }
   }
 }
 
+// I think this is unused
 module dished_for_show() {
   difference(){
     union() {
@@ -1933,7 +4426,7 @@ module dished_for_show() {
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
 // creates a bounding box 1.5 times larger in width and height than the keycap.
-module dished(depth_difference, inverted = false) {
+module dished(depth_difference = 0, inverted = false) {
   intersection() {
     children();
     difference(){
@@ -2019,15 +4512,32 @@ module clearance_check() {
   }
 }
 
+module legends(depth=0) {
+
+  if (len($front_legends) > 0) {
+    front_placement() {
+      if (len($front_legends) > 0) {
+        for (i=[0:len($front_legends)-1]) {
+          rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
+  		  }
+	    } 
+    }
+  }
+  if (len($legends) > 0) {
+    top_of_key() {
+      // outset legend
+      if (len($legends) > 0) {
+        for (i=[0:len($legends)-1]) {
+          keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+        }
+      }
+    }
+  }
+}
+
 // legends / artisan support
 module artisan(depth) {
   top_of_key() {
-    // outset legend
-    if (len($legends) > 0) {
-      for (i=[0:len($legends)-1]) {
-        keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-      }
-    }
     // artisan objects / outset shape legends
     children();
   }
@@ -2042,7 +4552,7 @@ module keytop() {
       shape(0, 0);
     }
     // translation purely for aesthetic purposes, to get rid of that awful lattice
-    translate([0,0,-0.005]) {
+    translate([0,0,-SMALLEST_POSSIBLE]) {
       shape($wall_thickness, $keytop_thickness);
     }
   }
@@ -2058,23 +4568,26 @@ module key(inset = false) {
       keytop();
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
-      if(!inset) artisan() children();
+      if(!inset) artisan(0) children();
+      if($outset_legends) legends(0);
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
     }
 
     // subtractive objects at the top of the key
-    if (inset) artisan(0.3) children();
+    if (inset) artisan($inset_legend_depth) children();
+    if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch
     if ($clearance_check) clearance_check();
   }
 
   // both stem and support are optional
-  if ($stem_type != "disable" || $stabilizer_type != "disable") {
+  if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
         if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+
         if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }
@@ -2106,7 +4619,10 @@ $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
-$stem_slop = 0.3; // Not working in thingiverse customizer atm [0:0.01:1]
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
 
 // Font size used for text
 $font_size = 6;
@@ -2114,12 +4630,22 @@ $font_size = 6;
 // Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
 
 // Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
 $support_type = "flared"; // [flared, bars, flat, disable]
 
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
 $stem_support_type = "tines"; // [tines, brim, disabled]
+
+// enable to have stem support extend past the keycap bottom, to (hopefully) the next
+// keycap. only works on tines right now
+$extra_long_stem_support = false;
 
 /* [Advanced] */
 
@@ -2144,8 +4670,15 @@ $height_difference = 4;
 $total_depth = 11.5;
 // The tilt of the dish in degrees. divided by key height
 $top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
 // How skewed towards the back the top is (0 for center)
 $top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
 
 /* Stem */
 
@@ -2191,7 +4724,7 @@ $dish_overdraw_height = 0;
 $cherry_bevel = true;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
-$stem_support_height = 0.4;
+$stem_support_height = .8;
 // Font used for text
 $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
@@ -2199,6 +4732,10 @@ $clearance_check = false;
 // Use linear_extrude instead of hull slices to make the shape of the key
 // Should be faster, also required for concave shapes
 $linear_extrude_shape = false;
+
+// brand new, more correct, hopefully faster, lots more work
+// warns in trajectory.scad but it looks benign
+$skin_extrude_shape = false;
 //should the key be rounded? unnecessary for most printers, and very slow
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -2221,11 +4758,27 @@ $key_bump_edge = 0.4;
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
 
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
-// Enable stabilizers. If you don't want stabilizers use disable; most other keycaps use Cherry stabilizers
-$stabilizer_type = "cherry"; // [cherry, rounded_cherry, alps, disable]
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
