@@ -109,7 +109,7 @@ Artisan support also supports _subtracting_ children by doing `key(inset=true) {
 
 ## Tips and tricks
 
-Looking for information or something specific? you could try checking out the [tips and tricks](TIPS_AND_TRICKS.md) section.
+Looking for information or something specific? you could try checking out the [tips and tricks](TIPS_AND_TRICKS.md) section, or the [examples](/examples) directory.
 
 ## What if I want to get _really_ technical?
 
