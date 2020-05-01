@@ -11,6 +11,8 @@ row = 1; // [5,1,2,3,4,0]
 // What does the top of your key say?
 legend = "";
 
+$using_customizer = true;
+
 /* [Basic-Settings] */
 
 // Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
@@ -31,8 +33,6 @@ $font_size = 6;
 // Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
-// set this to true if you are making double sculpted keycaps
-$double_sculpted = false;
 // change aggressiveness of double sculpting
 // this is the radius of the cylinder the keytops are placed on
 $double_sculpt_radius = 200;
@@ -44,13 +44,11 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
 $stem_support_type = "tines"; // [tines, brim, disabled]
 
-// enable to have stem support extend past the keycap bottom, to (hopefully) the next
-// keycap. only works on tines right now
-$extra_long_stem_support = false;
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
 
-/* [Advanced] */
-
-/* Key */
+/* [Key] */
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
@@ -81,7 +79,7 @@ $top_skew = 1.7;
 // for double axis sculpted keycaps and probably not much else
 $top_skew_x = 0;
 
-/* Stem */
+/* [Stem] */
 
 // How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
@@ -95,7 +93,11 @@ $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
 
-/* Shape */
+// enable to have stem support extend past the keycap bottom, to (hopefully) the next
+// keycap. only works on tines right now
+$extra_long_stem_support = false;
+
+/* [Shape] */
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
 $key_shape_type = "rounded_square";
@@ -105,7 +107,7 @@ $linear_extrude_height_adjustment = 0;
 // If you're doing fancy bowed keycap sides, this controls how many slices you take
 $height_slices = 1;
 
-/* Dish */
+/* [Dish] */
 
 // What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
 $dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
@@ -120,7 +122,7 @@ $dish_overdraw_width = 0;
 // Same as width but for height
 $dish_overdraw_height = 0;
 
-/* Misc */
+/* [Misc] */
 // There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
 $cherry_bevel = true;
 
@@ -130,19 +132,19 @@ $stem_support_height = .8;
 $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
-// Use linear_extrude instead of hull slices to make the shape of the key
 // Should be faster, also required for concave shapes
+// Use linear_extrude instead of hull slices to make the shape of the key
 $linear_extrude_shape = false;
 
-// brand new, more correct, hopefully faster, lots more work
 // warns in trajectory.scad but it looks benign
+// brand new, more correct, hopefully faster, lots more work
 $skin_extrude_shape = false;
-//should the key be rounded? unnecessary for most printers, and very slow
+// This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
 $minkowski_radius = .33;
 
-/* Features */
+/* [Features] */
 
 //insert locating bump
 $key_bump = false;
@@ -152,6 +154,9 @@ $key_bump_depth = 0.5;
 $key_bump_edge = 0.4;
 
 /* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
 
 //list of legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
@@ -164,10 +169,6 @@ $legends = [];
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $front_legends = [];
-
-// make legends outset instead of inset.
-// broken off from artisan support since who wants outset legends?
-$outset_legends = false;
 
 // print legends on the front of the key instead of the top
 $front_print_legends = false;
@@ -847,7 +848,6 @@ module row_profile(profile, unsculpted = false) {
     translate_u(0, -row) key_profile(profile, unsculpted ? 3 : rows[row]) children();
   }
 }
-
 // files
 SMALLEST_POSSIBLE = 1/128;
 
@@ -3326,880 +3326,6 @@ function profile_segment_length(profile,i) = norm(profile[(i+1)%len(profile)] - 
 function dup(value=0,n) = [for (i = [1:n]) value];
 
 
-
-
-
-
-
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-// so3
-
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-
-function rodrigues_so3_exp(w, A, B) = [
-[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
-[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
-[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
-];
-
-function so3_exp(w) = so3_exp_rad(w/180*PI);
-function so3_exp_rad(w) =
-combine_so3_exp(w,
-  w*w < 1e-8
-  ? so3_exp_1(w*w)
-  : w*w < 1e-6
-    ? so3_exp_2(w*w)
-    : so3_exp_3(w*w));
-
-function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
-
-// Taylor series expansions close to 0
-function so3_exp_1(theta_sq) = [
-  1 - 1/6*theta_sq,
-  0.5
-];
-
-function so3_exp_2(theta_sq) = [
-  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
-  0.5 - 0.25/6 * theta_sq
-];
-
-function so3_exp_3_0(theta_deg, inv_theta) = [
-  sin(theta_deg) * inv_theta,
-  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
-];
-
-function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
-
-
-function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
-
-function so3_ln(m) = 180/PI*so3_ln_rad(m);
-function so3_ln_rad(m) = so3_ln_0(m,
-  cos_angle = rot_cos_angle(m),
-  preliminary_result = rot_axis_part(m));
-
-function so3_ln_0(m, cos_angle, preliminary_result) =
-so3_ln_1(m, cos_angle, preliminary_result,
-  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
-
-function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
-  cos_angle > sqrt(1/2)
-  ? sin_angle_abs > 0
-    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
-    : preliminary_result
-  : cos_angle > -sqrt(1/2)
-    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
-    : so3_get_symmetric_part_rotation(
-        preliminary_result,
-        m,
-        angle = PI - asin(sin_angle_abs)*PI/180,
-        d0 = m[0][0] - cos_angle,
-        d1 = m[1][1] - cos_angle,
-        d2 = m[2][2] - cos_angle
-      );
-
-function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
-so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
-
-function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
-  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
-
-function so3_largest_column(m, d0, d1, d2) =
-    d0*d0 > d1*d1 && d0*d0 > d2*d2
-    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
-    : d1*d1 > d2*d2
-      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
-      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
-
-__so3_test = [12,-125,110];
-echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
-
-function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
-
-// [A,B,t]
-function se3_exp_1(t,w) = concat(
-  so3_exp_1(w*w),
-  [t + 0.5 * cross(w,t)]
-);
-
-function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
-function se3_exp_2_0(t,w,theta_sq) =
-se3_exp_23(
-  so3_exp_2(theta_sq),
-  C = (1.0 - theta_sq/20) / 6,
-  t=t,w=w);
-
-function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
-
-function se3_exp_3_0(t,w,theta_deg,inv_theta) =
-se3_exp_23(
-  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
-  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
-  t=t,w=w);
-
-function se3_exp_23(AB,C,t,w) =
-[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
-
-function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
-
-function se3_exp_0(t,w) =
-combine_se3_exp(w,
-// Evaluate by Taylor expansion when near 0
-  w*w < 1e-8
-  ? se3_exp_1(t,w)
-  : w*w < 1e-6
-    ? se3_exp_2(t,w)
-    : se3_exp_3(t,w)
-);
-
-function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
-function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
-
-function se3_ln_rad(m) = se3_ln_0(m,
-  rot = so3_ln_rad(rotation_part(m)));
-function se3_ln_0(m,rot) = se3_ln_1(m,rot,
-  theta = sqrt(rot*rot));
-function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
-  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
-  halfrotator = so3_exp_rad(rot * -.5));
-function se3_ln_2(m,rot,theta,shtot,halfrotator) =
-concat( (halfrotator * translation_part(m) -
-  (theta > 0.001
-  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
-  : rot * ((translation_part(m) * rot)/24)
-  )) / (2 * shtot), rot);
-
-__se3_test = [20,-40,60,-80,100,-120];
-echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-// List helpers
-
-/*!
-  Flattens a list one level:
-
-  flatten([[0,1],[2,3]]) => [0,1,2,3]
-*/
-function flatten(list) = [ for (i = list, v = i) v ];
-
-
-/*!
-  Creates a list from a range:
-
-  range([0:2:6]) => [0,2,4,6]
-*/
-function range(r) = [ for(x=r) x ];
-
-/*!
-  Reverses a list:
-
-  reverse([1,2,3]) => [3,2,1]
-*/
-function reverse(list) = [for (i = [len(list)-1:-1:0]) list[i]];
-
-/*!
-  Extracts a subarray from index begin (inclusive) to end (exclusive)
-  FIXME: Change name to use list instead of array?
-
-  subarray([1,2,3,4], 1, 2) => [2,3]
-*/
-function subarray(list,begin=0,end=-1) = [
-    let(end = end < 0 ? len(list) : end)
-      for (i = [begin : 1 : end-1])
-        list[i]
-];
-
-/*!
-  Returns a copy of a list with the element at index i set to x
-
-  set([1,2,3,4], 2, 5) => [1,2,5,4]
-*/
-function set(list, i, x) = [for (i_=[0:len(list)-1]) i == i_ ? x : list[i_]];
-
-/*!
-  Remove element from the list by index.
-  remove([4,3,2,1],1) => [4,2,1]
-*/
-function remove(list, i) = [for (i_=[0:1:len(list)-2]) list[i_ < i ? i_ : i_ + 1]];
-
-/*!
-  Creates a rotation matrix
-
-  xyz = euler angles = rz * ry * rx
-  axis = rotation_axis * rotation_angle
-*/
-function rotation(xyz=undef, axis=undef) =
-  xyz != undef && axis != undef ? undef :
-  xyz == undef  ? se3_exp([0,0,0,axis[0],axis[1],axis[2]]) :
-  len(xyz) == undef ? rotation(axis=[0,0,xyz]) :
-  (len(xyz) >= 3 ? rotation(axis=[0,0,xyz[2]]) : identity4()) *
-  (len(xyz) >= 2 ? rotation(axis=[0,xyz[1],0]) : identity4()) *
-  (len(xyz) >= 1 ? rotation(axis=[xyz[0],0,0]) : identity4());
-
-/*!
-  Creates a scaling matrix
-*/
-function scaling(v) = [
-  [v[0],0,0,0],
-  [0,v[1],0,0],
-  [0,0,v[2],0],
-  [0,0,0,1],
-];
-
-/*!
-  Creates a translation matrix
-*/
-function translation(v) = [
-  [1,0,0,v[0]],
-  [0,1,0,v[1]],
-  [0,0,1,v[2]],
-  [0,0,0,1],
-];
-
-// Convert between cartesian and homogenous coordinates
-function project(x) = subarray(x,end=len(x)-1) / x[len(x)-1];
-
-function transform(m, list) = [for (p=list) project(m * vec4(p))];
-function to_3d(list) = [ for(v = list) vec3(v) ];
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-// so3
-
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-
-function rodrigues_so3_exp(w, A, B) = [
-[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
-[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
-[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
-];
-
-function so3_exp(w) = so3_exp_rad(w/180*PI);
-function so3_exp_rad(w) =
-combine_so3_exp(w,
-  w*w < 1e-8
-  ? so3_exp_1(w*w)
-  : w*w < 1e-6
-    ? so3_exp_2(w*w)
-    : so3_exp_3(w*w));
-
-function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
-
-// Taylor series expansions close to 0
-function so3_exp_1(theta_sq) = [
-  1 - 1/6*theta_sq,
-  0.5
-];
-
-function so3_exp_2(theta_sq) = [
-  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
-  0.5 - 0.25/6 * theta_sq
-];
-
-function so3_exp_3_0(theta_deg, inv_theta) = [
-  sin(theta_deg) * inv_theta,
-  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
-];
-
-function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
-
-
-function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
-
-function so3_ln(m) = 180/PI*so3_ln_rad(m);
-function so3_ln_rad(m) = so3_ln_0(m,
-  cos_angle = rot_cos_angle(m),
-  preliminary_result = rot_axis_part(m));
-
-function so3_ln_0(m, cos_angle, preliminary_result) =
-so3_ln_1(m, cos_angle, preliminary_result,
-  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
-
-function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
-  cos_angle > sqrt(1/2)
-  ? sin_angle_abs > 0
-    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
-    : preliminary_result
-  : cos_angle > -sqrt(1/2)
-    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
-    : so3_get_symmetric_part_rotation(
-        preliminary_result,
-        m,
-        angle = PI - asin(sin_angle_abs)*PI/180,
-        d0 = m[0][0] - cos_angle,
-        d1 = m[1][1] - cos_angle,
-        d2 = m[2][2] - cos_angle
-      );
-
-function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
-so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
-
-function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
-  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
-
-function so3_largest_column(m, d0, d1, d2) =
-    d0*d0 > d1*d1 && d0*d0 > d2*d2
-    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
-    : d1*d1 > d2*d2
-      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
-      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
-
-__so3_test = [12,-125,110];
-echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
-
-function combine_se3_exp(w, ABt) = construct_Rt(rodrigues_so3_exp(w, ABt[0], ABt[1]), ABt[2]);
-
-// [A,B,t]
-function se3_exp_1(t,w) = concat(
-  so3_exp_1(w*w),
-  [t + 0.5 * cross(w,t)]
-);
-
-function se3_exp_2(t,w) = se3_exp_2_0(t,w,w*w);
-function se3_exp_2_0(t,w,theta_sq) =
-se3_exp_23(
-  so3_exp_2(theta_sq),
-  C = (1.0 - theta_sq/20) / 6,
-  t=t,w=w);
-
-function se3_exp_3(t,w) = se3_exp_3_0(t,w,sqrt(w*w)*180/PI,1/sqrt(w*w));
-
-function se3_exp_3_0(t,w,theta_deg,inv_theta) =
-se3_exp_23(
-  so3_exp_3_0(theta_deg = theta_deg, inv_theta = inv_theta),
-  C = (1 - sin(theta_deg) * inv_theta) * (inv_theta * inv_theta),
-  t=t,w=w);
-
-function se3_exp_23(AB,C,t,w) =
-[AB[0], AB[1], t + AB[1] * cross(w,t) + C * cross(w,cross(w,t)) ];
-
-function se3_exp(mu) = se3_exp_0(t=take3(mu),w=tail3(mu)/180*PI);
-
-function se3_exp_0(t,w) =
-combine_se3_exp(w,
-// Evaluate by Taylor expansion when near 0
-  w*w < 1e-8
-  ? se3_exp_1(t,w)
-  : w*w < 1e-6
-    ? se3_exp_2(t,w)
-    : se3_exp_3(t,w)
-);
-
-function se3_ln(m) = se3_ln_to_deg(se3_ln_rad(m));
-function se3_ln_to_deg(v) = concat(take3(v),tail3(v)*180/PI);
-
-function se3_ln_rad(m) = se3_ln_0(m,
-  rot = so3_ln_rad(rotation_part(m)));
-function se3_ln_0(m,rot) = se3_ln_1(m,rot,
-  theta = sqrt(rot*rot));
-function se3_ln_1(m,rot,theta) = se3_ln_2(m,rot,theta,
-  shtot = theta > 0.00001 ? sin(theta/2*180/PI)/theta : 0.5,
-  halfrotator = so3_exp_rad(rot * -.5));
-function se3_ln_2(m,rot,theta,shtot,halfrotator) =
-concat( (halfrotator * translation_part(m) -
-  (theta > 0.001
-  ? rot * ((translation_part(m) * rot) * (1-2*shtot) / (rot*rot))
-  : rot * ((translation_part(m) * rot)/24)
-  )) / (2 * shtot), rot);
-
-__se3_test = [20,-40,60,-80,100,-120];
-echo(UNITTEST_se3=norm(__se3_test-se3_ln(se3_exp(__se3_test))) < 1e-8);
-
-function left_multiply(a,bs,i_=0) = i_ >= len(bs) ? [] :
-  concat([
-    a * bs[i_]
-  ], left_multiply(a,bs,i_+1));
-
-
-function right_multiply(as,b,i_=0) = i_ >= len(as) ? [] :
-  concat([
-    as[i_] * b
-  ], right_multiply(as,b,i_+1));
-
-function quantize_trajectory(trajectory,step=undef,start_position=0,steps=undef,i_=0,length_=undef) =
-  length_ == undef ? quantize_trajectory(
-    trajectory=trajectory,
-    start_position=(step==undef?norm(take3(trajectory))/steps*start_position:start_position),
-    length_=norm(take3(trajectory)),
-    step=step,steps=steps,i_=i_) :
-  (steps==undef?start_position > length_:i_>=steps) ? [] :
-  concat([
-  // if steps is defined, ignore start_position
-    se3_exp(trajectory*(steps==undef ? start_position/length_
-                                         : i_/(steps>1?steps-1:1)))
-  ], quantize_trajectory(trajectory=trajectory,step=step,start_position=(steps==undef?start_position+step:start_position),steps=steps,i_=i_+1,length_=length_));
-
-function close_trajectory_loop(trajectories) = concat(trajectories,[se3_ln(invert_rt(trajectories_end_position(trajectories)))]);
-
-function quantize_trajectories(trajectories,step=undef,start_position=0,steps=undef,loop=false,last_=identity4(),i_=0,current_length_=undef,j_=0) =
-    // due to quantization differences, the last step may be missed. In that case, add it:
-  loop==true ? quantize_trajectories(
-    trajectories=close_trajectory_loop(trajectories),
-    step=step,
-    start_position = start_position,
-    steps=steps,
-    loop=false,
-    last_=last_,
-    i_=i_,
-    current_length_=current_length_,
-    j_=j_) :
-  i_ >= len(trajectories) ? (j_ < steps ? [last_] : []) :
-  current_length_ == undef ?
-  quantize_trajectories(
-    trajectories=trajectories,
-    step = (step == undef ? trajectories_length(trajectories) / steps : step),
-    start_position = (step == undef ? start_position * trajectories_length(trajectories) / steps : start_position),
-    steps=steps,
-    loop=loop,
-    last_=last_,
-    i_=i_,
-    current_length_=norm(take3(trajectories[i_])),
-    j_=j_) :
-  concat(
-    left_multiply(last_,quantize_trajectory(
-      trajectory=trajectories[i_],
-      start_position=start_position,
-      step=step)),
-  quantize_trajectories(
-    trajectories=trajectories,
-    step=step,
-    start_position = start_position > current_length_
-      ? start_position - current_length_
-      : step - ((current_length_-start_position) % step),
-    steps=steps,
-    loop=loop,
-      last_=last_ * se3_exp(trajectories[i_]),
-      i_=i_+1,
-    current_length_ = undef,
-    j_=j_+len(
-
-    quantize_trajectory(
-      trajectory=trajectories[i_],
-      start_position=start_position,
-      step=step
-
-    ))
-  ))
-;
-
-
-function trajectories_length(trajectories, i_=0) = i_ >= len(trajectories) ? 0
-  : norm(take3(trajectories[i_])) + trajectories_length(trajectories,i_+1);
-
-
-function trajectories_end_position(rt,i_=0,last_=identity4()) =
-  i_ >= len(rt) ? last_ :
-  trajectories_end_position(rt, i_+1, last_ * se3_exp(rt[i_]));
-// so3
-
-// very minimal set of linalg functions needed by so3, se3 etc.
-
-// cross and norm are builtins
-//function cross(x,y) = [x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0]];
-//function norm(v) = sqrt(v*v);
-
-function vec3(p) = len(p) < 3 ? concat(p,0) : p;
-function vec4(p) = let (v3=vec3(p)) len(v3) < 4 ? concat(v3,1) : v3;
-function unit(v) = v/norm(v);
-
-function identity3()=[[1,0,0],[0,1,0],[0,0,1]];
-function identity4()=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-
-
-function take3(v) = [v[0],v[1],v[2]];
-function tail3(v) = [v[3],v[4],v[5]];
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function rot_trace(m) = m[0][0] + m[1][1] + m[2][2];
-function rot_cos_angle(m) = (rot_trace(m)-1)/2;
-
-function rotation_part(m) = [take3(m[0]),take3(m[1]),take3(m[2])];
-function translation_part(m) = [m[0][3],m[1][3],m[2][3]];
-function transpose_3(m) = [[m[0][0],m[1][0],m[2][0]],[m[0][1],m[1][1],m[2][1]],[m[0][2],m[1][2],m[2][2]]];
-function transpose_4(m) = [[m[0][0],m[1][0],m[2][0],m[3][0]],
-                           [m[0][1],m[1][1],m[2][1],m[3][1]],
-                           [m[0][2],m[1][2],m[2][2],m[3][2]],
-                           [m[0][3],m[1][3],m[2][3],m[3][3]]];
-function invert_rt(m) = construct_Rt(transpose_3(rotation_part(m)), -(transpose_3(rotation_part(m)) * translation_part(m)));
-function construct_Rt(R,t) = [concat(R[0],t[0]),concat(R[1],t[1]),concat(R[2],t[2]),[0,0,0,1]];
-
-// Hadamard product of n-dimensional arrays
-function hadamard(a,b) = !(len(a)>0) ? a*b : [ for(i = [0:len(a)-1]) hadamard(a[i],b[i]) ];
-
-function rodrigues_so3_exp(w, A, B) = [
-[1.0 - B*(w[1]*w[1] + w[2]*w[2]), B*(w[0]*w[1]) - A*w[2],          B*(w[0]*w[2]) + A*w[1]],
-[B*(w[0]*w[1]) + A*w[2],          1.0 - B*(w[0]*w[0] + w[2]*w[2]), B*(w[1]*w[2]) - A*w[0]],
-[B*(w[0]*w[2]) - A*w[1],          B*(w[1]*w[2]) + A*w[0],          1.0 - B*(w[0]*w[0] + w[1]*w[1])]
-];
-
-function so3_exp(w) = so3_exp_rad(w/180*PI);
-function so3_exp_rad(w) =
-combine_so3_exp(w,
-  w*w < 1e-8
-  ? so3_exp_1(w*w)
-  : w*w < 1e-6
-    ? so3_exp_2(w*w)
-    : so3_exp_3(w*w));
-
-function combine_so3_exp(w,AB) = rodrigues_so3_exp(w,AB[0],AB[1]);
-
-// Taylor series expansions close to 0
-function so3_exp_1(theta_sq) = [
-  1 - 1/6*theta_sq,
-  0.5
-];
-
-function so3_exp_2(theta_sq) = [
-  1.0 - theta_sq * (1.0 - theta_sq/20) / 6,
-  0.5 - 0.25/6 * theta_sq
-];
-
-function so3_exp_3_0(theta_deg, inv_theta) = [
-  sin(theta_deg) * inv_theta,
-  (1 - cos(theta_deg)) * (inv_theta * inv_theta)
-];
-
-function so3_exp_3(theta_sq) = so3_exp_3_0(sqrt(theta_sq)*180/PI, 1/sqrt(theta_sq));
-
-
-function rot_axis_part(m) = [m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]]*0.5;
-
-function so3_ln(m) = 180/PI*so3_ln_rad(m);
-function so3_ln_rad(m) = so3_ln_0(m,
-  cos_angle = rot_cos_angle(m),
-  preliminary_result = rot_axis_part(m));
-
-function so3_ln_0(m, cos_angle, preliminary_result) =
-so3_ln_1(m, cos_angle, preliminary_result,
-  sin_angle_abs = sqrt(preliminary_result*preliminary_result));
-
-function so3_ln_1(m, cos_angle, preliminary_result, sin_angle_abs) =
-  cos_angle > sqrt(1/2)
-  ? sin_angle_abs > 0
-    ? preliminary_result * asin(sin_angle_abs)*PI/180 / sin_angle_abs
-    : preliminary_result
-  : cos_angle > -sqrt(1/2)
-    ? preliminary_result * acos(cos_angle)*PI/180 / sin_angle_abs
-    : so3_get_symmetric_part_rotation(
-        preliminary_result,
-        m,
-        angle = PI - asin(sin_angle_abs)*PI/180,
-        d0 = m[0][0] - cos_angle,
-        d1 = m[1][1] - cos_angle,
-        d2 = m[2][2] - cos_angle
-      );
-
-function so3_get_symmetric_part_rotation(preliminary_result, m, angle, d0, d1, d2) =
-so3_get_symmetric_part_rotation_0(preliminary_result,angle,so3_largest_column(m, d0, d1, d2));
-
-function so3_get_symmetric_part_rotation_0(preliminary_result, angle, c_max) =
-  angle * unit(c_max * preliminary_result < 0 ? -c_max : c_max);
-
-function so3_largest_column(m, d0, d1, d2) =
-    d0*d0 > d1*d1 && d0*d0 > d2*d2
-    ?  [d0, (m[1][0]+m[0][1])/2, (m[0][2]+m[2][0])/2]
-    : d1*d1 > d2*d2
-      ? [(m[1][0]+m[0][1])/2, d1, (m[2][1]+m[1][2])/2]
-      : [(m[0][2]+m[2][0])/2, (m[2][1]+m[1][2])/2, d2];
-
-__so3_test = [12,-125,110];
-echo(UNITTEST_so3=norm(__so3_test-so3_ln(so3_exp(__so3_test))) < 1e-8);
-
-function val(a=undef,default=undef) = a == undef ? default : a;
-function vec_is_undef(x,index_=0) = index_ >= len(x) ? true :
-is_undef(x[index_]) && vec_is_undef(x,index_+1);
-
-function is_undef(x) = len(x) > 0 ? vec_is_undef(x) : x == undef;
-// Either a or b, but not both
-function either(a,b,default=undef) = is_undef(a) ? (is_undef(b) ? default : b) : is_undef(b) ? a : undef;
-
-function translationv(left=undef,right=undef,up=undef,down=undef,forward=undef,backward=undef,translation=undef) =
-translationv_2(
-  x = either(up,-down),
-  y = either(right,-left),
-  z = either(forward,-backward),
-  translation = translation);
-
-function translationv_2(x,y,z,translation) =
-  x == undef && y == undef && z == undef ? translation :
-  is_undef(translation) ? [val(x,0),val(y,0),val(z,0)]
-  : undef;
-
-function rotationv(pitch=undef,yaw=undef,roll=undef,rotation=undef) =
-  rotation == undef ? [val(yaw,0),val(pitch,0),val(roll,0)] :
-  pitch == undef && yaw == undef && roll == undef ? rotation :
-  undef;
-
-function trajectory(
-  left=undef,    right=undef,
-  up=undef,      down=undef,
-  forward=undef, backward=undef,
-  translation=undef,
-
-    pitch=undef,
-    yaw=undef,
-    roll=undef,
-    rotation=undef
-) = concat(
-  translationv(left=left,right=right,up=up,down=down,forward=forward,backward=backward,translation=translation),
-  rotationv(pitch=pitch,yaw=yaw,roll=roll,rotation=rotation)
-);
-
-function rotationm(rotation=undef,pitch=undef,yaw=undef,roll=undef) = so3_exp(rotationv(rotation=rotation,pitch=pitch,yaw=yaw,roll=roll));
-function square(size) = [[-size,-size], [-size,size], [size,size], [size,-size]] / 2;
-
-function circle(r) = [for (i=[0:$fn-1]) let (a=i*360/$fn) r * [cos(a), sin(a)]];
-
-function regular(r, n) = circle(r, $fn=n);
-
-function rectangle_profile(size=[1,1]) = [
-  // The first point is the anchor point, put it on the point corresponding to [cos(0),sin(0)]
-  [ size[0]/2,  0],
-  [ size[0]/2,  size[1]/2],
-  [-size[0]/2,  size[1]/2],
-  [-size[0]/2, -size[1]/2],
-  [ size[0]/2, -size[1]/2],
-];
-
-// FIXME: Move rectangle and rounded rectangle from extrusion
-
-module fakeISOEnter(thickness_difference = 0){
-    // 1u is the space taken upy by a 1u keycap.
-    // unit is the space taken up by a unit space for a keycap.
-    // formula is 1u + unit *(length - 1)
-
-    // t is all modifications to the polygon array
-    t = thickness_difference/2 - (19.02 - 18.16);
-
-    function unit(length) = 19.02 * length;
-
-    pointArray = [
-        [19.05 * (-.5)  + t,      19.05 * (-1)  + t],
-        [19.05 * (0.5)  - t,      19.05 * (-1)  + t],
-        [19.05 * (0.5)  - t,      19.05 * (1)  - t],
-        [19.05 * (-0.75) + t,      19.05 * (1)  - t],
-        [19.05 * (-0.75) + t,      19.05 * (0)  + t],
-        [19.05 * (-0.5) + t,      19.05 * (0)  + t]
-    ];
-
-
-  /*translate([unit(-.5), unit(-1) + 0.86]){*/
-    minkowski() {
-            circle($corner_radius, $fn=20);
-            offset(r=-$corner_radius * 2, $fn=20) polygon(points=pointArray);
-          }
-  /*}*/
-}
-
-function isoEnter() = [
-        [19.05 * (-.5)  + (19.02 - 18.16),      19.05 * (-1)  + (19.02 - 18.16)],
-        [19.05 * (0.5)  - (19.02 - 18.16),      19.05 * (-1)  + (19.02 - 18.16)],
-        [19.05 * (0.5)  - (19.02 - 18.16),      19.05 * (1)  - (19.02 - 18.16)],
-        [19.05 * (-0.75) + (19.02 - 18.16),      19.05 * (1)  - (19.02 - 18.16)],
-        [19.05 * (-0.75) + (19.02 - 18.16),      19.05 * (0)  + (19.02 - 18.16)],
-        [19.05 * (-0.5) + (19.02 - 18.16),      19.05 * (0)  + (19.02 - 18.16)]
-    ];
-
-
-path_definition = [
-trajectory(forward = 10, roll  =  0),
-];
-
-// sweep
-path = quantize_trajectories(path_definition, steps=100);
-
-// skin
-myLen = len(path)-1;
-trans = [ for (i=[0:len(path)-1]) transform(path[i], isoEnter()) ];
-
-translate([0,10,0])
-  skin(trans);
-
-
 /* [Hidden] */
 SMALLEST_POSSIBLE = 1/128;
 $fs = .1;
@@ -4520,7 +3646,7 @@ module legends(depth=0) {
         for (i=[0:len($front_legends)-1]) {
           rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
   		  }
-	    } 
+	    }
     }
   }
   if (len($legends) > 0) {
@@ -4630,8 +3756,6 @@ $font_size = 6;
 // Set this to true if you're making a spacebar!
 $inverted_dish = false;
 
-// set this to true if you are making double sculpted keycaps
-$double_sculpted = false;
 // change aggressiveness of double sculpting
 // this is the radius of the cylinder the keytops are placed on
 $double_sculpt_radius = 200;
@@ -4643,13 +3767,11 @@ $support_type = "flared"; // [flared, bars, flat, disable]
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
 $stem_support_type = "tines"; // [tines, brim, disabled]
 
-// enable to have stem support extend past the keycap bottom, to (hopefully) the next
-// keycap. only works on tines right now
-$extra_long_stem_support = false;
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
 
-/* [Advanced] */
-
-/* Key */
+/* [Key] */
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
@@ -4680,7 +3802,7 @@ $top_skew = 1.7;
 // for double axis sculpted keycaps and probably not much else
 $top_skew_x = 0;
 
-/* Stem */
+/* [Stem] */
 
 // How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
 $stem_throw = 4;
@@ -4694,7 +3816,11 @@ $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
 
-/* Shape */
+// enable to have stem support extend past the keycap bottom, to (hopefully) the next
+// keycap. only works on tines right now
+$extra_long_stem_support = false;
+
+/* [Shape] */
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
 $key_shape_type = "rounded_square";
@@ -4704,7 +3830,7 @@ $linear_extrude_height_adjustment = 0;
 // If you're doing fancy bowed keycap sides, this controls how many slices you take
 $height_slices = 1;
 
-/* Dish */
+/* [Dish] */
 
 // What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
 $dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
@@ -4719,7 +3845,7 @@ $dish_overdraw_width = 0;
 // Same as width but for height
 $dish_overdraw_height = 0;
 
-/* Misc */
+/* [Misc] */
 // There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
 $cherry_bevel = true;
 
@@ -4729,19 +3855,19 @@ $stem_support_height = .8;
 $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
-// Use linear_extrude instead of hull slices to make the shape of the key
 // Should be faster, also required for concave shapes
+// Use linear_extrude instead of hull slices to make the shape of the key
 $linear_extrude_shape = false;
 
-// brand new, more correct, hopefully faster, lots more work
 // warns in trajectory.scad but it looks benign
+// brand new, more correct, hopefully faster, lots more work
 $skin_extrude_shape = false;
-//should the key be rounded? unnecessary for most printers, and very slow
+// This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
 $minkowski_radius = .33;
 
-/* Features */
+/* [Features] */
 
 //insert locating bump
 $key_bump = false;
@@ -4751,6 +3877,9 @@ $key_bump_depth = 0.5;
 $key_bump_edge = 0.4;
 
 /* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
 
 //list of legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
@@ -4763,10 +3892,6 @@ $legends = [];
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $front_legends = [];
-
-// make legends outset instead of inset.
-// broken off from artisan support since who wants outset legends?
-$outset_legends = false;
 
 // print legends on the front of the key instead of the top
 $front_print_legends = false;
@@ -4792,6 +3917,9 @@ $stem_positions = [[0,0]];
   key();
 }
 
+if (!$using_customizer) {
+  example_key();
+}
 
 key_profile(key_profile, row) legend(legend) {
   key();

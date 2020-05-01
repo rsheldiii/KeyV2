@@ -11,6 +11,8 @@ row = 1; // [5,1,2,3,4,0]
 // What does the top of your key say?
 legend = "";
 
+$using_customizer = true;
+
 include <src/settings.scad>
 
 include <src/key_sizes.scad>
@@ -18,8 +20,7 @@ include <src/key_profiles.scad>
 include <src/key_types.scad>
 include <src/key_transformations.scad>
 include <src/key_helpers.scad>
-
-use <src/key.scad>
+include <src/key.scad>
 
 key_profile(key_profile, row) legend(legend) {
   key();
