@@ -176,3 +176,10 @@ $stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
 $stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];

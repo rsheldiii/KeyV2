@@ -145,10 +145,13 @@ module bump(depth=undef) {
 
 // kinda dirty, but it works
 // might not work great with fully sculpted profiles yet
+// NOTE: this needs to come after row declarations or it won't work
 module upside_down() {
   if ($stem_inner_slop != 0) {
     echo("it is recommended you set inner stem slop to 0 when you use upside_down()");
   }
+
+  $stem_support_type = "disable";
   // $top_tilt*2 because top_placement rotates by top_tilt for us
   // first rotate 180 to get the keycaps to face the same direction
   rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
@@ -162,4 +165,15 @@ module sideways() {
   extra_y_rotation = atan2($width_difference/2,$total_depth);
   translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
   rotate([0,90 + extra_y_rotation ,0]) children();
+}
+
+// emulating the % modifier.
+// since we use custom colors, just using the % modifier doesn't work
+module debug() {
+  $primary_color = [0.5,0.5,0.5,0.2];
+  $secondary_color = [0.5,0.5,0.5,0.2];
+  $tertiary_color = [0.5,0.5,0.5,0.2];
+  $quaternary_color = [0.5,0.5,0.5,0.2];
+
+  %children();
 }

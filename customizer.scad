@@ -192,6 +192,13 @@ $stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12
 // Shouldn't work in thingiverse customizer, though it has been...
 $stem_positions = [[0,0]];
 
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
 // key width functions
 
 module u(u=1) {
@@ -799,10 +806,13 @@ module bump(depth=undef) {
 
 // kinda dirty, but it works
 // might not work great with fully sculpted profiles yet
+// NOTE: this needs to come after row declarations or it won't work
 module upside_down() {
   if ($stem_inner_slop != 0) {
     echo("it is recommended you set inner stem slop to 0 when you use upside_down()");
   }
+
+  $stem_support_type = "disable";
   // $top_tilt*2 because top_placement rotates by top_tilt for us
   // first rotate 180 to get the keycaps to face the same direction
   rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
@@ -816,6 +826,17 @@ module sideways() {
   extra_y_rotation = atan2($width_difference/2,$total_depth);
   translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
   rotate([0,90 + extra_y_rotation ,0]) children();
+}
+
+// emulating the % modifier.
+// since we use custom colors, just using the % modifier doesn't work
+module debug() {
+  $primary_color = [0.5,0.5,0.5,0.2];
+  $secondary_color = [0.5,0.5,0.5,0.2];
+  $tertiary_color = [0.5,0.5,0.5,0.2];
+  $quaternary_color = [0.5,0.5,0.5,0.2];
+
+  %children();
 }
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
@@ -3330,16 +3351,11 @@ function dup(value=0,n) = [for (i = [1:n]) value];
 SMALLEST_POSSIBLE = 1/128;
 $fs = .1;
 $unit = 19.05;
-blue = [.2667,.5882,1];
-color2 = [.5412, .4784, 1];
-purple = [.4078, .3569, .749];
-yellow = [1, .6941, .2];
-transparent_red = [1,0,0, 0.15];
 
 // key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
-    color(blue) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
+    color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
   }
 }
 
@@ -3348,9 +3364,9 @@ module shape(thickness_difference, depth_difference=0){
 // the dish doesn't _quite_ reach as far as it should
 module rounded_shape() {
   dished(-$minkowski_radius, $inverted_dish) {
-    color(blue) minkowski(){
+    color($primary_color) minkowski(){
       // half minkowski in the z direction
-      color(blue) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
+      color($primary_color) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
       /* cube($minkowski_radius); */
       sphere(r=$minkowski_radius, $fn=48);
     }
@@ -3362,7 +3378,7 @@ module rounded_shape() {
 // the main difference is minkowski happens after dishing, meaning the dish is
 // also minkowski'd
 /* module rounded_shape() {
-  color(blue) minkowski(){
+  color($primary_color) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
     difference(){
@@ -3524,7 +3540,7 @@ module front_placement() {
 
 // just to DRY up the code
 module _dish() {
-  dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
 module envelope(depth_difference=0) {
@@ -3582,7 +3598,7 @@ module keytext(text, position, font_size, depth) {
   woffset = (top_total_key_width()/3.5) * position[0];
   hoffset = (top_total_key_height()/3.5) * -position[1];
   translate([woffset, hoffset, -depth]){
-    linear_extrude(height=$dish_depth){
+    color($tertiary_color) linear_extrude(height=$dish_depth){
       text(text=text, font=$font, size=font_size, halign="center", valign="center");
     }
   }
@@ -3600,15 +3616,15 @@ module keystem_positions(positions) {
 
 module support_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(yellow) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
+    color($tertiary_color) supports($support_type, stem_type, $stem_throw, $total_depth - $stem_throw);
   }
 }
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color(yellow) stem(stem_type, $total_depth, $stem_slop);
+    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop);
     if ($stem_support_type != "disable") {
-      color(color2) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
+      color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }
   }
 }
@@ -3630,7 +3646,7 @@ module cherry_keyswitch() {
 //approximate (fully depressed) cherry key to check clearances
 module clearance_check() {
   if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
-    color(transparent_red){
+    color($warning_color){
       translate([0,0,3.6 + $stem_inset - 5]) {
         cherry_keyswitch();
       }
@@ -3639,7 +3655,6 @@ module clearance_check() {
 }
 
 module legends(depth=0) {
-
   if (len($front_legends) > 0) {
     front_placement() {
       if (len($front_legends) > 0) {
@@ -3665,7 +3680,7 @@ module legends(depth=0) {
 module artisan(depth) {
   top_of_key() {
     // artisan objects / outset shape legends
-    children();
+    color($secondary_color) children();
   }
 }
 
@@ -3705,7 +3720,7 @@ module key(inset = false) {
     if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch
-    if ($clearance_check) clearance_check();
+    if ($clearance_check) %clearance_check();
   }
 
   // both stem and support are optional
@@ -3914,6 +3929,13 @@ $stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
 $stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
   key();
 }
 
