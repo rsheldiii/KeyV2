@@ -387,7 +387,7 @@ module key(inset = false) {
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
       // outside() makes them stay out of the inside. it's a bad name
-      if(!inset) outside() artisan(0) children();
+      if(!inset && $children > 0) outside() artisan(0) children();
       if($outset_legends) legends(0);
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
@@ -395,7 +395,7 @@ module key(inset = false) {
 
     // subtractive objects at the top of the key
     // no outside() - I can't think of a use for it. will save render time
-    if (inset) artisan($inset_legend_depth) children();
+    if (inset && $children > 0) artisan($inset_legend_depth) children();
     if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch

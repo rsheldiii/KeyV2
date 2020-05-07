@@ -199,6 +199,11 @@ $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
+// 3d surface variables
+
+$3d_surface_size = 0.5;
+$3d_surface_step = .05;
+
 // key width functions
 
 module u(u=1) {
@@ -2160,6 +2165,76 @@ module geodesic_sphere(r=-1, d=-1) {
   scale(rad)
   polyhedron(points=subdiv_icos[0], faces=subdiv_icos[1]);
 }
+module 3d_surface(size=$3d_surface_size, step=$3d_surface_step){
+  bottom = 0;
+  function p(x, y) = [ x, y, surface_function(x, y) ];
+  function p0(x, y) = [ x, y, bottom ];
+  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
+  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
+  function fan(a, i) =
+        a == 0 ? [ [ 0, 0, bottom ], [ i, -size, bottom ], [ i + step, -size, bottom ] ]
+      : a == 1 ? [ [ 0, 0, bottom ], [ i + step,  size, bottom ], [ i,  size, bottom ] ]
+      : a == 2 ? [ [ 0, 0, bottom ], [ -size, i + step, bottom ], [ -size, i, bottom ] ]
+      :          [ [ 0, 0, bottom ], [  size, i, bottom ], [  size, i + step, bottom ] ];
+  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
+  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
+
+  points = flatten(concat(
+      // top surface
+      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
+      // bottom surface as triangle fan
+      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ]
+      // sides
+      /* [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ], */
+      /* [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ] */
+  ));
+
+  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
+  scount = 8 * size / step;
+
+  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
+  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
+  faces = concat(tfaces, sfaces);
+
+  polyhedron(points, faces, convexity = 8);
+}
+
+module polar_3d_surface(size=$3d_surface_size, step=$3d_surface_step){
+  function to_polar(q) = q * (90 / size);
+
+  function p(x, y) = [ sin(to_polar(x)) * size, sin(to_polar(y)) * size, surface_function(sin(to_polar(x)) * size, sin(to_polar(y)) * size) ];
+  function p0(x, y) = [ x, y, 0 ];
+  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
+  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
+  function fan(a, i) =
+        a == 0 ? [ [ 0, 0, 0 ], [ sin(to_polar(i))*size, -size, 0 ], [ sin(to_polar((i + step)))*size, -size, 0 ] ]
+      : a == 1 ? [ [ 0, 0, 0 ], [ sin(to_polar(i + step))*size,  size, 0 ], [ sin(to_polar(i))*size,  size, 0 ] ]
+      : a == 2 ? [ [ 0, 0, 0 ], [ -size, sin(to_polar(i + step))*size, 0 ], [ -size, sin(to_polar(i))*size, 0 ] ]
+      :          [ [ 0, 0, 0 ], [  size, sin(to_polar(i))*size, 0 ], [  size, sin(to_polar(i + step))*size, 0 ] ];
+  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
+  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
+
+  points = flatten(concat(
+      // top surface
+      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
+      // bottom surface as triangle fan
+      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ]
+      // sides
+      /* [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ], */
+      /* [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ] */
+  ));
+
+  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
+  scount = 8 * size / step;
+
+  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
+  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
+  faces = concat(tfaces, sfaces);
+
+  polyhedron(points, faces, convexity = 8);
+}
+
+function surface_function(x,y) = $dish_depth * (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 
 module cylindrical_dish(width, height, depth, inverted){
   // .5 has problems starting around 3u
@@ -2246,6 +2321,9 @@ module spherical_dish(width, height, depth, inverted){
 module flat_dish(width, height, depth, inverted){
   cube([width + 100,height + 100, depth], center=true);
 }
+module 3d_surface_dish(width, height, depth, inverted) {
+  scale([width*2,height*2,depth]) rotate([180,0,0]) polar_3d_surface();
+}
 
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
@@ -2265,6 +2343,8 @@ module  dish(width, height, depth, inverted) {
       old_spherical_dish(width, height, depth, inverted);
     } else if ($dish_type == "flat") {
       flat_dish(width, height, depth, inverted);
+    } else if ($dish_type == "3d_surface") {
+      3d_surface_dish(width, height, depth, inverted);
     } else if ($dish_type == "disable") {
       // else no dish
     } else {
@@ -3362,22 +3442,22 @@ module shape(thickness_difference, depth_difference=0){
 // shape of the key but with soft, rounded edges. no longer includes dish
 // randomly doesnt work sometimes
 // the dish doesn't _quite_ reach as far as it should
-module rounded_shape() {
+/* module rounded_shape() {
   dished(-$minkowski_radius, $inverted_dish) {
     color($primary_color) minkowski(){
       // half minkowski in the z direction
       color($primary_color) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
-      /* cube($minkowski_radius); */
+      // cube($minkowski_radius);
       sphere(r=$minkowski_radius, $fn=48);
     }
   }
-  /* %envelope(); */
-}
+  // %envelope();
+} */
 
 // this function is more correct, but takes _forever_
 // the main difference is minkowski happens after dishing, meaning the dish is
 // also minkowski'd
-/* module rounded_shape() {
+module rounded_shape() {
   color($primary_color) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
@@ -3388,7 +3468,7 @@ module rounded_shape() {
       }
     }
   }
-} */
+}
 
 
 
@@ -3718,7 +3798,7 @@ module key(inset = false) {
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
       // outside() makes them stay out of the inside. it's a bad name
-      if(!inset) outside() artisan(0) children();
+      if(!inset && $children > 0) outside() artisan(0) children();
       if($outset_legends) legends(0);
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
@@ -3726,7 +3806,7 @@ module key(inset = false) {
 
     // subtractive objects at the top of the key
     // no outside() - I can't think of a use for it. will save render time
-    if (inset) artisan($inset_legend_depth) children();
+    if (inset && $children > 0) artisan($inset_legend_depth) children();
     if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
     // parts of the keycap that will hit the cherry switch
@@ -3946,6 +4026,11 @@ $secondary_color = [.4412, .7, .3784];
 $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
+
+// 3d surface variables
+
+$3d_surface_size = 0.5;
+$3d_surface_step = .05;
   key();
 }
 
