@@ -21,7 +21,7 @@ SMALLEST_POSSIBLE = 1/128;
 $fs = .1;
 $unit = 19.05;
 
-// key shape including dish. used as the ouside and inside shape in keytop(). allows for itself to be shrunk in depth and width / height
+// key shape including dish. used as the ouside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
     color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
@@ -171,6 +171,14 @@ module inside() {
   intersection() {
     shape($wall_thickness, $keytop_thickness);
     children();
+  }
+}
+
+// for when you want something to only exist outside the keycap
+module outside() {
+  difference() {
+    children();
+    shape($wall_thickness, $keytop_thickness);
   }
 }
 
@@ -354,7 +362,7 @@ module artisan(depth) {
 }
 
 // key with hollowed inside but no stem
-module keytop() {
+module hollow_key() {
   difference(){
     if ($rounded_key) {
       rounded_shape();
@@ -375,16 +383,18 @@ module key(inset = false) {
   difference() {
     union(){
       // the shape of the key, inside and out
-      keytop();
+      hollow_key();
       if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
       // additive objects at the top of the key
-      if(!inset) artisan(0) children();
+      // outside() makes them stay out of the inside. it's a bad name
+      if(!inset) outside() artisan(0) children();
       if($outset_legends) legends(0);
       // render the clearance check if it's enabled, but don't have it intersect with anything
       if ($clearance_check) %clearance_check();
     }
 
     // subtractive objects at the top of the key
+    // no outside() - I can't think of a use for it. will save render time
     if (inset) artisan($inset_legend_depth) children();
     if(!$outset_legends) legends($inset_legend_depth);
     // subtract the clearance check if it's enabled, letting the user see the
