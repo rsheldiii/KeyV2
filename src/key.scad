@@ -37,7 +37,7 @@ module rounded_shape() {
       // half minkowski in the z direction
       color($primary_color) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
       /* cube($minkowski_radius); */
-      sphere(r=$minkowski_radius, $fn=48);
+      sphere(r=$minkowski_radius, $fn=$minkowski_facets);
     }
   }
   /* %envelope(); */
