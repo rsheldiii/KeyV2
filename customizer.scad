@@ -52,7 +52,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 1;
+$keytop_thickness = 2;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -101,7 +101,7 @@ $extra_long_stem_support = false;
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
 $key_shape_type = "rounded_square";
-// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
 $linear_extrude_height_adjustment = 0;
 // How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
 // If you're doing fancy bowed keycap sides, this controls how many slices you take
@@ -200,9 +200,17 @@ $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
 // 3d surface variables
+// see functions.scad for the surface function
+$3d_surface_size = 10;
+$3d_surface_step = 1;
+// normally the bottom of the keytop looks like the top - curved, at least
+// underneath the support structure. This ensures there's a minimum thickness for the
+// underside of the keycap, but it's a fair bit of geometry
+$flat_keytop_bottom = true;
 
-$3d_surface_size = 0.5;
-$3d_surface_step = .05;
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
 
 // key width functions
 
@@ -975,23 +983,41 @@ function iso_enter_vertices(width, height, width_ratio, height_ratio, wd, hd) = 
 // no rounding on the corners at all
 function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
   iso_enter_vertices(size.x, size.y, unit_length(1.25) / unit_length(1.5), unit_length(1) / unit_length(2), thickness_difference/2 + delta.x * progress/2, thickness_difference/2 + delta.y * progress/2);
-function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
-	for (index = [0:fn-1])
-		let(a = index/fn*360)
-			r * [cos(a), sin(a)]
-			+ sign_x(index, fn) * [size[0]/2-r,0]
-			+ sign_y(index, fn) * [0,size[1]/2-r]
-];
-
 function sign_x(i,n) =
-	i < n/4 || i > n-n/4  ?  1 :
-	i > n/4 && i < n-n/4  ? -1 :
+	i < n/4 || i > n*3/4  ?  1 :
+	i > n/4 && i < n*3/4  ? -1 :
 	0;
 
 function sign_y(i,n) =
 	i > 0 && i < n/2  ?  1 :
 	i > n/2 ? -1 :
 	0;
+
+
+function rectangle_profile(size=[1,1],fn=32) = [
+	for (index = [0:fn-1])
+		let(a = index/fn*360)
+			sign_x(index, fn) * [size[0]/2,0]
+			+ sign_y(index, fn) * [0,size[1]/2]
+];
+
+function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
+
+function double_rounded_rectangle_profile(size=[1,1], r=1, fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
 
 // rounded square shape with additional sculpting functions to better approximate
 
@@ -1030,7 +1056,7 @@ module sculpted_square_shape(size, delta, progress) {
     height - extra_height_this_slice
   ];
 
-  offset(r = extra_corner_radius_this_slice) {
+  offset(r = extra_corner_radius_this_slice, $fa=360/$shape_facets) {
     offset(r = -extra_corner_radius_this_slice) {
       side_rounded_square(square_size, r = $more_side_sculpting_factor * progress);
     }
@@ -1039,7 +1065,7 @@ module sculpted_square_shape(size, delta, progress) {
 
 // fudging the hell out of this, I don't remember what the negative-offset-positive-offset was doing in the module above
 // also no 'bowed' square shape for now
-function skin_sculpted_square_shape(size, delta, progress) =
+function skin_sculpted_square_shape(size, delta, progress, thickness_difference) =
   let(
     width = size[0],
     height = size[1],
@@ -1057,10 +1083,10 @@ function skin_sculpted_square_shape(size, delta, progress) =
     extra_corner_radius_this_slice = ($corner_radius + extra_corner_size),
 
     square_size = [
-      width - extra_width_this_slice,
-      height - extra_height_this_slice
+      width - extra_width_this_slice - thickness_difference,
+      height - extra_height_this_slice - thickness_difference
     ]
-  ) rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=36, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
+  ) double_rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=$shape_facets, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
 
   /* offset(r = extra_corner_radius_this_slice) {
     offset(r = -extra_corner_radius_this_slice) {
@@ -1078,25 +1104,17 @@ module side_rounded_square(size, r) {
     sw = iw / resolution;
     union() {
       if (sr > 0) {
-        translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution);
-        translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution);
-        translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution);
-        translate([0, ih/2]) scale([sw, sr]) circle(d = resolution);
+        translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([0, ih/2]) scale([sw, sr]) circle(d = resolution, $fa=360/$shape_facets);
       }
         square([iw, ih], center=true);
     }
 }
-function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
-	for (index = [0:fn-1])
-		let(a = index/fn*360)
-			r * [cos(a), sin(a)]
-			+ sign_x(index, fn) * [size[0]/2-r,0]
-			+ sign_y(index, fn) * [0,size[1]/2-r]
-];
-
 function sign_x(i,n) =
-	i < n/4 || i > n-n/4  ?  1 :
-	i > n/4 && i < n-n/4  ? -1 :
+	i < n/4 || i > n*3/4  ?  1 :
+	i > n/4 && i < n*3/4  ? -1 :
 	0;
 
 function sign_y(i,n) =
@@ -1104,16 +1122,42 @@ function sign_y(i,n) =
 	i > n/2 ? -1 :
 	0;
 
+
+function rectangle_profile(size=[1,1],fn=32) = [
+	for (index = [0:fn-1])
+		let(a = index/fn*360)
+			sign_x(index, fn) * [size[0]/2,0]
+			+ sign_y(index, fn) * [0,size[1]/2]
+];
+
+function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
+
+function double_rounded_rectangle_profile(size=[1,1], r=1, fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
+
 module rounded_square_shape(size, delta, progress, center = true) {
-  offset(r=$corner_radius){
+  offset(r=$corner_radius, $fa=360/$shape_facets){
     square_shape([size.x - $corner_radius*2, size.y - $corner_radius*2], delta, progress);
   }
 }
 
 // for skin
 
-function skin_rounded_square(size, delta, progress) =
-  rounded_rectangle_profile(size - (delta * progress), fn=36, r=$corner_radius);
+function skin_rounded_square(size, delta, progress, thickness_difference) =
+  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1156,6 +1200,42 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+function sign_x(i,n) =
+	i < n/4 || i > n*3/4  ?  1 :
+	i > n/4 && i < n*3/4  ? -1 :
+	0;
+
+function sign_y(i,n) =
+	i > 0 && i < n/2  ?  1 :
+	i > n/2 ? -1 :
+	0;
+
+
+function rectangle_profile(size=[1,1],fn=32) = [
+	for (index = [0:fn-1])
+		let(a = index/fn*360)
+			sign_x(index, fn) * [size[0]/2,0]
+			+ sign_y(index, fn) * [0,size[1]/2]
+];
+
+function rounded_rectangle_profile(size=[1,1],r=1,fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
+
+function double_rounded_rectangle_profile(size=[1,1], r=1, fn=32) = [
+	let(max_fn = max(fn,8))
+		for (index = [0:max_fn-1])
+			let(a = index/max_fn*360)
+				r * [cos(a), sin(a)]
+				+ sign_x(index, max_fn) * [size[0]/2-r,0]
+				+ sign_y(index, max_fn) * [0,size[1]/2-r]
+];
+
 
 // we do this weird key_shape_type check here because rounded_square uses
 // square_shape, and we want flat sides to work for that too.
@@ -1185,6 +1265,20 @@ module flat_sided_square_shape(size, delta, progress) {
     [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
   ]);
 }
+
+function skin_square_shape(size, delta, progress, thickness_difference) =
+  let(
+    width = size[0],
+    height = size[1],
+
+    width_difference = delta[0] * progress,
+    height_difference = delta[1] * progress,
+
+    square_size = [
+      width - width_difference - thickness_difference,
+      height - height_difference - thickness_difference
+    ]
+  ) rectangle_profile(square_size, fn=36);
 module oblong_shape(size, delta, progress) {
   // .05 is because of offset. if we set offset to be half the height of the shape, and then subtract height from the shape, the height of the shape will be zero (because the shape would be [width - height, height - height]). that doesn't play well with openSCAD (understandably), so we add this tiny fudge factor to make sure the shape we offset has a positive width
   height = size[1] - delta[1] * progress - .05;
@@ -1222,9 +1316,11 @@ module key_shape(size, delta, progress = 0) {
 
 function skin_key_shape(size, delta, progress = 0, thickness_difference) =
   $key_shape_type == "rounded_square" ?
-    skin_rounded_square(size, delta, progress) :
+    skin_rounded_square(size, delta, progress, thickness_difference) :
     $key_shape_type == "sculpted_square" ?
-      skin_sculpted_square_shape(size, delta, progress) :
+      skin_sculpted_square_shape(size, delta, progress, thickness_difference) :
+    $key_shape_type == "square" ?
+      skin_square_shape(size, delta, progress, thickness_difference) :
     $key_shape_type == "iso_enter" ?
       skin_iso_enter_shape(size, delta, progress, thickness_difference) :
       echo("Warning: unsupported $key_shape_type for skin shape. disable skin_extrude_shape or pick a new shape");
@@ -2165,76 +2261,6 @@ module geodesic_sphere(r=-1, d=-1) {
   scale(rad)
   polyhedron(points=subdiv_icos[0], faces=subdiv_icos[1]);
 }
-module 3d_surface(size=$3d_surface_size, step=$3d_surface_step){
-  bottom = 0;
-  function p(x, y) = [ x, y, surface_function(x, y) ];
-  function p0(x, y) = [ x, y, bottom ];
-  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
-  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
-  function fan(a, i) =
-        a == 0 ? [ [ 0, 0, bottom ], [ i, -size, bottom ], [ i + step, -size, bottom ] ]
-      : a == 1 ? [ [ 0, 0, bottom ], [ i + step,  size, bottom ], [ i,  size, bottom ] ]
-      : a == 2 ? [ [ 0, 0, bottom ], [ -size, i + step, bottom ], [ -size, i, bottom ] ]
-      :          [ [ 0, 0, bottom ], [  size, i, bottom ], [  size, i + step, bottom ] ];
-  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
-  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
-
-  points = flatten(concat(
-      // top surface
-      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
-      // bottom surface as triangle fan
-      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ]
-      // sides
-      /* [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ], */
-      /* [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ] */
-  ));
-
-  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
-  scount = 8 * size / step;
-
-  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
-  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
-  faces = concat(tfaces, sfaces);
-
-  polyhedron(points, faces, convexity = 8);
-}
-
-module polar_3d_surface(size=$3d_surface_size, step=$3d_surface_step){
-  function to_polar(q) = q * (90 / size);
-
-  function p(x, y) = [ sin(to_polar(x)) * size, sin(to_polar(y)) * size, surface_function(sin(to_polar(x)) * size, sin(to_polar(y)) * size) ];
-  function p0(x, y) = [ x, y, 0 ];
-  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
-  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
-  function fan(a, i) =
-        a == 0 ? [ [ 0, 0, 0 ], [ sin(to_polar(i))*size, -size, 0 ], [ sin(to_polar((i + step)))*size, -size, 0 ] ]
-      : a == 1 ? [ [ 0, 0, 0 ], [ sin(to_polar(i + step))*size,  size, 0 ], [ sin(to_polar(i))*size,  size, 0 ] ]
-      : a == 2 ? [ [ 0, 0, 0 ], [ -size, sin(to_polar(i + step))*size, 0 ], [ -size, sin(to_polar(i))*size, 0 ] ]
-      :          [ [ 0, 0, 0 ], [  size, sin(to_polar(i))*size, 0 ], [  size, sin(to_polar(i + step))*size, 0 ] ];
-  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
-  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
-
-  points = flatten(concat(
-      // top surface
-      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
-      // bottom surface as triangle fan
-      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ]
-      // sides
-      /* [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ], */
-      /* [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ] */
-  ));
-
-  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
-  scount = 8 * size / step;
-
-  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
-  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
-  faces = concat(tfaces, sfaces);
-
-  polyhedron(points, faces, convexity = 8);
-}
-
-function surface_function(x,y) = $dish_depth * (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 
 module cylindrical_dish(width, height, depth, inverted){
   // .5 has problems starting around 3u
@@ -2321,9 +2347,6 @@ module spherical_dish(width, height, depth, inverted){
 module flat_dish(width, height, depth, inverted){
   cube([width + 100,height + 100, depth], center=true);
 }
-module 3d_surface_dish(width, height, depth, inverted) {
-  scale([width*2,height*2,depth]) rotate([180,0,0]) polar_3d_surface();
-}
 
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
@@ -2343,8 +2366,6 @@ module  dish(width, height, depth, inverted) {
       old_spherical_dish(width, height, depth, inverted);
     } else if ($dish_type == "flat") {
       flat_dish(width, height, depth, inverted);
-    } else if ($dish_type == "3d_surface") {
-      3d_surface_dish(width, height, depth, inverted);
     } else if ($dish_type == "disable") {
       // else no dish
     } else {
@@ -3442,22 +3463,22 @@ module shape(thickness_difference, depth_difference=0){
 // shape of the key but with soft, rounded edges. no longer includes dish
 // randomly doesnt work sometimes
 // the dish doesn't _quite_ reach as far as it should
-/* module rounded_shape() {
+module rounded_shape() {
   dished(-$minkowski_radius, $inverted_dish) {
     color($primary_color) minkowski(){
       // half minkowski in the z direction
       color($primary_color) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
-      // cube($minkowski_radius);
-      sphere(r=$minkowski_radius, $fn=48);
+      /* cube($minkowski_radius); */
+      sphere(r=$minkowski_radius, $fn=$minkowski_facets);
     }
   }
-  // %envelope();
-} */
+  /* %envelope(); */
+}
 
 // this function is more correct, but takes _forever_
 // the main difference is minkowski happens after dishing, meaning the dish is
 // also minkowski'd
-module rounded_shape() {
+/* module rounded_shape() {
   color($primary_color) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
@@ -3468,7 +3489,7 @@ module rounded_shape() {
       }
     }
   }
-}
+} */
 
 
 
@@ -3880,7 +3901,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 1;
+$keytop_thickness = 2;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -3929,7 +3950,7 @@ $extra_long_stem_support = false;
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
 $key_shape_type = "rounded_square";
-// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
 $linear_extrude_height_adjustment = 0;
 // How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
 // If you're doing fancy bowed keycap sides, this controls how many slices you take
@@ -4028,9 +4049,17 @@ $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
 // 3d surface variables
+// see functions.scad for the surface function
+$3d_surface_size = 10;
+$3d_surface_step = 1;
+// normally the bottom of the keytop looks like the top - curved, at least
+// underneath the support structure. This ensures there's a minimum thickness for the
+// underside of the keycap, but it's a fair bit of geometry
+$flat_keytop_bottom = true;
 
-$3d_surface_size = 0.5;
-$3d_surface_step = .05;
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
   key();
 }
 

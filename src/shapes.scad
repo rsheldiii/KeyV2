@@ -32,9 +32,11 @@ module key_shape(size, delta, progress = 0) {
 
 function skin_key_shape(size, delta, progress = 0, thickness_difference) =
   $key_shape_type == "rounded_square" ?
-    skin_rounded_square(size, delta, progress) :
+    skin_rounded_square(size, delta, progress, thickness_difference) :
     $key_shape_type == "sculpted_square" ?
-      skin_sculpted_square_shape(size, delta, progress) :
+      skin_sculpted_square_shape(size, delta, progress, thickness_difference) :
+    $key_shape_type == "square" ?
+      skin_square_shape(size, delta, progress, thickness_difference) :
     $key_shape_type == "iso_enter" ?
       skin_iso_enter_shape(size, delta, progress, thickness_difference) :
       echo("Warning: unsupported $key_shape_type for skin shape. disable skin_extrude_shape or pick a new shape");
