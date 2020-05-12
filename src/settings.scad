@@ -37,7 +37,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 1;
+$keytop_thickness = 2;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -86,7 +86,7 @@ $extra_long_stem_support = false;
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
 $key_shape_type = "rounded_square";
-// ISO enter needs to be linear extruded NOT from the center. this tells the program how far up 'not from the center' is
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
 $linear_extrude_height_adjustment = 0;
 // How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
 // If you're doing fancy bowed keycap sides, this controls how many slices you take
@@ -183,3 +183,16 @@ $secondary_color = [.4412, .7, .3784];
 $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
+
+// 3d surface variables
+// see functions.scad for the surface function
+$3d_surface_size = 10;
+$3d_surface_step = 1;
+// normally the bottom of the keytop looks like the top - curved, at least
+// underneath the support structure. This ensures there's a minimum thickness for the
+// underside of the keycap, but it's a fair bit of geometry
+$flat_keytop_bottom = true;
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets = 30;

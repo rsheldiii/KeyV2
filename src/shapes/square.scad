@@ -1,4 +1,6 @@
 use <../functions.scad>
+include <../libraries/rounded_rectangle_profile.scad>
+
 
 // we do this weird key_shape_type check here because rounded_square uses
 // square_shape, and we want flat sides to work for that too.
@@ -28,3 +30,17 @@ module flat_sided_square_shape(size, delta, progress) {
     [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
   ]);
 }
+
+function skin_square_shape(size, delta, progress, thickness_difference) =
+  let(
+    width = size[0],
+    height = size[1],
+
+    width_difference = delta[0] * progress,
+    height_difference = delta[1] * progress,
+
+    square_size = [
+      width - width_difference - thickness_difference,
+      height - height_difference - thickness_difference
+    ]
+  ) rectangle_profile(square_size, fn=36);

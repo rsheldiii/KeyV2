@@ -37,7 +37,7 @@ module sculpted_square_shape(size, delta, progress) {
     height - extra_height_this_slice
   ];
 
-  offset(r = extra_corner_radius_this_slice) {
+  offset(r = extra_corner_radius_this_slice, $fa=360/$shape_facets) {
     offset(r = -extra_corner_radius_this_slice) {
       side_rounded_square(square_size, r = $more_side_sculpting_factor * progress);
     }
@@ -46,7 +46,7 @@ module sculpted_square_shape(size, delta, progress) {
 
 // fudging the hell out of this, I don't remember what the negative-offset-positive-offset was doing in the module above
 // also no 'bowed' square shape for now
-function skin_sculpted_square_shape(size, delta, progress) =
+function skin_sculpted_square_shape(size, delta, progress, thickness_difference) =
   let(
     width = size[0],
     height = size[1],
@@ -64,10 +64,10 @@ function skin_sculpted_square_shape(size, delta, progress) =
     extra_corner_radius_this_slice = ($corner_radius + extra_corner_size),
 
     square_size = [
-      width - extra_width_this_slice,
-      height - extra_height_this_slice
+      width - extra_width_this_slice - thickness_difference,
+      height - extra_height_this_slice - thickness_difference
     ]
-  ) rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=36, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
+  ) double_rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=36, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
 
   /* offset(r = extra_corner_radius_this_slice) {
     offset(r = -extra_corner_radius_this_slice) {
@@ -85,10 +85,10 @@ module side_rounded_square(size, r) {
     sw = iw / resolution;
     union() {
       if (sr > 0) {
-        translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution);
-        translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution);
-        translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution);
-        translate([0, ih/2]) scale([sw, sr]) circle(d = resolution);
+        translate([-iw/2, 0]) scale([sr, sh]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([iw/2, 0]) scale([sr, sh]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([0, -ih/2]) scale([sw, sr]) circle(d = resolution, $fa=360/$shape_facets);
+        translate([0, ih/2]) scale([sw, sr]) circle(d = resolution, $fa=360/$shape_facets);
       }
         square([iw, ih], center=true);
     }
