@@ -5,7 +5,7 @@ include <stems.scad>
 include <stem_supports.scad>
 include <dishes.scad>
 include <supports.scad>
-include <key_features.scad>
+include <features.scad>
 
 include <libraries/geodesic_sphere.scad>
 
@@ -271,16 +271,6 @@ module top_of_key(){
   }
 }
 
-module keytext(text, position, font_size, depth) {
-  woffset = (top_total_key_width()/3.5) * position[0];
-  hoffset = (top_total_key_height()/3.5) * -position[1];
-  translate([woffset, hoffset, -depth]){
-    color($tertiary_color) linear_extrude(height=$dish_depth){
-      text(text=text, font=$font, size=font_size, halign="center", valign="center");
-    }
-  }
-}
-
 module keystem_positions(positions) {
   for (connector_pos = positions) {
     translate(connector_pos) {
@@ -306,49 +296,16 @@ module stems_for(positions, stem_type) {
   }
 }
 
-// a fake cherry keyswitch, abstracted out to maybe replace with a better one later
-module cherry_keyswitch() {
-  union() {
-    hull() {
-      cube([15.6, 15.6, 0.01], center=true);
-      translate([0,1,5 - 0.01]) cube([10.5,9.5, 0.01], center=true);
-    }
-    hull() {
-      cube([15.6, 15.6, 0.01], center=true);
-      translate([0,0,-5.5]) cube([13.5,13.5,0.01], center=true);
     }
   }
 }
 
-//approximate (fully depressed) cherry key to check clearances
-module clearance_check() {
-  if($stem_type == "cherry" || $stem_type == "cherry_rounded"){
-    color($warning_color){
-      translate([0,0,3.6 + $stem_inset - 5]) {
-        cherry_keyswitch();
       }
     }
   }
 }
 
-module legends(depth=0) {
-  if (len($front_legends) > 0) {
-    front_placement() {
-      if (len($front_legends) > 0) {
-        for (i=[0:len($front_legends)-1]) {
-          rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
-  		  }
-	    }
-    }
   }
-  if (len($legends) > 0) {
-    top_of_key() {
-      // outset legend
-      if (len($legends) > 0) {
-        for (i=[0:len($legends)-1]) {
-          keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
-        }
-      }
     }
   }
 }
