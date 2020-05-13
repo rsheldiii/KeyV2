@@ -52,7 +52,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 2;
+$keytop_thickness = 1;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -199,18 +199,15 @@ $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
-// 3d surface variables
-// see functions.scad for the surface function
-$3d_surface_size = 10;
-$3d_surface_step = 1;
-// normally the bottom of the keytop looks like the top - curved, at least
-// underneath the support structure. This ensures there's a minimum thickness for the
-// underside of the keycap, but it's a fair bit of geometry
-$flat_keytop_bottom = true;
-
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 10;
 
 // key width functions
 
@@ -925,6 +922,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 $fs=.1;
 unit = 19.05;
 
@@ -1200,6 +1216,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 function sign_x(i,n) =
 	i < n/4 || i > n*3/4  ?  1 :
 	i > n/4 && i < n*3/4  ? -1 :
@@ -1367,6 +1402,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -1444,6 +1498,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1486,6 +1559,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1574,6 +1666,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1616,6 +1727,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1723,6 +1853,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -1815,6 +1964,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1857,6 +2025,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1980,6 +2167,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -2022,6 +2228,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -2347,6 +2572,158 @@ module spherical_dish(width, height, depth, inverted){
 module flat_dish(width, height, depth, inverted){
   cube([width + 100,height + 100, depth], center=true);
 }
+// thanks Paul https://github.com/openscad/list-comprehension-demos/
+
+SMALLEST_POSSIBLE = 1/128;
+
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
+
+module 3d_surface(size=$3d_surface_size, step=$3d_surface_step, bottom=-SMALLEST_POSSIBLE){
+  function p(x, y) = [ x, y, max(0,surface_function(x, y)) ];
+  function p0(x, y) = [ x, y, bottom ];
+  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
+  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
+  function fan(a, i) =
+        a == 0 ? [ [ 0, 0, bottom ], [ i, -size, bottom ], [ i + step, -size, bottom ] ]
+      : a == 1 ? [ [ 0, 0, bottom ], [ i + step,  size, bottom ], [ i,  size, bottom ] ]
+      : a == 2 ? [ [ 0, 0, bottom ], [ -size, i + step, bottom ], [ -size, i, bottom ] ]
+      :          [ [ 0, 0, bottom ], [  size, i, bottom ], [  size, i + step, bottom ] ];
+  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
+  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
+
+  points = flatten(concat(
+      // top surface
+      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
+      // bottom surface as triangle fan
+      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ],
+      // sides
+      [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ],
+      [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ]
+  ));
+
+  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
+  scount = 8 * size / step;
+
+  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
+  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
+  faces = concat(tfaces, sfaces);
+
+  polyhedron(points, faces, convexity = 8);
+}
+
+module polar_3d_surface(size=$3d_surface_size, step=$3d_surface_step, bottom=-SMALLEST_POSSIBLE){
+  function to_polar(q, size) = q * (90 / size);
+
+  function p(x, y) = [
+    surface_distribution_function(to_polar(x, size), size),
+    surface_distribution_function(to_polar(y, size), size),
+    max(0,surface_function(surface_distribution_function(to_polar(x, size), size), surface_distribution_function(to_polar(y, size), size)))
+  ];
+  function p0(x, y) = [ x, y, bottom ];
+  function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
+  function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
+  function fan(a, i) =
+        a == 0 ? [ [ 0, 0, bottom ], [ i, -size, bottom ], [ i + step, -size, bottom ] ]
+      : a == 1 ? [ [ 0, 0, bottom ], [ i + step,  size, bottom ], [ i,  size, bottom ] ]
+      : a == 2 ? [ [ 0, 0, bottom ], [ -size, i + step, bottom ], [ -size, i, bottom ] ]
+      :          [ [ 0, 0, bottom ], [  size, i, bottom ], [  size, i + step, bottom ] ];
+  function sidex(x, y) = [ p0(x, y), p(x, y), p(x + step, y), p0(x + step, y) ];
+  function sidey(x, y) = [ p0(x, y), p(x, y), p(x, y + step), p0(x, y + step) ];
+
+  points = flatten(concat(
+      // top surface
+      [ for (x = [ -size : step : size - step ], y = [ -size : step : size - step ]) face(x, y) ],
+      // bottom surface as triangle fan
+      [ for (a = [ 0 : 3 ], i = [ -size : step : size - step ]) fan(a, i) ],
+      // sides
+      [ for (x = [ -size : step : size - step ], y = [ -size, size ]) rev(y < 0, sidex(x, y)) ],
+      [ for (y = [ -size : step : size - step ], x = [ -size, size ]) rev(x > 0, sidey(x, y)) ]
+  ));
+
+  tcount = 2 * pow(2 * size / step, 2) + 8 * size / step;
+  scount = 8 * size / step;
+
+  tfaces = [ for (a = [ 0 : 3 : 3 * (tcount - 1) ] ) [ a, a + 1, a + 2 ] ];
+  sfaces = [ for (a = [ 3 * tcount : 4 : 3 * tcount + 4 * scount ] ) [ a, a + 1, a + 2, a + 3 ] ];
+  faces = concat(tfaces, sfaces);
+
+  polyhedron(points, faces, convexity = 8);
+}
+
+// defaults, overridden in functions.scad
+function surface_distribution_function(dim, size) = sin(dim) * size;
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+
+module 3d_surface_dish(width, height, depth, inverted) {
+  echo(inverted ? "inverted" : "not inverted");
+  // scale_factor is dead reckoning
+  // it doesn't have to be dead reckoning for anything but sculpted sides
+  // we know the angle of the sides from the width difference, height difference,
+  // skew and tilt of the top. it's a pain to calculate though
+  scale_factor = 1.1;
+  // the edges on this behave differently than with the previous dish implementations
+  scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth]) rotate([inverted ? 0:180,0,90]) polar_3d_surface(bottom=-10);
+  /* %scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth]) rotate([180,0,0]) polar_3d_surface(bottom=-10); */
+
+}
 
 //geodesic looks much better, but runs very slow for anything above a 2u
 geodesic=false;
@@ -2361,9 +2738,10 @@ module  dish(width, height, depth, inverted) {
     }
     else if ($dish_type == "sideways cylindrical"){
       sideways_cylindrical_dish(width, height, depth, inverted);
-    }
-    else if ($dish_type == "old spherical") {
+    } else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
+    } else if ($dish_type == "3d_surface") {
+      3d_surface_dish(width, height, depth, inverted);
     } else if ($dish_type == "flat") {
       flat_dish(width, height, depth, inverted);
     } else if ($dish_type == "disable") {
@@ -2414,6 +2792,25 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 // TODO this define doesn't do anything besides tell me I used flat() in this file
 // is it better than not having it at all?
 module flat(stem_type, loft, height) {
@@ -3901,7 +4298,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 2;
+$keytop_thickness = 1;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -4048,18 +4445,15 @@ $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
-// 3d surface variables
-// see functions.scad for the surface function
-$3d_surface_size = 10;
-$3d_surface_step = 1;
-// normally the bottom of the keytop looks like the top - curved, at least
-// underneath the support structure. This ensures there's a minimum thickness for the
-// underside of the keycap, but it's a fair bit of geometry
-$flat_keytop_bottom = true;
-
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 10;
   key();
 }
 
