@@ -404,6 +404,7 @@ module key(inset = false) {
 
   // both stem and support are optional
   if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
+    inside()
     dished($keytop_thickness, $inverted_dish) {
       translate([0, 0, $stem_inset]) {
         if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
