@@ -24,8 +24,6 @@ To make your own key, all you need to do is open `keys.scad` with openSCAD and [
 Here is an example you can replace the line with to get started. This is for a ctrl key on an OEM keyboard:  
 `u(1.25) oem_row(3) legend("ctrl", size=4.5) key();`
 
-
-
 It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
 
 All examples below assume you are running the library on your computer with OpenSCAD.
