@@ -187,3 +187,12 @@ $warning_color = [1,0,0, 0.15];
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 5;
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";

@@ -9,7 +9,32 @@ include <./includes.scad>
 
 
 // example key
-dcs_row(5) legend("⇪", size=9) key();
+/* $skin_key_shape = true; */
+
+difference() {
+  /* top_of_key() { */
+    /* cube(10); */
+  /* } */
+  /* key(); */
+}
+
+/* simple_layout(lets_split_layout) {
+  dcs_row($row) key();
+} */
+
+dcs_row(1) legend("h") front_legend("q"
+) {
+  $key_length = 2.75;
+    key();
+}
+
+translate_u(0,1) dcs_row(1) {
+  $key_length = 0.86;
+  key();
+}
+
+/* debug() key(); */
+
 
 // example row
 /* for (x = [0:1:4]) {
