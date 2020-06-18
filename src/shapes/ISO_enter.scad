@@ -2,6 +2,7 @@
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
 
+
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
@@ -16,19 +17,21 @@ module ISO_enter_shape(size, delta, progress){
   width_ratio = unit_length(1.25) / unit_length(1.5);
   height_ratio = unit_length(1) / unit_length(2);
 
+  delta = delta / 2;
+
   pointArray = [
-      [                   0,                     0], // top right
-      [                   0,               -height], // bottom right
-      [-width * width_ratio,               -height], // bottom left
-      [-width * width_ratio,-height * height_ratio], // inner middle point
-      [              -width,-height * height_ratio], // outer middle point
-      [              -width,                     0]  // top left
+      [                   0-delta.x,                     0-delta.y], // top right
+      [                   0-delta.x,               -height+delta.y], // bottom right
+      [-width * width_ratio+delta.x,               -height+delta.y], // bottom left
+      [-width * width_ratio + delta.x,-height * height_ratio+delta.y], // inner middle point
+      [              -width + delta.x,-height * height_ratio + delta.y], // outer middle point
+      [              -width + delta.x,                     0-delta.y]  // top left
   ];
 
   minkowski(){
-    circle(r=corner_size);
+    circle(r=$corner_radius);
     // gives us rounded inner corner
-    offset(r=-corner_size*2) {
+    offset(r=-$corner_radius*2) {
       translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
     }
   }
