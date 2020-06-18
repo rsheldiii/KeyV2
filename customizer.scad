@@ -588,6 +588,54 @@ module grid_row(row=3, column = 0) {
     children();
   }
 }
+// based off GMK keycap set
+
+module cherry_row(row=3, column=0) {
+  $bottom_key_width = 18.16;
+  $bottom_key_height = 18.16;
+  $width_difference = $bottom_key_width - 11.85;
+  $height_difference = $bottom_key_height - 14.64;
+  $dish_type = "cylindrical";
+  $dish_depth = 0.65;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 2;
+
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  // NOTE: cherry keycaps have this stem inset, but I'm reticent to turn it on
+  // since it'll be surprising to folks. the height has been adjusted accordingly
+  // $stem_inset = 0.6;
+  extra_stem_inset_height = max(0.6 - $stem_inset, 0);
+
+  // <= is a hack so you can do these in a for loop. function row = 0
+  if (row <= 1) {
+    $total_depth = 9.8 - extra_stem_inset_height + extra_height;
+    $top_tilt = 0;
+
+    children();
+  } else if (row == 2) {
+    $total_depth = 7.45 - extra_stem_inset_height + extra_height;
+    $top_tilt = 2.5;
+
+    children();
+  } else if (row == 3) {
+    $total_depth = 6.55 - extra_stem_inset_height + extra_height;
+    $top_tilt = 5;
+    children();
+  } else if (row == 3) {
+    $total_depth = 6.7 + 0.65 - extra_stem_inset_height + extra_height;
+    $top_tilt = 11.5;
+    children();
+  } else if (row >= 4) {
+    $total_depth = 6.7 + 0.65 - extra_stem_inset_height + extra_height;
+    $top_tilt = 11.5;
+    children();
+  } else {
+    children();
+  }
+}
 
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
@@ -605,6 +653,8 @@ module key_profile(key_profile_type, row, column=0) {
     hipro_row(row, column) children();
   } else if (key_profile_type == "grid") {
     grid_row(row, column) children();
+  } else if (key_profile_type == "cherry") {
+    cherry_row(row, column) children();
   } else if (key_profile_type == "disable") {
     children();
   } else {
@@ -656,13 +706,14 @@ module iso_enter() {
   $key_length = 1.5;
   $key_height = 2;
 
-  $top_tilt = 0;
+  $top_tilt = 10;
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
   /* $linear_extrude_shape = true; */
+  /* $skin_extrude_shape = true; */
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
-  $dish_overdraw_width = 2.38125;
+  $dish_overdraw_width = 13.84125;
 
 
   stabilized(vertical=true) {
@@ -948,6 +999,7 @@ unit = 19.05;
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
 
+
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
@@ -962,19 +1014,21 @@ module ISO_enter_shape(size, delta, progress){
   width_ratio = unit_length(1.25) / unit_length(1.5);
   height_ratio = unit_length(1) / unit_length(2);
 
+  delta = delta / 2;
+
   pointArray = [
-      [                   0,                     0], // top right
-      [                   0,               -height], // bottom right
-      [-width * width_ratio,               -height], // bottom left
-      [-width * width_ratio,-height * height_ratio], // inner middle point
-      [              -width,-height * height_ratio], // outer middle point
-      [              -width,                     0]  // top left
+      [                   0-delta.x,                     0-delta.y], // top right
+      [                   0-delta.x,               -height+delta.y], // bottom right
+      [-width * width_ratio+delta.x,               -height+delta.y], // bottom left
+      [-width * width_ratio + delta.x,-height * height_ratio+delta.y], // inner middle point
+      [              -width + delta.x,-height * height_ratio + delta.y], // outer middle point
+      [              -width + delta.x,                     0-delta.y]  // top left
   ];
 
   minkowski(){
-    circle(r=corner_size);
+    circle(r=$corner_radius);
     // gives us rounded inner corner
-    offset(r=-corner_size*2) {
+    offset(r=-$corner_radius*2) {
       translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
     }
   }
@@ -1173,7 +1227,7 @@ module rounded_square_shape(size, delta, progress, center = true) {
 // for skin
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
+  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
