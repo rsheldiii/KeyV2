@@ -177,14 +177,3 @@ module debug() {
 
   %children();
 }
-
-module display() {
-  $height_slices = 30;
-  $minkowski_facets = 64;
-  $shape_facets = 64;
-  $stem_type = "disable";
-  $support_type = "disable";
-  $stem_support_type = "disable";
-
-  children();
-}
