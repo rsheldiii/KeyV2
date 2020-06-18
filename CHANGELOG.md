@@ -10,6 +10,7 @@ CHANGELOG:
     * implemented `$inner_shape_type`, use "flat" for less geometry or "disable" to make a completely solid key easily. didn't help render rounded keys though
     * side-printed keycaps are first class! you can use the `sideways()` modifier to set up sideways keycaps that have flat sides to print on.
     * it's much easier to make quick artisans now that the inside of the keycap is differenced from any additive features placed on top
+    * `$linear_extrude_shape` and `$skin_extrude_shape` retired in favor of `$hull_shape_type`
     * still todo: add a magic scaling variable so you can scale the whole world up, see if that fixes degeneracy
     * still todo: rejigger supports
     * still todo: rejigger inner shape. maybe just always make it flat

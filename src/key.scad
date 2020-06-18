@@ -29,9 +29,7 @@ module shape(thickness_difference, depth_difference=0){
   }
 }
 
-// this function is more correct, but takes _forever_
-// the main difference is minkowski happens after dishing, meaning the dish is
-// also minkowski'd
+// Not currently used due to CGAL errors. Rounds the shape via minkowski
 module rounded_shape() {
   color($primary_color) minkowski(){
     // half minkowski in the z direction
@@ -53,7 +51,6 @@ module minkowski_object() {
     }
   }
 }
-
 
 module envelope(depth_difference=0) {
   s = 1.5;
@@ -85,19 +82,6 @@ module dished(depth_difference = 0, inverted = false) {
 // just to DRY up the code
 module _dish(inverted=$inverted_dish) {
   color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
-}
-
-// puts its children at the center of the dishing on the key, including dish height
-// more user-friendly than top_placement
-module top_of_key(){
-  // if there is a dish, we need to account for how much it digs into the top
-  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
-  // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
-  corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
-
-  top_placement(corrected_dish_depth) {
-    children();
-  }
 }
 
 // puts its children at each keystem position provided
@@ -140,6 +124,19 @@ module top_placement(depth_difference=0) {
   }
 }
 
+// puts its children at the center of the dishing on the key, including dish height
+// more user-friendly than top_placement
+module top_of_key(){
+  // if there is a dish, we need to account for how much it digs into the top
+  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
+  // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
+  corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
+
+  top_placement(corrected_dish_depth) {
+    children();
+  }
+}
+
 module front_of_key() {
   // all this math is to take top skew and tilt into account
   // we need to find the new effective height and depth of the top, front lip
@@ -164,14 +161,12 @@ module outer_shape() {
 }
 
 module inner_shape(extra_wall_thickness = 0, extra_keytop_thickness = 0) {
-  translate([0,0,-SMALLEST_POSSIBLE]) {
-    if ($inner_shape_type == "flat") {
-      /* $key_shape_type="square"; */
-      $height_slices = 1;
-      color($primary_color) shape_hull($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness, 0);
-    } else {
-      shape($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness);
-    }
+  if ($inner_shape_type == "flat") {
+    /* $key_shape_type="square"; */
+    $height_slices = 1;
+    color($primary_color) shape_hull($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness, 0);
+  } else {
+    shape($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness);
   }
 }
 
@@ -197,15 +192,11 @@ module subtractive_features(inset) {
   if ($clearance_check) %clearance_check();
 }
 
+// features inside the key itself (stem, supports, etc)
 module inside_features() {
   translate([0, 0, $stem_inset]) {
-    // both stem and support are optional
     if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
     if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
-    if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
-    // always render stem support even if there isn't a stem.
-    // rendering flat support w/no stem is much more common than a hollow keycap
-    // so if you want a hollow keycap you'll have to turn support off entirely
     if ($support_type != "disable") support_for($stem_positions, $stem_type);
   }
 }
@@ -221,26 +212,19 @@ module key(inset=false) {
       };
     }
 
-    if ($inner_shape_type != "disable") difference() {
-      inner_shape();
-      inside_features();
+    if ($inner_shape_type != "disable") {
+      translate([0,0,-SMALLEST_POSSIBLE]) {
+        difference() {
+          inner_shape();
+          inside_features();
+        }
+      }
     }
 
     subtractive_features(inset) {
       children();
     };
   }
-}
-
-module display_key(inset=false) {
-    minkowski() {
-      outer_shape();
-      minkowski_object();
-      // minkowski doesn't work with difference
-      additive_features(false) {
-        children();
-      };
-    }
 }
 
 // actual full key with space carved out and keystem/stabilizer connectors

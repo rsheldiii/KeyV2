@@ -14,7 +14,7 @@ At the end of the day though, all the columnular sculpting is doing is adding ex
 
 ## skin mode
 
-SA, HiPro and DSA keycaps take _forever_ to render. This is a multifaceted issue that I don't want to get into here, but suffice to say _one_ of the reasons it takes so long is how the keycap is constructed from multiple, smaller slices. OpenSCAD takes more time to render the more objects you have, regardless of how they interact. Enter `$skin_extrude_shape = true`.
+SA, HiPro and DSA keycaps take _forever_ to render. This is a multifaceted issue that I don't want to get into here, but suffice to say _one_ of the reasons it takes so long is how the keycap is constructed from multiple, smaller slices. OpenSCAD takes more time to render the more objects you have, regardless of how they interact. Enter `$hull_shape_type = "skin"`.
 
 `skin()` is a list comprehension function available [here](https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad). The gist of it is that instead of having x number of keycap slices unioned together, we give `skin()` a set of profiles and it makes a single object out of it for us. This reduces the number of objects per keycap, which makes it easier to render them.
 
