@@ -2940,7 +2940,7 @@ module shape_slice(progress, thickness_difference, depth_difference) {
 
   translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
     rotate([tilt_this_slice,y_tilt_this_slice,0]){
-      linear_extrude(height = SMALLEST_POSSIBLE + ($rounded_key ? $minkowski_radius : 0), scale = SMALLEST_POSSIBLE){
+      linear_extrude(height = SMALLEST_POSSIBLE, scale = 1){
         key_shape(
           [
             total_key_width(thickness_difference),
