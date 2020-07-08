@@ -201,23 +201,30 @@ module inside_features() {
   }
 }
 
+// helpers for doubleshot keycaps for now
+module inner_total_shape() {
+  difference() {
+    inner_shape();
+    inside_features();
+  }
+}
+
+module outer_total_shape(inset=false) {
+  outer_shape();
+  additive_features(inset) {
+    children();
+  };
+}
+
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
 module key(inset=false) {
   difference(){
-    union() {
-      outer_shape();
-      additive_features(inset) {
-        children();
-      };
-    }
+    outer_total_shape(inset);
 
     if ($inner_shape_type != "disable") {
       translate([0,0,-SMALLEST_POSSIBLE]) {
-        difference() {
-          inner_shape();
-          inside_features();
-        }
+        inner_total_shape();
       }
     }
 

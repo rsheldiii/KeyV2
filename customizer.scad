@@ -2846,7 +2846,7 @@ module keytext(text, position, font_size, depth) {
   woffset = (top_total_key_width()/3.5) * position[0];
   hoffset = (top_total_key_height()/3.5) * -position[1];
   translate([woffset, hoffset, -depth]){
-    color($tertiary_color) linear_extrude(height=$dish_depth){
+    color($tertiary_color) linear_extrude(height=$dish_depth + depth){
       text(text=text, font=$font, size=font_size, halign="center", valign="center");
     }
   }
@@ -4098,23 +4098,30 @@ module inside_features() {
   }
 }
 
+// helpers for doubleshot keycaps for now
+module inner_total_shape() {
+  difference() {
+    inner_shape();
+    inside_features();
+  }
+}
+
+module outer_total_shape(inset=false) {
+  outer_shape();
+  additive_features(inset) {
+    children();
+  };
+}
+
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
 module key(inset=false) {
   difference(){
-    union() {
-      outer_shape();
-      additive_features(inset) {
-        children();
-      };
-    }
+    outer_total_shape(inset);
 
     if ($inner_shape_type != "disable") {
       translate([0,0,-SMALLEST_POSSIBLE]) {
-        difference() {
-          inner_shape();
-          inside_features();
-        }
+        inner_total_shape();
       }
     }
 
