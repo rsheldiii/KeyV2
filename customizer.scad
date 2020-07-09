@@ -544,8 +544,8 @@ module hipro_row(row=3, column=0) {
 module grid_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
-  $width_difference = 0.2;
-  $height_difference = 0.2;
+  $width_difference = 1;
+  $height_difference = 1;
   $top_tilt = 0;
   $top_skew = 0;
   $dish_type = "old spherical";
@@ -557,8 +557,8 @@ module grid_row(row=3, column = 0) {
   $linear_extrude_shape = true;
 
 
-  $dish_overdraw_width = -8;
-  $dish_overdraw_height = -8;
+  $dish_overdraw_width = -6.5;
+  $dish_overdraw_height = -6.5;
 
   $minkowski_radius = 0.5;
   //also,
@@ -567,7 +567,7 @@ module grid_row(row=3, column = 0) {
   $top_tilt_y = side_tilt(column);
   extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
 
-  $total_depth = 6 + abs((row-3) * 0.5) + extra_height;
+  $total_depth = 7 + abs((row-3) * 0.5) + extra_height;
 
   if (row == 5 || row == 0) {
     /* $top_tilt =  -18.55; */
@@ -706,14 +706,13 @@ module iso_enter() {
   $key_length = 1.5;
   $key_height = 2;
 
-  $top_tilt = 10;
+  $top_tilt = 0;
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
   /* $linear_extrude_shape = true; */
-  /* $skin_extrude_shape = true; */
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
-  $dish_overdraw_width = 13.84125;
+  $dish_overdraw_width = 2.38125;
 
 
   stabilized(vertical=true) {
@@ -999,7 +998,6 @@ unit = 19.05;
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
 
-
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
@@ -1014,21 +1012,19 @@ module ISO_enter_shape(size, delta, progress){
   width_ratio = unit_length(1.25) / unit_length(1.5);
   height_ratio = unit_length(1) / unit_length(2);
 
-  delta = delta / 2;
-
   pointArray = [
-      [                   0-delta.x,                     0-delta.y], // top right
-      [                   0-delta.x,               -height+delta.y], // bottom right
-      [-width * width_ratio+delta.x,               -height+delta.y], // bottom left
-      [-width * width_ratio + delta.x,-height * height_ratio+delta.y], // inner middle point
-      [              -width + delta.x,-height * height_ratio + delta.y], // outer middle point
-      [              -width + delta.x,                     0-delta.y]  // top left
+      [                   0,                     0], // top right
+      [                   0,               -height], // bottom right
+      [-width * width_ratio,               -height], // bottom left
+      [-width * width_ratio,-height * height_ratio], // inner middle point
+      [              -width,-height * height_ratio], // outer middle point
+      [              -width,                     0]  // top left
   ];
 
   minkowski(){
-    circle(r=$corner_radius);
+    circle(r=corner_size);
     // gives us rounded inner corner
-    offset(r=-$corner_radius*2) {
+    offset(r=-corner_size*2) {
       translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
     }
   }
@@ -1227,7 +1223,7 @@ module rounded_square_shape(size, delta, progress, center = true) {
 // for skin
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
+  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
