@@ -15,7 +15,7 @@ module inside_cherry_stabilizer_cross(slop) {
   }
 }
 
-module cherry_stabilizer_stem(depth, slop) {
+module cherry_stabilizer_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {

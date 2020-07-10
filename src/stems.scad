@@ -4,22 +4,23 @@ include <stems/box_cherry.scad>
 include <stems/alps.scad>
 include <stems/filled.scad>
 include <stems/cherry_stabilizer.scad>
+include <stems/custom.scad>
 
 
 //whole stem, alps or cherry, trimmed to fit
-module stem(stem_type, depth, slop){
+module stem(stem_type, depth, slop, throw){
     if (stem_type == "alps") {
-      alps_stem(depth, slop);
+      alps_stem(depth, slop, throw);
     } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
-      cherry_stem(depth, slop);
+      cherry_stem(depth, slop, throw);
     } else if (stem_type == "rounded_cherry") {
-      rounded_cherry_stem(depth, slop);
+      rounded_cherry_stem(depth, slop, throw);
     } else if (stem_type == "box_cherry") {
-      box_cherry_stem(depth, slop);
+      box_cherry_stem(depth, slop, throw);
     } else if (stem_type == "filled") {
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
-      cherry_stabilizer_stem(depth, slop);
+      cherry_stabilizer_stem(depth, slop, throw);
     } else if (stem_type == "disable") {
       children();
     } else {

@@ -706,14 +706,13 @@ module iso_enter() {
   $key_length = 1.5;
   $key_height = 2;
 
-  $top_tilt = 10;
+  $top_tilt = 0;
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
   /* $linear_extrude_shape = true; */
-  /* $skin_extrude_shape = true; */
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
-  $dish_overdraw_width = 13.84125;
+  $dish_overdraw_width = 2.38125;
 
 
   stabilized(vertical=true) {
@@ -999,7 +998,6 @@ unit = 19.05;
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
 
-
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
@@ -1014,21 +1012,19 @@ module ISO_enter_shape(size, delta, progress){
   width_ratio = unit_length(1.25) / unit_length(1.5);
   height_ratio = unit_length(1) / unit_length(2);
 
-  delta = delta / 2;
-
   pointArray = [
-      [                   0-delta.x,                     0-delta.y], // top right
-      [                   0-delta.x,               -height+delta.y], // bottom right
-      [-width * width_ratio+delta.x,               -height+delta.y], // bottom left
-      [-width * width_ratio + delta.x,-height * height_ratio+delta.y], // inner middle point
-      [              -width + delta.x,-height * height_ratio + delta.y], // outer middle point
-      [              -width + delta.x,                     0-delta.y]  // top left
+      [                   0,                     0], // top right
+      [                   0,               -height], // bottom right
+      [-width * width_ratio,               -height], // bottom left
+      [-width * width_ratio,-height * height_ratio], // inner middle point
+      [              -width,-height * height_ratio], // outer middle point
+      [              -width,                     0]  // top left
   ];
 
   minkowski(){
-    circle(r=$corner_radius);
+    circle(r=corner_size);
     // gives us rounded inner corner
-    offset(r=-$corner_radius*2) {
+    offset(r=-corner_size*2) {
       translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
     }
   }
@@ -1227,7 +1223,7 @@ module rounded_square_shape(size, delta, progress, center = true) {
 // for skin
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
+  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1498,7 +1494,7 @@ module inside_cherry_cross(slop) {
   }
 }
 
-module cherry_stem(depth, slop) {
+module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -1656,7 +1652,7 @@ module inside_cherry_cross(slop) {
   }
 }
 
-module cherry_stem(depth, slop) {
+module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -1669,7 +1665,7 @@ module cherry_stem(depth, slop) {
   }
 }
 
-module rounded_cherry_stem(depth, slop) {
+module rounded_cherry_stem(depth, slop, throw) {
   difference(){
     cylinder(d=$rounded_cherry_stem_d, h=depth);
 
@@ -1824,7 +1820,7 @@ module inside_cherry_cross(slop) {
   }
 }
 
-module cherry_stem(depth, slop) {
+module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -1837,7 +1833,7 @@ module cherry_stem(depth, slop) {
   }
 }
 
-module box_cherry_stem(depth, slop) {
+module box_cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -1850,12 +1846,12 @@ module box_cherry_stem(depth, slop) {
     inside_cherry_cross(slop);
   }
 }
-module alps_stem(depth, has_brim, slop){
+module alps_stem(depth, slop, throw){
   linear_extrude(height=depth) {
     square($alps_stem, center = true);
   }
 }
-module filled_stem() {
+module filled_stem(_depth, _slop, _throw) {
   // I broke the crap out of this stem type due to the changes I made around how stems are differenced
   // now that we just take the dish out of stems in order to support stuff like
   // bare stem keycaps (and buckling spring eventually) we can't just make a
@@ -1941,7 +1937,7 @@ module inside_cherry_stabilizer_cross(slop) {
   }
 }
 
-module cherry_stabilizer_stem(depth, slop) {
+module cherry_stabilizer_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -1953,22 +1949,31 @@ module cherry_stabilizer_stem(depth, slop) {
     inside_cherry_stabilizer_cross(slop);
   }
 }
+thickness = .84;
+
+module custom_stem(depth, slop, throw){
+  linear_extrude(height=depth) {
+    square($alps_stem, center = true);
+  }
+}
 
 
 //whole stem, alps or cherry, trimmed to fit
-module stem(stem_type, depth, slop){
+module stem(stem_type, depth, slop, throw){
     if (stem_type == "alps") {
-      alps_stem(depth, slop);
+      alps_stem(depth, slop, throw);
     } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
-      cherry_stem(depth, slop);
+      cherry_stem(depth, slop, throw);
     } else if (stem_type == "rounded_cherry") {
-      rounded_cherry_stem(depth, slop);
+      rounded_cherry_stem(depth, slop, throw);
     } else if (stem_type == "box_cherry") {
-      box_cherry_stem(depth, slop);
+      box_cherry_stem(depth, slop, throw);
     } else if (stem_type == "filled") {
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
-      cherry_stabilizer_stem(depth, slop);
+      cherry_stabilizer_stem(depth, slop, throw);
+    } else if (stem_type == "custom") {
+      custom_stem(depth, slop, throw);
     } else if (stem_type == "disable") {
       children();
     } else {
@@ -2122,7 +2127,7 @@ module inside_cherry_cross(slop) {
   }
 }
 
-module cherry_stem(depth, slop) {
+module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -2325,7 +2330,7 @@ module inside_cherry_cross(slop) {
   }
 }
 
-module cherry_stem(depth, slop) {
+module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {
@@ -4182,7 +4187,7 @@ module support_for(positions, stem_type) {
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop);
+    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop, $stem_throw);
     if ($stem_support_type != "disable") {
       color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }

@@ -299,7 +299,7 @@ module support_for(positions, stem_type) {
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop);
+    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop, $stem_throw);
     if ($stem_support_type != "disable") {
       color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }

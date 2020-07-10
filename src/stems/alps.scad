@@ -1,4 +1,4 @@
-module alps_stem(depth, has_brim, slop){
+module alps_stem(depth, slop, throw){
   linear_extrude(height=depth) {
     square($alps_stem, center = true);
   }
