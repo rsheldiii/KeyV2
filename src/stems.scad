@@ -21,6 +21,8 @@ module stem(stem_type, depth, slop, throw){
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
       cherry_stabilizer_stem(depth, slop, throw);
+    } else if (stem_type == "custom") {
+      custom_stem(depth, slop, throw);
     } else if (stem_type == "disable") {
       children();
     } else {

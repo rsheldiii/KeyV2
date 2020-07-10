@@ -9,7 +9,10 @@ include <./includes.scad>
 
 
 // example key
-dcs_row(5) legend("⇪", size=9) key();
+/* $stem_throw = 1; */
+$stem_type = "custom";
+$outset_legends = true;
+dcs_row(5) front_legend("j") key();
 
 // example row
 /* for (x = [0:1:4]) {
