@@ -2913,8 +2913,8 @@ module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_s
     linear_extrude(height = height, scale = [width_scale, height_scale]) {
         translate([0,-$linear_extrude_height_adjustment,0]){
         key_shape(
-          [total_key_width(thickness_difference), total_key_height(thickness_difference)],
-          [$width_difference, $height_difference]
+          [total_key_width(), total_key_height()],
+          [thickness_difference, thickness_difference]
         );
       }
     }
