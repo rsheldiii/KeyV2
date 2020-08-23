@@ -1,6 +1,5 @@
-// corollary is rounded_square
-// NOT 3D
-function unit_length(length) = unit * (length - 1) + 18.16;
+include <../functions.scad>
+include <../libraries/round-anything/polyround.scad>
 
 width_ratio = unit_length(1.25) / unit_length(1.5);
 height_ratio = unit_length(1) / unit_length(2);
@@ -55,4 +54,15 @@ function iso_enter_vertices(size, delta, progress, thickness_difference) = [
 
 // no rounding on the corners at all
 function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
-  iso_enter_vertices(size, delta, progress, thickness_difference);
+  polyRound(
+    add_rounding(
+      iso_enter_vertices(
+        size,
+        delta,
+        progress,
+        thickness_difference
+      ),
+      $corner_radius
+    ),
+    $shape_facets
+  );

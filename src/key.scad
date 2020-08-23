@@ -1,4 +1,5 @@
 // files
+include <constants.scad>
 include <functions.scad>
 include <shapes.scad>
 include <stems.scad>
@@ -15,15 +16,10 @@ use <libraries/scad-utils/lists.scad>
 use <libraries/scad-utils/shapes.scad>
 use <libraries/skin.scad>
 
-
-/* [Hidden] */
-SMALLEST_POSSIBLE = 1/128;
-$fs = .1;
-$unit = 19.05;
-
 // key shape including dish. used as the ouside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
+    /* %shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0); */
     color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
   }
 }
@@ -217,7 +213,7 @@ module front_placement() {
 
 // just to DRY up the code
 module _dish() {
-  color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
+  translate([$dish_offset_x,0,0]) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
 module envelope(depth_difference=0) {
@@ -235,9 +231,9 @@ module dished_for_show() {
   difference(){
     union() {
       envelope();
-      if ($inverted_dish) top_placement(0) _dish();
+      if ($inverted_dish) top_placement(0) color($secondary_color) _dish();
     }
-    if (!$inverted_dish) top_placement(0) _dish();
+    if (!$inverted_dish) top_placement(0) color($secondary_color) _dish();
   }
 }
 
@@ -251,9 +247,10 @@ module dished(depth_difference = 0, inverted = false) {
     difference(){
       union() {
         envelope(depth_difference);
-        if (inverted) top_placement(depth_difference) _dish();
+        if (inverted) top_placement(depth_difference) color($secondary_color) _dish();
       }
-      if (!inverted) top_placement(depth_difference) _dish();
+      if (!inverted) top_placement(depth_difference) color($secondary_color) _dish();
+      /* %top_placement(depth_difference) _dish(); */
     }
   }
 }

@@ -10,9 +10,7 @@ module sa_row(n=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
-  // might wanna change this if you don't minkowski
-  // do you even minkowski bro
-  $corner_radius = 0.25;
+  $corner_radius = 1;
 
   // this is _incredibly_ intensive
   /* $rounded_key = true; */
