@@ -102,7 +102,11 @@ $dish_depth = 1;
 $dish_skew_x = 0;
 // How skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
 $dish_overdraw_width = 0;
 // Same as width but for height
 $dish_overdraw_height = 0;
