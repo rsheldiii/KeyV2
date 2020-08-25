@@ -92,6 +92,12 @@ module blank() {
   children();
 }
 
+module c64(slop) {
+  $stem_slop = slop ? slop : $stem_slop;
+  $stem_type = "c64";
+  children();
+}
+
 module cherry(slop) {
   $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "cherry";

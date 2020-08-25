@@ -114,6 +114,7 @@ $dish_overdraw_height = 0;
 /* [Misc] */
 // There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
 $cherry_bevel = true;
+$c64_bevel = true;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
 $stem_support_height = .8;

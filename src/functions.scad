@@ -7,6 +7,8 @@ include <constants.scad>
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 
+function outer_c64_stem(slop) = [7.2 - slop * 2, 7.2 - slop * 2];
+
 // cherry stabilizer stem dimensions
 function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
 
@@ -20,6 +22,14 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+function c64_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [5.5 + slop, 1.7 + slop / 3],
+  // vertical tine
+  [1.7 + slop / 3, 5.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
