@@ -17,7 +17,7 @@ If you are technically inclined at all, this is definitely the best way to run t
 
 First, you'll need OpenSCAD: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they generally support more features and are relatively stable. Development snapshots are listed in their own section on the downloads page.
 
-After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the directory should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set! It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
+After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/KeyV2.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/KeyV2/archive/master.zip) and extracting the directory should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set! It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
 
 All examples below assume you are running the library on your computer with OpenSCAD.
 
