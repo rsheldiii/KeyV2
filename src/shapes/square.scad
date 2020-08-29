@@ -1,6 +1,4 @@
 use <../functions.scad>
-include <../libraries/rounded_rectangle_profile.scad>
-
 
 // we do this weird key_shape_type check here because rounded_square uses
 // square_shape, and we want flat sides to work for that too.
@@ -23,13 +21,22 @@ module square_shape(size, delta, progress){
 // shape makes the sides flat by making the top a trapezoid.
 // This obviously doesn't work with rounded sides at all
 module flat_sided_square_shape(size, delta, progress) {
-  polygon(points=[
-    [(-size.x + (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2, (-size.y + delta.y * progress)/2],
-    [(size.x - (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2,(-size.y + delta.y * progress)/2],
-    [(size.x - (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2],
-    [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
-  ]);
+  polygon(skin_flat_sided_square_shape(size, delta, progress));
 }
+
+function skin_flat_sided_square_shape(size,delta,progress) = [
+  [(-size.x + (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2, (-size.y + delta.y * progress)/2],
+  [(size.x - (delta.x + extra_keytop_length_for_flat_sides()) * progress)/2,(-size.y + delta.y * progress)/2],
+  [(size.x - (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2],
+  [(-size.x + (delta.x - extra_keytop_length_for_flat_sides()) * progress)/2, (size.y - delta.y * progress)/2]
+];
+
+function rectangle_profile(size) = [
+  [-size.x/2, -size.y/2],
+  [size.x/2, -size.y/2],
+  [size.x/2, size.y/2],
+  [-size.x/2, size.y/2],
+];
 
 function skin_square_shape(size, delta, progress, thickness_difference) =
   let(
@@ -43,4 +50,4 @@ function skin_square_shape(size, delta, progress, thickness_difference) =
       width - width_difference - thickness_difference,
       height - height_difference - thickness_difference
     ]
-  ) rectangle_profile(square_size, fn=36);
+  ) $key_shape_type == "flat_sided_square" ? skin_flat_sided_square_shape(size, delta, progress) : rectangle_profile(square_size);
