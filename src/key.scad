@@ -402,7 +402,7 @@ module key(inset = false) {
   // both stem and support are optional
   if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
     dished($keytop_thickness, $inverted_dish) {
-      translate([0, 0, $stem_inset]) {
+      translate([0, (unit_length($key_height) - unit_length(1))/2, $stem_inset]) {
         if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
 
         if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
@@ -412,7 +412,7 @@ module key(inset = false) {
 
   if ($support_type != "disable"){
     inside() {
-      translate([0, 0, $stem_inset]) {
+      translate([0, (unit_length($key_height) - unit_length(1))/2, $stem_inset]) {
         if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
 
         // always render stem support even if there isn't a stem.
