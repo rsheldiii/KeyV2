@@ -118,12 +118,10 @@ $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
 // Should be faster, also required for concave shapes
-// Use linear_extrude instead of hull slices to make the shape of the key
-$linear_extrude_shape = false;
 
-// warns in trajectory.scad but it looks benign
-// brand new, more correct, hopefully faster, lots more work
-$skin_extrude_shape = false;
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
 // This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -187,3 +185,12 @@ $warning_color = [1,0,0, 0.15];
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 5;
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";

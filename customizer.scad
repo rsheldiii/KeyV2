@@ -52,7 +52,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 2;
+$keytop_thickness = 1;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -133,12 +133,10 @@ $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
 // Should be faster, also required for concave shapes
-// Use linear_extrude instead of hull slices to make the shape of the key
-$linear_extrude_shape = false;
 
-// warns in trajectory.scad but it looks benign
-// brand new, more correct, hopefully faster, lots more work
-$skin_extrude_shape = false;
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
 // This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -199,18 +197,18 @@ $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
-// 3d surface variables
-// see functions.scad for the surface function
-$3d_surface_size = 10;
-$3d_surface_step = 1;
-// normally the bottom of the keytop looks like the top - curved, at least
-// underneath the support structure. This ensures there's a minimum thickness for the
-// underside of the keycap, but it's a fair bit of geometry
-$flat_keytop_bottom = true;
-
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 5;
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
 
 // key width functions
 
@@ -557,7 +555,7 @@ module grid_row(row=3, column = 0) {
   $dish_skew_x = 0;
   $dish_skew_y = 0;
 
-  $linear_extrude_shape = true;
+  $hull_shape_type = "linear extrude";
 
 
   $dish_overdraw_width = -8;
@@ -662,7 +660,7 @@ module iso_enter() {
   $top_tilt = 0;
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
-  /* $linear_extrude_shape = true; */
+  /* $hull_shape_type = "linear extrude"; */
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   $dish_overdraw_width = 2.38125;
@@ -925,12 +923,37 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 $fs=.1;
 unit = 19.05;
 
 // corollary is rounded_square
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
+
 
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
@@ -946,19 +969,21 @@ module ISO_enter_shape(size, delta, progress){
   width_ratio = unit_length(1.25) / unit_length(1.5);
   height_ratio = unit_length(1) / unit_length(2);
 
+  delta = delta / 2;
+
   pointArray = [
-      [                   0,                     0], // top right
-      [                   0,               -height], // bottom right
-      [-width * width_ratio,               -height], // bottom left
-      [-width * width_ratio,-height * height_ratio], // inner middle point
-      [              -width,-height * height_ratio], // outer middle point
-      [              -width,                     0]  // top left
+      [                   0-delta.x,                     0-delta.y], // top right
+      [                   0-delta.x,               -height+delta.y], // bottom right
+      [-width * width_ratio+delta.x,               -height+delta.y], // bottom left
+      [-width * width_ratio + delta.x,-height * height_ratio+delta.y], // inner middle point
+      [              -width + delta.x,-height * height_ratio + delta.y], // outer middle point
+      [              -width + delta.x,                     0-delta.y]  // top left
   ];
 
   minkowski(){
-    circle(r=corner_size);
+    circle(r=$corner_radius);
     // gives us rounded inner corner
-    offset(r=-corner_size*2) {
+    offset(r=-$corner_radius*2) {
       translate([(width * width_ratio)/2, height/2]) polygon(points=pointArray);
     }
   }
@@ -1157,7 +1182,7 @@ module rounded_square_shape(size, delta, progress, center = true) {
 // for skin
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
+  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1200,6 +1225,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 function sign_x(i,n) =
 	i < n/4 || i > n*3/4  ?  1 :
 	i > n/4 && i < n*3/4  ? -1 :
@@ -1367,6 +1416,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -1444,6 +1517,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1486,6 +1583,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1574,6 +1695,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1616,6 +1761,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1723,6 +1892,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -1815,6 +2008,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -1857,6 +2074,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -1980,6 +2221,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 SMALLEST_POSSIBLE = 1/128;
 
 // I use functions when I need to compute special variables off of other special variables
@@ -2022,6 +2287,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
@@ -2414,6 +2703,30 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // of the keycap a flat plane. 1 = front, -1 = back
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// 3d surface functions (still in beta)
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+function surface_distribution_function(dim, size) = sin(dim) * size;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+function surface_function(x,y) = 1;
+// cylindrical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
+// spherical
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
+// (statically) random!
+// ripples
+/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
+// Rosenbrock's banana
+/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
+// y=x revolved around the y axis
+/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
 // TODO this define doesn't do anything besides tell me I used flat() in this file
 // is it better than not having it at all?
 module flat(stem_type, loft, height) {
@@ -2533,7 +2846,7 @@ module keytext(text, position, font_size, depth) {
   woffset = (top_total_key_width()/3.5) * position[0];
   hoffset = (top_total_key_height()/3.5) * -position[1];
   translate([woffset, hoffset, -depth]){
-    color($tertiary_color) linear_extrude(height=$dish_depth){
+    color($tertiary_color) linear_extrude(height=$dish_depth + depth){
       text(text=text, font=$font, size=font_size, halign="center", valign="center");
     }
   }
@@ -2552,6 +2865,107 @@ module legends(depth=0) {
       for (i=[0:len($legends)-1]) {
         keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
       }
+    }
+  }
+}
+// use skin() instead of successive hulls. much more correct, and looks faster
+// too, in most cases. successive hull relies on overlapping faces which are
+// not good. But, skin works on vertex sets instead of shapes, which makes it
+// a lot more difficult to use
+module skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0 ) {
+  skin([
+    for (index = [0:$height_slices + extra_slices])
+      let(
+        progress = (index / $height_slices),
+        skew_this_slice = $top_skew * progress,
+        x_skew_this_slice = $top_skew_x * progress,
+        depth_this_slice = ($total_depth - depth_difference) * progress,
+        tilt_this_slice = -$top_tilt / $key_height * progress,
+        y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0
+      )
+      skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice)
+  ]);
+}
+
+function skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice) =
+  transform(
+    translation([x_skew_this_slice,skew_this_slice,depth_this_slice]),
+    transform(
+      rotation([tilt_this_slice,y_tilt_this_slice,0]),
+        skin_key_shape([
+          total_key_width(0),
+          total_key_height(0),
+          ],
+          [$width_difference, $height_difference],
+          progress,
+          thickness_difference
+        )
+    )
+  );
+// corollary is hull_shape_hull
+// extra_slices unused, only to match argument signatures
+module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0){
+  height = $total_depth - depth_difference;
+  width_scale = top_total_key_width() / total_key_width();
+  height_scale = top_total_key_height() / total_key_height();
+
+  translate([0,$linear_extrude_height_adjustment,0]){
+    linear_extrude(height = height, scale = [width_scale, height_scale]) {
+        translate([0,-$linear_extrude_height_adjustment,0]){
+        key_shape(
+          [total_key_width(), total_key_height()],
+          [thickness_difference, thickness_difference]
+        );
+      }
+    }
+  }
+}
+module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0) {
+  for (index = [0:$height_slices - 1 + extra_slices]) {
+    hull() {
+      shape_slice(index / $height_slices, thickness_difference, depth_difference);
+      shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
+    }
+  }
+}
+
+module shape_slice(progress, thickness_difference, depth_difference) {
+  skew_this_slice = $top_skew * progress;
+  x_skew_this_slice = $top_skew_x * progress;
+
+  depth_this_slice = ($total_depth - depth_difference) * progress;
+
+  tilt_this_slice = -$top_tilt / $key_height * progress;
+  y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0;
+
+  translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
+    rotate([tilt_this_slice,y_tilt_this_slice,0]){
+      linear_extrude(height = SMALLEST_POSSIBLE, scale = 1){
+        key_shape(
+          [
+            total_key_width(thickness_difference),
+            total_key_height(thickness_difference)
+          ],
+          [$width_difference, $height_difference],
+          progress
+        );
+      }
+    }
+  }
+}
+
+// basic key shape, no dish, no inside
+// which is only used for dishing to cut the dish off correctly
+// $height_difference used for keytop thickness
+// extra_slices is a hack to make inverted dishes still work
+module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
+  render() {
+    if ($hull_shape_type == "skin") {
+      skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
+    } else if ($hull_shape_type == "linear extrude") {
+      linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
+    } else {
+      hull_shape_hull(thickness_difference, depth_difference, extra_slices);
     }
   }
 }
@@ -3499,209 +3913,40 @@ function profile_segment_length(profile,i) = norm(profile[(i+1)%len(profile)] - 
 // Generates an array with n copies of value (default 0)
 function dup(value=0,n) = [for (i = [1:n]) value];
 
-
 /* [Hidden] */
 SMALLEST_POSSIBLE = 1/128;
-$fs = .1;
+// basically disable $fs - though it might be useful for these CGAL problems
+$fs = .01;
 $unit = 19.05;
 
 // key shape including dish. used as the ouside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
-    color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 2 : 0);
+    color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 200 : 0);
   }
 }
 
-// shape of the key but with soft, rounded edges. no longer includes dish
-// randomly doesnt work sometimes
-// the dish doesn't _quite_ reach as far as it should
+// Not currently used due to CGAL errors. Rounds the shape via minkowski
 module rounded_shape() {
-  dished(-$minkowski_radius, $inverted_dish) {
-    color($primary_color) minkowski(){
-      // half minkowski in the z direction
-      color($primary_color) shape_hull($minkowski_radius * 2, $minkowski_radius/2, $inverted_dish ? 2 : 0);
-      /* cube($minkowski_radius); */
-      sphere(r=$minkowski_radius, $fn=$minkowski_facets);
-    }
-  }
-  /* %envelope(); */
-}
-
-// this function is more correct, but takes _forever_
-// the main difference is minkowski happens after dishing, meaning the dish is
-// also minkowski'd
-/* module rounded_shape() {
   color($primary_color) minkowski(){
     // half minkowski in the z direction
     shape($minkowski_radius * 2, $minkowski_radius/2);
-    difference(){
-      sphere(r=$minkowski_radius, $fn=20);
-      translate([0,0,-$minkowski_radius]){
-        cube($minkowski_radius * 2, center=true);
-      }
+    minkowski_object();
+  }
+}
+
+// minkowski places this object at every vertex of the other object then mashes
+// it all together
+module minkowski_object() {
+  // alternative minkowski shape that needs the bottom of the keycap to be trimmed
+  /* sphere(1); */
+
+  difference(){
+    sphere(r=$minkowski_radius, $fa=360/$minkowski_facets);
+    translate([0,0,-$minkowski_radius]){
+      cube($minkowski_radius * 2, center=true);
     }
   }
-} */
-
-
-
-// basic key shape, no dish, no inside
-// which is only used for dishing to cut the dish off correctly
-// $height_difference used for keytop thickness
-// extra_slices is a hack to make inverted dishes still work
-module shape_hull(thickness_difference, depth_difference, extra_slices = 0){
-  render() {
-    if ($skin_extrude_shape) {
-      skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
-    } else if ($linear_extrude_shape) {
-      linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices);
-    } else {
-      hull_shape_hull(thickness_difference, depth_difference, extra_slices);
-    }
-  }
-}
-
-// use skin() instead of successive hulls. much more correct, and looks faster
-// too, in most cases. successive hull relies on overlapping faces which are
-// not good. But, skin works on vertex sets instead of shapes, which makes it
-// a lot more difficult to use
-module skin_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0 ) {
-  skin([
-    for (index = [0:$height_slices + extra_slices])
-      let(
-        progress = (index / $height_slices),
-        skew_this_slice = $top_skew * progress,
-        x_skew_this_slice = $top_skew_x * progress,
-        depth_this_slice = ($total_depth - depth_difference) * progress,
-        tilt_this_slice = -$top_tilt / $key_height * progress,
-        y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0
-      )
-      skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice)
-  ]);
-}
-
-function skin_shape_slice(progress, thickness_difference, skew_this_slice, x_skew_this_slice, depth_this_slice, tilt_this_slice, y_tilt_this_slice) =
-  transform(
-    translation([x_skew_this_slice,skew_this_slice,depth_this_slice]),
-    transform(
-      rotation([tilt_this_slice,y_tilt_this_slice,0]),
-        skin_key_shape([
-          total_key_width(0),
-          total_key_height(0),
-          ],
-          [$width_difference, $height_difference],
-          progress,
-          thickness_difference
-        )
-    )
-  );
-
-// corollary is hull_shape_hull
-// extra_slices unused, only to match argument signatures
-module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_slices = 0){
-  height = $total_depth - depth_difference;
-  width_scale = top_total_key_width() / total_key_width();
-  height_scale = top_total_key_height() / total_key_height();
-
-  translate([0,$linear_extrude_height_adjustment,0]){
-    linear_extrude(height = height, scale = [width_scale, height_scale]) {
-        translate([0,-$linear_extrude_height_adjustment,0]){
-        key_shape(
-          [total_key_width(thickness_difference), total_key_height(thickness_difference)],
-          [$width_difference, $height_difference]
-        );
-      }
-    }
-  }
-}
-
-module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0) {
-  for (index = [0:$height_slices - 1 + extra_slices]) {
-    hull() {
-      shape_slice(index / $height_slices, thickness_difference, depth_difference);
-      shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
-    }
-  }
-}
-
-module shape_slice(progress, thickness_difference, depth_difference) {
-  skew_this_slice = $top_skew * progress;
-  x_skew_this_slice = $top_skew_x * progress;
-
-  depth_this_slice = ($total_depth - depth_difference) * progress;
-
-  tilt_this_slice = -$top_tilt / $key_height * progress;
-  y_tilt_this_slice = $double_sculpted ? (-$top_tilt_y / $key_length * progress) : 0;
-
-  translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
-    rotate([tilt_this_slice,y_tilt_this_slice,0]){
-      linear_extrude(height = SMALLEST_POSSIBLE){
-        key_shape(
-          [
-            total_key_width(thickness_difference),
-            total_key_height(thickness_difference)
-          ],
-          [$width_difference, $height_difference],
-          progress
-        );
-      }
-    }
-  }
-}
-
-// for when you want something to only exist inside the keycap.
-// used for the support structure
-module inside() {
-  intersection() {
-    shape($wall_thickness, $keytop_thickness);
-    children();
-  }
-}
-
-// for when you want something to only exist outside the keycap
-module outside() {
-  difference() {
-    children();
-    shape($wall_thickness, $keytop_thickness);
-  }
-}
-
-// put something at the top of the key, with no adjustments for dishing
-module top_placement(depth_difference=0) {
-  top_tilt_by_height = -$top_tilt / $key_height;
-  top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
-
-  minkowski_height = $rounded_key ? $minkowski_radius : 0;
-
-  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference + minkowski_height/2]){
-    rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
-      children();
-    }
-  }
-}
-
-module front_placement() {
-  // all this math is to take top skew and tilt into account
-  // we need to find the new effective height and depth of the top, front lip
-  // of the keycap to find the angle so we can rotate things correctly into place
-  total_depth_difference = sin(-$top_tilt) * (top_total_key_height()/2);
-  total_height_difference = $top_skew + (1 - cos(-$top_tilt)) * (top_total_key_height()/2);
-
-  angle = atan2(($total_depth - total_depth_difference), ($height_difference/2 + total_height_difference));
-  hypotenuse = ($total_depth -total_depth_difference) / sin(angle);
-
-  translate([0,-total_key_height()/2,0]) {
-    rotate([-(90-angle), 0, 0]) {
-      translate([0,0,hypotenuse/2]){
-        children();
-      }
-    }
-  }
-}
-
-// just to DRY up the code
-module _dish() {
-  color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, $inverted_dish);
 }
 
 module envelope(depth_difference=0) {
@@ -3714,18 +3959,6 @@ module envelope(depth_difference=0) {
   }
 }
 
-// I think this is unused
-module dished_for_show() {
-  difference(){
-    union() {
-      envelope();
-      if ($inverted_dish) top_placement(0) _dish();
-    }
-    if (!$inverted_dish) top_placement(0) _dish();
-  }
-}
-
-
 // for when you want to take the dish out of things
 // used for adding the dish to the key shape and making sure stems don't stick out the top
 // creates a bounding box 1.5 times larger in width and height than the keycap.
@@ -3734,27 +3967,21 @@ module dished(depth_difference = 0, inverted = false) {
     children();
     difference(){
       union() {
+        // envelope is needed to "fill in" the rest of the keycap
         envelope(depth_difference);
-        if (inverted) top_placement(depth_difference) _dish();
+        if (inverted) top_placement(depth_difference) _dish(inverted);
       }
-      if (!inverted) top_placement(depth_difference) _dish();
+      if (!inverted) top_placement(depth_difference) _dish(inverted);
     }
   }
 }
 
-// puts it's children at the center of the dishing on the key, including dish height
-// more user-friendly than top_placement
-module top_of_key(){
-  // if there is a dish, we need to account for how much it digs into the top
-  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
-  // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
-  corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
-
-  top_placement(corrected_dish_depth) {
-    children();
-  }
+// just to DRY up the code
+module _dish(inverted=$inverted_dish) {
+  color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
 }
 
+// puts its children at each keystem position provided
 module keystem_positions(positions) {
   for (connector_pos = positions) {
     translate(connector_pos) {
@@ -3780,77 +4007,127 @@ module stems_for(positions, stem_type) {
   }
 }
 
-// legends / artisan support
-module artisan(depth) {
+// put something at the top of the key, with no adjustments for dishing
+module top_placement(depth_difference=0) {
+  top_tilt_by_height = -$top_tilt / $key_height;
+  top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
+
+  minkowski_height = $rounded_key ? $minkowski_radius : 0;
+
+  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference + minkowski_height/2]){
+    rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
+      children();
+    }
+  }
+}
+
+// puts its children at the center of the dishing on the key, including dish height
+// more user-friendly than top_placement
+module top_of_key(){
+  // if there is a dish, we need to account for how much it digs into the top
+  dish_depth = ($dish_type == "disable") ? 0 : $dish_depth;
+  // if the dish is inverted, we need to account for that too. in this case we do half, otherwise the children would be floating on top of the dish
+  corrected_dish_depth = ($inverted_dish) ? -dish_depth / 2 : dish_depth;
+
+  top_placement(corrected_dish_depth) {
+    children();
+  }
+}
+
+module front_of_key() {
+  // all this math is to take top skew and tilt into account
+  // we need to find the new effective height and depth of the top, front lip
+  // of the keycap to find the angle so we can rotate things correctly into place
+  total_depth_difference = sin(-$top_tilt) * (top_total_key_height()/2);
+  total_height_difference = $top_skew + (1 - cos(-$top_tilt)) * (top_total_key_height()/2);
+
+  angle = atan2(($total_depth - total_depth_difference), ($height_difference/2 + total_height_difference));
+  hypotenuse = ($total_depth -total_depth_difference) / sin(angle);
+
+  translate([0,-total_key_height()/2,0]) {
+    rotate([-(90-angle), 0, 0]) {
+      translate([0,0,hypotenuse/2]){
+        children();
+      }
+    }
+  }
+}
+
+module outer_shape() {
+  shape(0, 0);
+}
+
+module inner_shape(extra_wall_thickness = 0, extra_keytop_thickness = 0) {
+  if ($inner_shape_type == "flat") {
+    /* $key_shape_type="square"; */
+    $height_slices = 1;
+    color($primary_color) shape_hull($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness, 0);
+  } else {
+    shape($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness);
+  }
+}
+
+// additive objects at the top of the key
+module additive_features(inset) {
   top_of_key() {
-    // artisan objects / outset shape legends
-    color($secondary_color) children();
+    if($key_bump) keybump($key_bump_depth, $key_bump_edge);
+    if(!inset && $children > 0) color($secondary_color) children();
+  }
+  if($outset_legends) legends(0);
+  // render the clearance check if it's enabled, but don't have it intersect with anything
+  if ($clearance_check) %clearance_check();
+}
+
+// subtractive objects at the top of the key
+module subtractive_features(inset) {
+  top_of_key() {
+    if (inset && $children > 0) color($secondary_color) children();
+  }
+  if(!$outset_legends) legends($inset_legend_depth);
+  // subtract the clearance check if it's enabled, letting the user see the
+  // parts of the keycap that will hit the cherry switch
+  if ($clearance_check) %clearance_check();
+}
+
+// features inside the key itself (stem, supports, etc)
+module inside_features() {
+  translate([0, 0, $stem_inset]) {
+    if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+    if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
+    if ($support_type != "disable") support_for($stem_positions, $stem_type);
   }
 }
 
-// key with hollowed inside but no stem
-module hollow_key() {
-  difference(){
-    if ($rounded_key) {
-      rounded_shape();
-    } else {
-      shape(0, 0);
-    }
-    // translation purely for aesthetic purposes, to get rid of that awful lattice
-    translate([0,0,-SMALLEST_POSSIBLE]) {
-      shape($wall_thickness, $keytop_thickness);
-    }
+// helpers for doubleshot keycaps for now
+module inner_total_shape() {
+  difference() {
+    inner_shape();
+    inside_features();
   }
 }
 
+module outer_total_shape(inset=false) {
+  outer_shape();
+  additive_features(inset) {
+    children();
+  };
+}
 
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
-module key(inset = false) {
-  difference() {
-    union(){
-      // the shape of the key, inside and out
-      hollow_key();
-      if($key_bump) top_of_key() keybump($key_bump_depth, $key_bump_edge);
-      // additive objects at the top of the key
-      // outside() makes them stay out of the inside. it's a bad name
-      if(!inset && $children > 0) outside() artisan(0) children();
-      if($outset_legends) legends(0);
-      // render the clearance check if it's enabled, but don't have it intersect with anything
-      if ($clearance_check) %clearance_check();
-    }
+module key(inset=false) {
+  difference(){
+    outer_total_shape(inset);
 
-    // subtractive objects at the top of the key
-    // no outside() - I can't think of a use for it. will save render time
-    if (inset && $children > 0) artisan($inset_legend_depth) children();
-    if(!$outset_legends) legends($inset_legend_depth);
-    // subtract the clearance check if it's enabled, letting the user see the
-    // parts of the keycap that will hit the cherry switch
-    if ($clearance_check) %clearance_check();
-  }
-
-  // both stem and support are optional
-  if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
-    dished($keytop_thickness, $inverted_dish) {
-      translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
-
-        if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
+    if ($inner_shape_type != "disable") {
+      translate([0,0,-SMALLEST_POSSIBLE]) {
+        inner_total_shape();
       }
     }
-  }
 
-  if ($support_type != "disable"){
-    inside() {
-      translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
-
-        // always render stem support even if there isn't a stem.
-        // rendering flat support w/no stem is much more common than a hollow keycap
-        // so if you want a hollow keycap you'll have to turn support off entirely
-        support_for($stem_positions, $stem_type);
-      }
-    }
+    subtractive_features(inset) {
+      children();
+    };
   }
 }
 
@@ -3896,7 +4173,7 @@ $outset_legends = false;
 // Height in units of key. should remain 1 for most uses
 $key_height = 1.0;
 // Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
-$keytop_thickness = 2;
+$keytop_thickness = 1;
 // Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
 $wall_thickness = 3;
 // Radius of corners of keycap
@@ -3977,12 +4254,10 @@ $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
 // Should be faster, also required for concave shapes
-// Use linear_extrude instead of hull slices to make the shape of the key
-$linear_extrude_shape = false;
 
-// warns in trajectory.scad but it looks benign
-// brand new, more correct, hopefully faster, lots more work
-$skin_extrude_shape = false;
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
 // This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -4043,18 +4318,18 @@ $tertiary_color = [1, .6941, .2];
 $quaternary_color = [.4078, .3569, .749];
 $warning_color = [1,0,0, 0.15];
 
-// 3d surface variables
-// see functions.scad for the surface function
-$3d_surface_size = 10;
-$3d_surface_step = 1;
-// normally the bottom of the keytop looks like the top - curved, at least
-// underneath the support structure. This ensures there's a minimum thickness for the
-// underside of the keycap, but it's a fair bit of geometry
-$flat_keytop_bottom = true;
-
 // how many facets circles will have when used in these features
 $minkowski_facets = 30;
 $shape_facets =30;
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 100;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
+$3d_surface_step = 5;
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
   key();
 }
 

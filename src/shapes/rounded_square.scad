@@ -9,4 +9,4 @@ module rounded_square_shape(size, delta, progress, center = true) {
 // for skin
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress), fn=$shape_facets, r=$corner_radius);
+  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
