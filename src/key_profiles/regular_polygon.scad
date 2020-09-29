@@ -4,8 +4,8 @@ include <../constants.scad>
 
 // this function doesn't set the key shape, so you can't use it directly without some fiddling
 module regular_polygon_row(n=3, column=0) {
-  $bottom_key_width = $unit - 0.4;
-  $bottom_key_height = $unit - 0.4;
+  $bottom_key_width = $unit - 0.5;
+  $bottom_key_height = $unit - 0.5;
   $width_difference = 0;
   $height_difference = 0;
   $dish_type = "spherical";
