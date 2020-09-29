@@ -4,6 +4,8 @@ include <constants.scad>
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
+
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
 

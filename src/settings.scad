@@ -74,6 +74,7 @@ $rounded_cherry_stem_d = 5.5;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
 $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
