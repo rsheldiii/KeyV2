@@ -89,6 +89,7 @@ $rounded_cherry_stem_d = 5.5;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
 $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
@@ -589,6 +590,75 @@ module grid_row(row=3, column = 0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+// Regular polygon shapes CIRCUMSCRIBE the sphere of diameter $bottom_key_width
+// This is to make tiling them easier, like in the case of hexagonal keycaps etc
+
+// this function doesn't set the key shape, so you can't use it directly without some fiddling
+module regular_polygon_row(n=3, column=0) {
+  $bottom_key_width = $unit - 0.5;
+  $bottom_key_height = $unit - 0.5;
+  $width_difference = 0;
+  $height_difference = 0;
+  $dish_type = "spherical";
+  $dish_depth = 0.85;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 0;
+  $height_slices = 1;
+  $corner_radius = 1;
+
+  // this is _incredibly_ intensive
+  /* $rounded_key = true; */
+
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  base_depth = 7.5;
+  if (n <= 1){
+    $total_depth = base_depth + 2.5 + extra_height;
+    $top_tilt = -13;
+
+    children();
+  } else if (n == 2) {
+    $total_depth = base_depth + 0.5 + extra_height;
+    $top_tilt = -7;
+
+    children();
+  } else if (n == 3) {
+    $total_depth = base_depth + extra_height;
+    $top_tilt = 0;
+
+    children();
+  } else if (n == 4){
+    $total_depth = base_depth + 0.5 + extra_height;
+    $top_tilt = 7;
+
+    children();
+  } else {
+    $total_depth = base_depth + extra_height;
+    $top_tilt = 0;
+
+    children();
+  }
+}
+
+module hexagonal_row(n=3, column=0) {
+  $key_shape_type = "hexagon";
+  regular_polygon_row(n,column) {
+    children();
+  }
+}
+
+module octagonal_row(n=3, column=0) {
+  $key_shape_type = "octagon";
+  regular_polygon_row(n, column) {
+    children();
+  }
+}
 
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
@@ -606,6 +676,10 @@ module key_profile(key_profile_type, row, column=0) {
     hipro_row(row, column) children();
   } else if (key_profile_type == "grid") {
     grid_row(row, column) children();
+  } else if (key_profile_type == "hexagon") {
+    hexagonal_row(row, column) children();
+  } else if (key_profile_type == "octagon") {
+    octagonal_row(row, column) children();
   } else if (key_profile_type == "disable") {
     children();
   } else {
@@ -672,11 +746,13 @@ module iso_enter() {
 }
 // kind of a catch-all at this point for any directive that doesn't fit in the other files
 
-//TODO duplicate def to not make this a special var. maybe not worth it
-unit = 19.05;
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 module translate_u(x=0, y=0, z=0){
-  translate([x * unit, y*unit, z*unit]) children();
+  translate([x * $unit, y*$unit, z*$unit]) children();
 }
 
 module no_stem_support() {
@@ -881,11 +957,16 @@ module row_profile(profile, unsculpted = false) {
   }
 }
 // files
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -947,9 +1028,10 @@ function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
-$fs=.1;
-unit = 19.05;
-
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 // corollary is rounded_square
 // NOT 3D
 function unit_length(length) = unit * (length - 1) + 18.16;
@@ -1183,11 +1265,16 @@ module rounded_square_shape(size, delta, progress, center = true) {
 
 function skin_rounded_square(size, delta, progress, thickness_difference) =
   rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1339,6 +1426,20 @@ module oblong_shape(size, delta, progress) {
     }
   }
 }
+// we do this weird key_shape_type check here because rounded_square uses
+// square_shape, and we want flat sides to work for that too.
+// could be refactored, idk
+module regular_polygon_shape(size, delta, progress, sides=6){
+  // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/undersized_circular_objects
+  fudge = 1/cos(180/sides);
+  diameter = (size.x - delta.x * progress - $corner_radius*2) * fudge;
+  offset(r=$corner_radius) rotate([0,0,360/sides/2]) circle(d = diameter, $fn=sides);
+}
+
+
+
+// TODO not implemented
+function skin_regular_polygon_shape(size, delta, progress, thickness_difference, sides=6) = echo("skin regular polygon not implemented");
 
 // size: at progress 0, the shape is supposed to be this size
 // delta: at progress 1, the keycap is supposed to be size - delta
@@ -1358,6 +1459,10 @@ module key_shape(size, delta, progress = 0) {
     square_shape(size, delta, progress);
   } else if ($key_shape_type == "oblong") {
     oblong_shape(size, delta, progress);
+  } else if ($key_shape_type == "hexagon") {
+    regular_polygon_shape(size, delta, progress);
+  } else if ($key_shape_type == "octagon") {
+    regular_polygon_shape(size, delta, progress, sides=8);
   } else {
     echo("Warning: unsupported $key_shape_type");
   }
@@ -1373,11 +1478,16 @@ function skin_key_shape(size, delta, progress = 0, thickness_difference) =
     $key_shape_type == "iso_enter" ?
       skin_iso_enter_shape(size, delta, progress, thickness_difference) :
       echo("Warning: unsupported $key_shape_type for skin shape. disable skin_extrude_shape or pick a new shape");
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1475,11 +1585,16 @@ module cherry_stem(depth, slop) {
     inside_cherry_cross($stem_inner_slop);
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1541,11 +1656,16 @@ function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1653,11 +1773,16 @@ module rounded_cherry_stem(depth, slop) {
     inside_cherry_cross(slop);
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1719,11 +1844,16 @@ function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1849,11 +1979,16 @@ module filled_stem() {
 
   shape($wall_thickness);
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1966,11 +2101,16 @@ module stem(stem_type, depth, slop){
       echo(stem_type);
     }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -2032,11 +2172,16 @@ function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -2179,11 +2324,16 @@ module brim_support(stem_type, stem_support_height, slop) {
     }
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -2245,11 +2395,16 @@ function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -2661,11 +2816,16 @@ module  dish(width, height, depth, inverted) {
       echo("WARN: $dish_type unsupported");
     }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
 
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - $dish_depth - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -4000,7 +4160,7 @@ module support_for(positions, stem_type) {
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop);
+    color($tertiary_color) stem(stem_type, stem_height(), $stem_slop);
     if ($stem_support_type != "disable") {
       color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }
@@ -4086,16 +4246,25 @@ module subtractive_features(inset) {
   if(!$outset_legends) legends($inset_legend_depth);
   // subtract the clearance check if it's enabled, letting the user see the
   // parts of the keycap that will hit the cherry switch
-  if ($clearance_check) %clearance_check();
+  // this is a little confusing as it eats the stem too
+  /* if ($clearance_check) clearance_check(); */
+}
+
+// all stems and stabilizers
+module stems_and_stabilizers() {
+  translate([0, 0, $stem_inset]) {
+    if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+    if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
+  }
 }
 
 // features inside the key itself (stem, supports, etc)
 module inside_features() {
-  translate([0, 0, $stem_inset]) {
-    if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
-    if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
-    if ($support_type != "disable") support_for($stem_positions, $stem_type);
-  }
+  // Stems and stabilizers are not "inside features" unless they are fully
+  // contained inside the cap. otherwise they'd be cut off when they are
+  // differenced with the outside shape
+  if ($stem_inset >= 0) stems_and_stabilizers();
+  if ($support_type != "disable") translate([0, 0, $stem_inset]) support_for($stem_positions, $stem_type);
 }
 
 // helpers for doubleshot keycaps for now
@@ -4128,6 +4297,11 @@ module key(inset=false) {
     subtractive_features(inset) {
       children();
     };
+  }
+
+  // if $stem_inset is less than zero, we add the
+  if ($stem_inset < 0) {
+    stems_and_stabilizers();
   }
 }
 
@@ -4210,6 +4384,7 @@ $rounded_cherry_stem_d = 5.5;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
 $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;

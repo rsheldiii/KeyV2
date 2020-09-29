@@ -9,6 +9,7 @@ include <key_profiles/sa.scad>
 include <key_profiles/g20.scad>
 include <key_profiles/hipro.scad>
 include <key_profiles/grid.scad>
+include <key_profiles/regular_polygon.scad>
 
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
@@ -26,6 +27,10 @@ module key_profile(key_profile_type, row, column=0) {
     hipro_row(row, column) children();
   } else if (key_profile_type == "grid") {
     grid_row(row, column) children();
+  } else if (key_profile_type == "hexagon") {
+    hexagonal_row(row, column) children();
+  } else if (key_profile_type == "octagon") {
+    octagonal_row(row, column) children();
   } else if (key_profile_type == "disable") {
     children();
   } else {

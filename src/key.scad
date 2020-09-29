@@ -103,7 +103,7 @@ module support_for(positions, stem_type) {
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color($tertiary_color) stem(stem_type, $total_depth, $stem_slop);
+    color($tertiary_color) stem(stem_type, stem_height(), $stem_slop);
     if ($stem_support_type != "disable") {
       color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }
@@ -189,16 +189,25 @@ module subtractive_features(inset) {
   if(!$outset_legends) legends($inset_legend_depth);
   // subtract the clearance check if it's enabled, letting the user see the
   // parts of the keycap that will hit the cherry switch
-  if ($clearance_check) %clearance_check();
+  // this is a little confusing as it eats the stem too
+  /* if ($clearance_check) clearance_check(); */
+}
+
+// all stems and stabilizers
+module stems_and_stabilizers() {
+  translate([0, 0, $stem_inset]) {
+    if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+    if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
+  }
 }
 
 // features inside the key itself (stem, supports, etc)
 module inside_features() {
-  translate([0, 0, $stem_inset]) {
-    if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
-    if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
-    if ($support_type != "disable") support_for($stem_positions, $stem_type);
-  }
+  // Stems and stabilizers are not "inside features" unless they are fully
+  // contained inside the cap. otherwise they'd be cut off when they are
+  // differenced with the outside shape
+  if ($stem_inset >= 0) stems_and_stabilizers();
+  if ($support_type != "disable") translate([0, 0, $stem_inset]) support_for($stem_positions, $stem_type);
 }
 
 // helpers for doubleshot keycaps for now
@@ -231,6 +240,11 @@ module key(inset=false) {
     subtractive_features(inset) {
       children();
     };
+  }
+
+  // if $stem_inset is less than zero, we add the
+  if ($stem_inset < 0) {
+    stems_and_stabilizers();
   }
 }
 
