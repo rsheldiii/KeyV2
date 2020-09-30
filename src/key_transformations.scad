@@ -109,9 +109,31 @@ module box_cherry(slop) {
   children();
 }
 
-module choc(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module choc(slop = 0.05) {
+  echo("WARN:\n\n * choc support is experimental.\n * $stem_slop is overridden.\n * it is also recommended to print them upside down if you can\n\n");
+  $stem_throw = 3;
+  $stem_slop = slop;
+
+  $bottom_key_width = 18;
+  $bottom_key_height = 17;
+
   $stem_type = "choc";
+  children();
+}
+
+// a hacky way to make "low profile" keycaps
+module low_profile() {
+  $width_difference = $width_difference / 1.5;
+  $height_difference = $height_difference / 1.5;
+  // helps tilted keycaps not have holes if worst comes to worst
+  $inner_shape_type = "dished";
+
+  $top_tilt = $top_tilt / 1.25;
+
+  $total_depth = ($total_depth / 2) < 7 ? 7 : $total_depth / 2;
+
+  // just to make sure
+  $stem_throw = 3;
   children();
 }
 
@@ -181,12 +203,4 @@ module debug() {
   $quaternary_color = [0.5,0.5,0.5,0.2];
 
   %children();
-}
-
-module low_profile() {
-  /* $total_depth = 5.35; */
-  /* extra ugly hack right now to make sure we don't generate keycaps with insufficient throw */
-  /* $total_depth = ($total_depth / 2) < 6 ? 6 : $total_depth / 2; */
-  $stem_throw = 3;
-  children();
 }

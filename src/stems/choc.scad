@@ -1,5 +1,16 @@
-module choc_stem(depth, slop){
+separation = 5.7;
 
-  translate([-5.7/2, 0, depth/2]) cube([1.2 - slop, 3 - slop / 2, depth], center=true);
-  translate([5.7/2, 0, depth/2]) cube([1.2 - slop, 3 - slop / 2, depth], center=true);
+positions = [
+  [separation/2, 0],
+  [-separation/2, 0],
+];
+
+module choc_stem(depth, slop){
+  for (position=positions) {
+    translate([position.x,position.y, depth/2]) single_choc_stem(depth, slop);
+  }
+}
+
+module single_choc_stem(depth, slop) {
+  cube([$choc_stem.x - slop, $choc_stem.y - slop, depth], center=true);
 }
