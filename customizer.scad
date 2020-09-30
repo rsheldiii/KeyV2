@@ -178,6 +178,9 @@ $inset_legend_depth = 0.2;
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
@@ -855,6 +858,34 @@ module rounded_cherry(slop) {
 module box_cherry(slop) {
   $stem_slop = slop ? slop : $stem_slop;
   $stem_type = "box_cherry";
+  children();
+}
+
+module choc(slop = 0.05) {
+  echo("WARN:\n\n * choc support is experimental.\n * $stem_slop is overridden.\n * it is also recommended to print them upside down if you can\n\n");
+  $stem_throw = 3;
+  $stem_slop = slop;
+
+  $bottom_key_width = 18;
+  $bottom_key_height = 17;
+
+  $stem_type = "choc";
+  children();
+}
+
+// a hacky way to make "low profile" keycaps
+module low_profile() {
+  $width_difference = $width_difference / 1.5;
+  $height_difference = $height_difference / 1.5;
+  // helps tilted keycaps not have holes if worst comes to worst
+  $inner_shape_type = "dished";
+
+  $top_tilt = $top_tilt / 1.25;
+
+  $total_depth = ($total_depth / 2) < 7 ? 7 : $total_depth / 2;
+
+  // just to make sure
+  $stem_throw = 3;
   children();
 }
 
@@ -2078,6 +2109,22 @@ module cherry_stabilizer_stem(depth, slop) {
     inside_cherry_stabilizer_cross(slop);
   }
 }
+separation = 5.7;
+
+positions = [
+  [separation/2, 0],
+  [-separation/2, 0],
+];
+
+module choc_stem(depth, slop){
+  for (position=positions) {
+    translate([position.x,position.y, depth/2]) single_choc_stem(depth, slop);
+  }
+}
+
+module single_choc_stem(depth, slop) {
+  cube([$choc_stem.x - slop, $choc_stem.y - slop, depth], center=true);
+}
 
 
 //whole stem, alps or cherry, trimmed to fit
@@ -2094,6 +2141,8 @@ module stem(stem_type, depth, slop){
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
       cherry_stabilizer_stem(depth, slop);
+    } else if (stem_type == "choc") {
+      choc_stem(depth, slop);
     } else if (stem_type == "disable") {
       children();
     } else {
@@ -2321,6 +2370,18 @@ module brim_support(stem_type, stem_support_height, slop) {
       }
 
       inside_cherry_cross(slop);
+    }
+  } else if(stem_type == "choc") {
+    translate([-5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
+    }
+
+    translate([5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
     }
   }
 }
@@ -2579,6 +2640,10 @@ module tines_support(stem_type, stem_support_height, slop) {
     }
   } else if (stem_type == "alps"){
     centered_tines(stem_support_height);
+  } else if (stem_type == "choc"){
+    if ($key_length < 2) translate([0,0,$stem_support_height / 2]) cube([total_key_width($wall_thickness)+$wall_thickness/4, 0.42, $stem_support_height], center = true);
+    /* translate([-5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height($wall_thickness), $stem_support_height], center = true); */
+    /* translate([5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height($wall_thickness), $stem_support_height], center = true); */
   }
 }
 
@@ -2932,6 +2997,14 @@ module flared(stem_type, loft, height) {
           square(outer_cherry_stabilizer_stem($stem_slop) - [2,2], center=true);
         }
       }
+    } else if (stem_type == "choc") {
+      // single support, just the stem
+      new_choc_scale = [scale_for_45(height, $choc_stem[0] + 5.7 - $stem_slop), scale_for_45(height, $choc_stem[1])];
+      translate([0,0,0]) linear_extrude(height=height, scale = new_choc_scale){
+        // TODO make a choc_stem() function so it can build in the slop
+        square([$choc_stem[0] + 5.7 - $stem_slop, $choc_stem[1] - $stem_slop], center=true);
+      }
+
     } else {
       // always render cherry if no stem type. this includes stem_type = false!
       // this avoids a bug where the keycap is rendered filled when not desired
@@ -4472,6 +4545,9 @@ $inset_legend_depth = 0.2;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
 
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
