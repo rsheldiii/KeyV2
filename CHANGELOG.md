@@ -11,6 +11,15 @@ CHANGELOG:
     * side-printed keycaps are first class! you can use the `sideways()` modifier to set up sideways keycaps that have flat sides to print on.
     * it's much easier to make quick artisans now that the inside of the keycap is differenced from any additive features placed on top
     * `$linear_extrude_shape` and `$skin_extrude_shape` retired in favor of `$hull_shape_type`
-    * still todo: add a magic scaling variable so you can scale the whole world up, see if that fixes degeneracy
-    * still todo: rejigger supports
-    * still todo: rejigger inner shape. maybe just always make it flat
+    * added regular_polygon shape and octagonal and hexagonal key profiles
+    * added beta kailh choc
+    * Finally got ISO Enter working correctly!
+    * STILL TODO:
+      * add a magic scaling variable so you can scale the whole world up, see if that fixes degeneracy
+      * Make flat stem support default
+      * make flat inner shape default
+      * new_key_structure changes doesn't take into account support stems properly; fix
+      * support repositioning to print on the back surface of the keycap
+      * implement regular polygon for skin extrusions
+      * switch to skin-shaped extrusions by default
+      * kailh choc has a non-square key unit; should I get that working for layouts etc? 
