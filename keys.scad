@@ -8,15 +8,13 @@
 include <./includes.scad>
 
 
+// example key
+dcs_row(5) legend("⇪", size=9) key();
 
+// example row
+/* for (x = [0:1:4]) {
+  translate_u(0,-x) dcs_row(x) key();
+} */
 
-u(1) choc() {
-  flared_support()  tined_stem_support() sa_row(1){
-    $stem_support_height = 2;
-    low_profile() {
-      key();
-    }
-  }
-}
-
-/* translate_u(1,0) u(1) choc() row_profile("oem") low_profile() key(); */
+// example layout
+/* preonic_default("dcs"); */
