@@ -956,6 +956,19 @@ module debug() {
 
   %children();
 }
+
+// auto-place children in a grid.
+// For this to work all children have to be single keys, no for loops etc
+module auto_place() {
+  num_children = $children;
+  row_size = round(pow(num_children, 0.5));
+
+  for (child_index = [0:num_children-1]) {
+    x = child_index % row_size;
+    y = floor(child_index / row_size);
+    translate_u(x,-y) children(child_index);
+  }
+}
 module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
   legends = ["←", "↓", "→", "↑"];
