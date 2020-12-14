@@ -86,6 +86,7 @@ $stem_throw = 4;
 // Diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
 
+$c64_stem_d = 5;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles

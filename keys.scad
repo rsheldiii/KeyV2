@@ -9,7 +9,17 @@ include <./includes.scad>
 
 
 // example key
-dcs_row(5) legend("⇪", size=9) key();
+dsa_row(1) legend("Q", size=9) c64() key();
+
+translate([-1.5/2,-1.5/2,0])
+cube([1.5,1.5,1.5]);
+
+
+translate([-5/2,-1.5/2,0])
+cube([5,1.5,1.5]);
+
+translate([-0.75,-5/2,0])
+cube([1.5,5,1.5]);
 
 // example row
 /* for (x = [0:1:4]) {

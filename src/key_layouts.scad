@@ -1,5 +1,7 @@
 include <layouts/layout.scad>
 
+include <layouts/c64/default.scad>
+
 include <layouts/preonic/default.scad>
 include <layouts/preonic/mit.scad>
 

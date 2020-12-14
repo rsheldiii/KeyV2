@@ -25,11 +25,17 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 function c64_cross(slop, extra_vertical = 0) = [
   // horizontal tine
-  [5.5 + slop, 1.7 + slop / 3],
+  [5.0 + slop, 1.5 + slop / 3],
   // vertical tine
-  [1.7 + slop / 3, 5.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+  [1.5 + slop / 3, 5.0 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
 
+function c64_inner_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [5.4 + slop, 1.7 + slop / 3],
+  // vertical tine
+  [1.7 + slop / 3, 5.4 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;

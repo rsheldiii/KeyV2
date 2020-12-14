@@ -14,6 +14,14 @@ module inside_c64_cross(slop) {
     }
   }
 
+  // inner portion of the cross, c64 stems are thicker halfway to ensure keys stay put
+  translate([0,0,1.95]) {
+    linear_extrude(height = 0.6) {
+      square(c64_inner_cross(slop, extra_vertical)[0], center=true);
+      square(c64_inner_cross(slop, extra_vertical)[1], center=true);
+    }
+  }
+
   // Guides to assist insertion and mitigate first layer squishing
   if ($c64_bevel){
     for (i = c64_cross(slop, extra_vertical)) hull() {
@@ -24,13 +32,10 @@ module inside_c64_cross(slop) {
 }
 
 module c64_stem(depth, slop, throw) {
+
   difference(){
+    cylinder(d=$c64_stem_d, h=depth);
     // outside shape
-    linear_extrude(height = depth) {
-      offset(r=1){
-        square(outer_c64_stem(slop) - [2,2], center=true);
-      }
-    }
 
     inside_c64_cross($stem_inner_slop);
   }
