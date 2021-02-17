@@ -3,7 +3,11 @@ include <cherry.scad>
 
 module rounded_cherry_stem(depth, slop, throw) {
   difference(){
-    cylinder(d=$rounded_cherry_stem_d, h=depth);
+    hull() {
+      translate([0,0,$cherry_outer_bevel_height])
+      cylinder(d=$rounded_cherry_stem_d, h=depth-$cherry_outer_bevel_height);
+      cylinder(d=$rounded_cherry_stem_d-$cherry_outer_bevel_width*2, h=depth);
+    }
 
     // inside cross
     // translation purely for aesthetic purposes, to get rid of that awful lattice

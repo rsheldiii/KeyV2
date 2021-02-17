@@ -113,7 +113,16 @@ $dish_overdraw_height = 0;
 
 /* [Misc] */
 // There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
-$cherry_bevel = true;
+// Set height to 0 to disable.
+$cherry_bevel_height = 0.5;
+$cherry_bevel_width = 0.4;
+
+// Add bevel to outside of cherry stems.  Set to 0 to disable.
+$cherry_outer_bevel_height = 0;
+$cherry_outer_bevel_width = $cherry_outer_bevel_height;
+
+// Radius of corner on cherry and box_cherry stems
+$cherry_radius = 1;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
 $stem_support_height = .8;

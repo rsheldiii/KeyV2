@@ -15,10 +15,15 @@ module inside_cherry_cross(slop) {
   }
 
   // Guides to assist insertion and mitigate first layer squishing
-  if ($cherry_bevel){
+  if ($cherry_bevel_height){
     for (i = cherry_cross(slop, extra_vertical)) hull() {
-      linear_extrude(height = $zero, center = false) offset(delta = 0.4) square(i, center=true);
-      translate([0, 0, 0.5]) linear_extrude(height = $zero, center = false)  square(i, center=true);
+      linear_extrude(height = $zero, center = false)
+      offset(delta = $cherry_bevel_width)
+      square(i, center=true);
+
+      translate([0, 0, $cherry_bevel_height-$zero])
+      linear_extrude(height = $zero, center = false)
+      square(i, center=true);
     }
   }
 }
@@ -26,10 +31,15 @@ module inside_cherry_cross(slop) {
 module cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
-    linear_extrude(height = depth) {
-      offset(r=1){
-        square(outer_cherry_stem(slop) - [2,2], center=true);
-      }
+    hull() {
+      translate([0,0,$cherry_outer_bevel_height])
+      linear_extrude(height = depth - $cherry_outer_bevel_height)
+      offset(r=$cherry_radius)
+      square(outer_cherry_stem(slop) - [$cherry_radius*2,$cherry_radius*2], center=true);
+
+      linear_extrude(height = depth, center = false)
+      offset(r=$cherry_radius-$cherry_outer_bevel_width)
+      square(outer_cherry_stem(slop) - [$cherry_radius*2,$cherry_radius*2], center=true);
     }
 
     inside_cherry_cross($stem_inner_slop);
