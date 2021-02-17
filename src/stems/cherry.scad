@@ -17,8 +17,8 @@ module inside_cherry_cross(slop) {
   // Guides to assist insertion and mitigate first layer squishing
   if ($cherry_bevel){
     for (i = cherry_cross(slop, extra_vertical)) hull() {
-      linear_extrude(height = 0.01, center = false) offset(delta = 0.4) square(i, center=true);
-      translate([0, 0, 0.5]) linear_extrude(height = 0.01, center = false)  square(i, center=true);
+      linear_extrude(height = $zero, center = false) offset(delta = 0.4) square(i, center=true);
+      translate([0, 0, 0.5]) linear_extrude(height = $zero, center = false)  square(i, center=true);
     }
   }
 }
