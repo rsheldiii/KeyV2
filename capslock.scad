@@ -7,7 +7,14 @@
 
 include <./includes.scad>
 
-// single CAPS_LOCK key
+// set viewport
+$vpt = [ -51.76, -91.61, -87.33 ];
+$vpr = [ 55.00, 0.00, 25.00 ];
+$vpd = 839.47;
+
+// try a bunch of CAPS_LOCK keys at 4x size
+
+// single stem, centred
     u(u=1.75)
     dcs_row(2) 
     box_cherry(0.3)
@@ -16,8 +23,7 @@ include <./includes.scad>
     scale(4)
 key(); 
 
-
-// single CAPS_LOCK key
+// single stem, offset, no stabilizer
     u(u=1.75)
     dcs_row(2) 
     box_cherry(0.3)
@@ -25,10 +31,9 @@ key();
     legend("LOCK", size=2.5, position=[-0.75,0.5])
     scale(4)
 	translate_u(0,-1)
-key($stabilizers = [[6,0]],$stem_positions = [[-5, 0]]); 
+key($stem_positions = [[-5, 0]]); 
 
-
-$stabilizers = [] ;
+// single stem, offset, with one stabilizer
     u(u=1.75)
     dcs_row(2) 
     box_cherry(0.3)
@@ -36,17 +41,39 @@ $stabilizers = [] ;
     legend("LOCK", size=2.5, position=[-0.75,0.5])
     scale(4)
 	translate_u(0,-2)
-key($stem_positions = [[-5, 0]]); 
+key($stabilizers = [[6,0]],$stem_positions = [[-5, 0]]); 
 
-$stabilizers = [] ;
-    u(u=2)
+// CAPS width, with two stabilizers
+    u(u=1.75)
     dcs_row(2) 
     box_cherry(0.3)
     legend("CAPS", size=2.5, position=[-0.8,-0.5])
     legend("LOCK", size=2.5, position=[-0.8,0.5])
-    stabilized(mm=12, vertical = false, type=cherry_stabilizer[x])
+    stabilized(mm=12, vertical = false, type="cherry_stabilizer")
     scale(4)
-	translate_u(0,-3)
+    translate_u(0,-3)
+key(); 
+
+// 1.5 width, with two stabilizers
+    1_5u()
+    dcs_row(2) 
+    box_cherry(0.3)
+    legend("CAPS", size=2.5, position=[-0.70,-0.5])
+    legend("LOCK", size=2.5, position=[-0.70,0.5])
+    stabilized(mm=12, vertical = false, type="cherry_stabilizer")
+    scale(4)
+    translate_u(0,-4)
+key(); 
+
+// double width, with two stabilizers
+    u(u=2)
+    dcs_row(2) 
+    box_cherry(0.3)
+    legend("CAPS", size=2.5, position=[-0.85,-0.5])
+    legend("LOCK", size=2.5, position=[-0.85,0.5])
+    stabilized(mm=12, vertical = false, type="cherry_stabilizer")
+    scale(4)
+    translate_u(0,-5)
 key(); 
 
 // test all the stems
@@ -66,6 +93,3 @@ for (x = [0:1:4]) {
 
 // example layout
 /* preonic_default("dcs"); */
-
-
-
