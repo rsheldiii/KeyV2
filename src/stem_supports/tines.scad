@@ -3,7 +3,7 @@ include <../stems/cherry.scad>
 
 module centered_tines(stem_support_height) {
   if ($key_length < 2) {
-    translate([0,0,$stem_support_height / 2]) {
+    translate([0-$stem_positions[0][0],0-$stem_positions[0][1],$stem_support_height / 2]) {
       cube([total_key_width(), 0.5, $stem_support_height], center = true);
     }
   }
@@ -26,7 +26,7 @@ module tines_support(stem_type, stem_support_height, slop) {
     difference () {
       union() {
         if ($key_length < 2) {
-          translate([0,0,$stem_support_height / 2]) {
+          translate([0+$stem_positions[0][0],0+$stem_positions[0][1],$stem_support_height / 2]) {
             cube([
               total_key_width() + extra_width*2,
               0.5,
