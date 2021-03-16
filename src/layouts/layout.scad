@@ -5,7 +5,6 @@ function abs_sum(list, x=0) =
     x + abs(list[0]) :
     abs_sum([for (x = [1: len(list) - 1]) list[x]], x+abs(list[0]));
 
-
 function 2hands(index, total) = ((index+0.5) % (total/2)) - (total/4);
 function cresting_wave(index, total, mod=4) = (index < total/2) ? (((index + 0.5) / total)*mod) : -(mod - ((index + 0.5) / total * mod));
 function 1hand(index, total) = (index % (total)) - (total/2);
