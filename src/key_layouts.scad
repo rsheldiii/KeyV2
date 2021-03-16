@@ -20,6 +20,4 @@ include <layouts/dactyl_manuform/4x6_legends.scad>
 include <layouts/numpad/default.scad>
 include <layouts/numpad/iracing.scad>
 
-
-
 include <layouts/plate.scad>

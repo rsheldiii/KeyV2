@@ -7,7 +7,14 @@
 
 include <./includes.scad>
 
-//numpad_iracing();
 
-numpad_default();
+// example key
+dcs_row(5) legend("⇪", size=9) key();
 
+// example row
+/* for (x = [0:1:4]) {
+  translate_u(0,-x) dcs_row(x) key();
+} */
+
+// example layout
+/* preonic_default("dcs"); */
