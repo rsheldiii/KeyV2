@@ -1,52 +1,89 @@
 include <../layout.scad>
 
-// incomplete
-
-// how to make tall enter key?
-// how to auto scale text?
-
+numpad_default_top_layout = [
+  [1,1,1,1],
+];
 
 numpad_default_layout = [
   [1,1,1,1],
   [1,1,1,1],
   [1,1,1,1],
-  [1,1,1,-1],
-  [2,1,-1]
+  [1,1,1],
+  [2,1,1]
 ];
 
-numpad_top_row_layout =[
-  [1,1,1,1],
-];
+module numpad_default() {
+    char_size=8;
+    unicode_font="Noto Sans Symbols2";
+    front_offset=-0.2;
 
-numpad_top_row_legends = [
-  ["", "", "", "",],
-];
+    module profile(row) {
+        dcs_row(row)
+        children();
+    }
 
-numpad_default_legends = [
-  ["num", "/", "*", "bksp", ],
-  ["7", "8", "9", "-",],
-  ["4", "5", "6", "+",],
-  ["1", "2", "3", ],
-  ["0", ".",],
-];
+    module char(text, pos=[0,0], size=char_size) {
+        legend(text,pos,size)
+        children();
+    }
 
-numpad_default_front_legends = [
-  ["", "", "", "", ],
-  ["home", "\u2191", "pg up", "",],
-  ["\u2190", "", "\u2192", "",],
-  ["end", "\u2193", "pg down"],
-  ["ins", "del",],
-];
+    module unicode(text, pos=[0,0], size=char_size) {
+        $font=unicode_font;
+        legend(text,pos,size)
+        children();
+    }
 
+    module front_unicode(text,pos=[0,front_offset],size=5) {
+        $font=unicode_font;
+        front_legend(text,pos,size)
+        children();
+    }
 
+    module arrow(top, front, front_pos=[0,front_offset]) {
+        intersection() {
+            char(top)children();
+            front_unicode(front, front_pos)children();
+        }
+    }
 
-module numpad_default(profile) {
+    module front(text, pos=[0,front_offset], size=3) {
+        front_legend(text, pos, size)
+        children();
+    }
 
-  layout(numpad_default_layout, profile, numpad_default_legends, numpad_default_front_legends) children();
+    // estimated gap for kbdpad
+    translate_u(0,1.5)
+    layout_children(numpad_default_top_layout) {
+        profile(0) key();
+        profile(0) key();
+        profile(0) key();
+        profile(0) key();
+    };
 
-  translate_u(0,1.25) // this is not accurate
-  layout(numpad_top_row_layout, profile, numpad_top_row_legends) children();
+    layout_children(numpad_default_layout) {
 
-  translate_u(3,-3.5)
-  layout([[1,],], profile, [["\u2386",]], row_override=3) numpad_enter() children();
+        legend("NUM", [0,-0.5], size=2.5) legend("LOCK", [0,0.5], size=2.5) profile(0) key();
+        char("/") profile(0) key();
+        char("*", [0,0.3]) profile(0) key();
+        unicode(chr(129044),[0,0.2]) profile(0) key();
+
+        front("HOME")char("7") profile(1) key();
+        arrow("8", chr(129153)) profile(1) key();
+        front("PG UP")char("9") profile(1) key();
+        char("-", [0,0.3]) profile(1) key();
+
+        arrow("4", chr(129152)) profile(2) key();
+        char("5") profile(2) bump() key();
+        arrow("6", chr(129154)) profile(2) key();
+        char("+", [0,0.3]) profile(2) key();
+
+        front("END")char("1") profile(3) key();
+        arrow("2", chr(129155),[0,0]) profile(3) key();
+        front("PG DN")char("3") profile(3) key();
+
+        front("INS",[-1.07,front_offset])char("0") profile(4) 2u() key();
+        front("DEL")char(".") profile(4) key();
+        translate_u(0,0.5) unicode(chr(9166)) profile(2) 2uh() key();
+
+    }
 }

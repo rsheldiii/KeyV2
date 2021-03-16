@@ -1,13 +1,8 @@
-// the point of this file is to be a sort of DSL for constructing keycaps.
-// when you create a method chain you are just changing the parameters
-// key.scad uses, it doesn't generate anything itself until the end. This
-// lets it remain easy to use key.scad like before (except without key profiles)
-// without having to rely on this file. Unfortunately that means setting tons of
-// special variables, but that's a limitation of SCAD we have to work around
+numpad_iracing_top_layout = [
+  [1,1,1,1],
+];
 
-include <./includes.scad>
-
-numpad_default_layout = [
+numpad_iracing_layout = [
   [1,1,1,1],
   [1,1,1,1],
   [1,1,1,1],
@@ -16,86 +11,64 @@ numpad_default_layout = [
   [1,1,1,1]
 ];
 
-$font_size=4;
-$font="Noto Sans:style=bold";
-
-module three_letters(text) {
-    legend(text,size=3)
-    children();
-}
-
-module plus_text(text) {
-    legend(text,[0,0.7],size=3.4)
-    children();
-}
-module plus() {
-    $font="Noto Sans Symbols2";
-    legend("\u2B9D",[0,-0.7],size=5)
-    children();
-}
-
-module minus_text(text) {
-    legend(text,[0,-0.7],size=3.4)
-    children();
-}
-module minus() {
-    $font="Noto Sans Symbols2";
-    legend("\u2B9F",[0,0.7],size=5)
-    children();
-}
-
-module unicode(text) {
-    $font="Noto Sans Symbols2";
-    legend(text,size=8)
-    children();
-}
-
-module front(text) {
-    front_legend(text,[0,-0.5],size=3)
-    children();
-}
-
-// RENDER stl
-module foo() {
-    // This will silence my auto rendering script
-    echo(0);
-}
-
 module numpad_iracing() {
-    layout_children(numpad_default_layout) {
-        intersection() {
-            front("SUB")plus_text("CAM") dcs_row(0) key();
-            plus()dcs_row(0) key();
-        }
-        intersection() {
-            front("DRV")plus_text("CAR") dcs_row(0) key();
-            plus()dcs_row(0) key();
-        }
-        intersection() {
-            front("FOV")plus_text("LAP") dcs_row(0) key();
-            plus()dcs_row(0) key();
-        }
-        intersection() {
-            front("STEP")plus_text("INC") dcs_row(0) key();
-            plus()dcs_row(0) key();
-        }
+    $font_size=4;
+    $font="Noto Sans:style=bold";
 
+    module three_letters(text) {
+        legend(text,size=3)
+        children();
+    }
+
+    module plus(top, front) {
         intersection() {
-            front("SUB")minus_text("CAM") dcs_row(0) key();
-            minus()dcs_row(0) key();
+            legend(top,[0,0.7],size=3.4) front(front) children();
+            plus_symbol() children();
         }
+    }
+    module plus_symbol() {
+        $font="Noto Sans Symbols2";
+        legend("\u2B9D",[0,-0.7],size=5)
+        children();
+    }
+
+    module minus(top,front) {
         intersection() {
-            front("DRV")minus_text("CAR") dcs_row(0) key();
-            minus()dcs_row(0) key();
+            legend(top,[0,-0.7],size=3.4) front(front) children();
+            minus_symbol() children();
         }
-        intersection() {
-            front("FOV")minus_text("LAP") dcs_row(0) key();
-            minus()dcs_row(0) key();
-        }
-        intersection() {
-            front("STEP")minus_text("INC") dcs_row(0) key();
-            minus()dcs_row(0) key();
-        }
+    }
+    module minus_symbol() {
+        $font="Noto Sans Symbols2";
+        legend("\u2B9F",[0,0.7],size=5)
+        children();
+    }
+
+    module unicode(text) {
+        $font="Noto Sans Symbols2";
+        legend(text,size=8)
+        children();
+    }
+
+    module front(text) {
+        front_legend(text,[0,-0.5],size=3)
+        children();
+    }
+
+    // estimated gap for top row of kbdpad
+    translate_u(0,1.25)
+    layout_children(numpad_iracing_top_layout) {
+        plus("CAM", "SUB") dcs_row(0) key();
+        plus("CAR", "DRV") dcs_row(0) key();
+        plus("LAP", "FOV") dcs_row(0) key();
+        plus("INC", "STEP") dcs_row(0) key();
+    }
+
+    layout_children(numpad_iracing_layout) {
+        minus("CAM", "SUB") dcs_row(0) key();
+        minus("CAR", "DRV") dcs_row(0) key();
+        minus("LAP", "FOV") dcs_row(0) key();
+        minus("INC", "STEP") dcs_row(0) key();
 
         unicode("\u23EA") dcs_row(1) key();
         unicode("\u25B6") bump() dcs_row(1) key();
