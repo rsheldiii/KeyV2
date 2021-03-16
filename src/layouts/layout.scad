@@ -5,6 +5,24 @@ function abs_sum(list, x=0) =
     x + abs(list[0]) :
     abs_sum([for (x = [1: len(list) - 1]) list[x]], x+abs(list[0]));
 
+function row(list, n, count=0, row=0, col=0) =
+  count == n ?
+    row :
+        col >= len(list[row]) - 1 ?
+            row(list, n, count+1, row+1, 0) :
+                row(list, n, count+1, row, col+1);
+
+function col(list, n, count=0, row=0, col=0) =
+  count == n ?
+    col :
+        col >= len(list[row]) - 1 ?
+            col(list, n, count+1, row+1, 0) :
+                col(list, n, count+1, row, col+1);
+            
+
+           
+
+
 function 2hands(index, total) = ((index+0.5) % (total/2)) - (total/4);
 function cresting_wave(index, total, mod=4) = (index < total/2) ? (((index + 0.5) / total)*mod) : -(mod - ((index + 0.5) / total * mod));
 function 1hand(index, total) = (index % (total)) - (total/2);
@@ -20,7 +38,7 @@ function double_sculpted_column(column, row_length, column_sculpt_profile) =
         1hand(column, row_length) : (column_sculpt_profile == "cresting_wave") ?
           cresting_wave(column, row_length) : 0;
 
-module layout(list, profile="dcs", legends=undef, front_legends=undef, row_sculpting_offset=0, row_override=undef, column_sculpt_profile="2hands", column_override=undef) {
+module layout(list, profile="dcs", legends=undef, front_legends=undef, children_overrides=undef, row_sculpting_offset=0, row_override=undef, column_sculpt_profile="2hands", column_override=undef) {
   for (row = [0:len(list)-1]){
     /* echo("**ROW**:", row); */
     row_length = len(list[row]);
@@ -126,4 +144,19 @@ module simple_layout(list) {
       }
     }
   }
+}
+
+//function count_position(row,column)
+
+module layout_children(list, items) {
+    for (n=[0:1:$children-1]){
+        row = row(list,n);
+        column = col(list,n);
+        echo(row=row);
+        echo(column=column);
+        key_length = list[row][column];
+        column_distance = abs_sum([for (x = [0 : column]) list[row][x]]);
+        translate_u(column_distance - (key_length/2), -row)
+        children(n);
+    }
 }
