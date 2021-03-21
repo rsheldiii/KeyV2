@@ -39,16 +39,32 @@ module numpad_iracing() {
         children();
     }
 
+    module front_unicode(text,size=8) {
+        $font="Noto Sans Symbols2";
+        front_legend(text,size=size)
+        children();
+    }
     module unicode(text,size=8) {
         $font="Noto Sans Symbols2";
         legend(text,size=size)
         children();
     }
 
+    module unicode_and_front(code,text) {
+	intersection() {
+		unicode(code)
+		children();
+		front(text)
+		children();
+	}
+    }
+
+
     module front(text) {
         front_legend(text,[0,-0.5],size=3)
         children();
     }
+
 
 	cam_color="sienna";
 	car_color="gray";
@@ -115,14 +131,14 @@ module numpad_iracing() {
         minus("LAP", "SES") dcs_row(0) if_color(lap_color) key();
         minus("INC", "END") dcs_row(0) if_color(inc_color) key();
 
-        unicode("\u23EA") dcs_row(1) direction() key();
-        unicode("\u25B6") bump() dcs_row(1) red() key();
+        unicode_and_front("\u23EA","FOV") dcs_row(1) direction() key();
+        unicode_and_front("\u25B6","STEP") bump() dcs_row(1) red() key();
         unicode("\u23E9") dcs_row(1) direction() key();
         unicode(chr(9201),6) dcs_row(1) purple() key(); 
 
         
-        unicode("\u23EE") dcs_row(2) frame() key();
-        unicode(chr(129153)) dcs_row(2) purple() key(); // https://unicode-table.com/en/1F881/
+        unicode_and_front("\u23EE","FOV") dcs_row(2) frame() key();
+        unicode_and_front(chr(129153),"STEP") dcs_row(2) purple() key(); // https://unicode-table.com/en/1F881/
         unicode("\u23ED") dcs_row(2) frame() key();
         unicode(chr(9210)) dcs_row(2) frame() key();
         //legend("PRINT", [0,-0.6], size=2.5) legend("SCREEN", [0,0.6], size=2) dcs_row(2) brown() key();
@@ -130,21 +146,19 @@ module numpad_iracing() {
         unicode(chr(129152)) dcs_row(3) purple() key(); // https://unicode-table.com/en/1F880/
         unicode(chr(129155)) dcs_row(3) purple() key(); // https://unicode-table.com/en/1F883/
         unicode(chr(129154)) dcs_row(3) purple() key(); // https://unicode-table.com/en/1F882/
-        unicode(chr(128253)) dcs_row(3) purple() key(); // https://unicode-table.com/en/1F882/
+        dcs_row(3) purple() key(); // https://unicode-table.com/en/1F882/
         //legend("CAM", [0,-0.6], size=3.5) legend("TOOL", [0,0.7], size=2.9) dcs_row(3) purple() key(); // https://unicode-table.com/en/1F881/
 
-        front_legend("CTRL") dcs_row(4) mods() key();
-        front_legend("ALT") dcs_row(4) mods() key();
+        legend("CTRL",size=3) dcs_row(4) mods() key();
+        legend("ALT") front_legend("AIM") dcs_row(4) mods() key();
         //unicode(chr(11017)) unicode(chr(11018)) dcs_row(4) purple() key(); // https://unicode-table.com/en/1F881/
-        fullscreen_size=11;
-        intersection() {
-            unicode("\u2B66",fullscreen_size)
-            unicode("\u2B68",fullscreen_size)
-            unicode("\u2B67",fullscreen_size)
-            unicode("\u2B69",fullscreen_size)
-            dcs_row(4) purple() key(); 
-            front_legend("AIM") dcs_row(4) purple() key(); 
-        }
+        fullscreen_size=7.5;
+	unicode(chr(128253))
+	front_unicode("\u2B66",fullscreen_size)
+	front_unicode("\u2B68",fullscreen_size)
+	front_unicode("\u2B67",fullscreen_size)
+	front_unicode("\u2B69",fullscreen_size)
+	dcs_row(4) purple() key(); 
         front_legend("MOD") legend("UI",size=6) dcs_row(4) mods() key();
 
     };
