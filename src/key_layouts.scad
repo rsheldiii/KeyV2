@@ -20,3 +20,4 @@ include <layouts/dactyl_manuform/4x6_legends.scad>
 include <layouts/plate.scad>
 
 include <layouts/tkl/default.scad>
+include <layouts/full_size/default.scad>
