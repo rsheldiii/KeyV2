@@ -9,6 +9,14 @@ tkl_default_layout = [
   [1.25,1.25,1.25,6.25,1.25,1.25,1.25,1.25,-0.5,1,1,1]
 ];
 
+tkl_legend_size = [
+  [-2, 0, -2, -2, -2, -2, 0, -2, -2, -2, -2, 0, -2, -2, -2, -2, 0, -2, -2, -2],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+
 tkl_legends = [
   ["Esc", "", "F1", "F2", "F3", "F4", "", "F5", "F6", "F7", "F8", "", "F9", "F10", "F11", "F12", "", "Scn", "Scr", "Pse"],
   ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "⌫", "", "ins", "home", "pgup"],
@@ -19,5 +27,5 @@ tkl_legends = [
 ];
 
 module tkl_default(profile) {
-  layout(tkl_default_layout, profile, tkl_legends) children();
+  layout(tkl_default_layout, profile, tkl_legends, row_sculpting_offset=-1, legend_sizes=tkl_legend_size) children();
 }
