@@ -20,7 +20,7 @@ function double_sculpted_column(column, row_length, column_sculpt_profile) =
         1hand(column, row_length) : (column_sculpt_profile == "cresting_wave") ?
           cresting_wave(column, row_length) : 0;
 
-module layout(list, profile="dcs", legends=undef, front_legends=undef, row_sculpting_offset=0, row_override=undef, column_sculpt_profile="2hands", column_override=undef) {
+module layout(list, profile="dcs", legends=undef, front_legends=undef, row_sculpting_offset=0, row_override=undef, column_sculpt_profile="2hands", column_override=undef, legend_sizes=undef) {
   for (row = [0:len(list)-1]){
     /* echo("**ROW**:", row); */
     row_length = len(list[row]);
@@ -37,7 +37,7 @@ module layout(list, profile="dcs", legends=undef, front_legends=undef, row_sculp
       if (key_length >= 1) {
         translate_u(column_distance - (key_length/2), -row) {
         
-          key_profile(profile, row_sculpting, column_value) u(key_length) legend(legends ? legends[row][column] : "") front_legend(front_legends ? front_legends[row][column] : "") cherry() { // (row+4) % 5 + 1
+          key_profile(profile, row_sculpting, column_value) u(key_length) legend(legends ? legends[row][column] : "", size=legend_sizes ? $font_size+legend_sizes[row][column] : $font_size) front_legend(front_legends ? front_legends[row][column] : "") cherry() { // (row+4) % 5 + 1
           $row = row;
           $column = column;
 
