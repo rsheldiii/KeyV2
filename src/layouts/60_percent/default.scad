@@ -1,7 +1,7 @@
 include <../layout.scad>
 
 60_percent_default_layout = [
-  [0], // Row 0 (Function keys); blank so other rows get correct height/angle
+  [0], // Row 0 (Function keys); blank so other rows get correct depth/angle
   [1,1,1,1,1,1,1,1,1,1,1,1,1,2],
   [1.5,1,1,1,1,1,1,1,1,1,1,1,1,1.5],
   [1.75,1,1,1,1,1,1,1,1,1,1,1,2.25],
