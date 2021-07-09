@@ -1,7 +1,7 @@
-module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=3, den=4){
+module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=4, den=5){
   // changable numerator/denoninator on where to place the square's corners
   // for example, num=2, den=3 means the dish will happen at 1/3 and 2/3 the
-  // width and the height.  Defaults to 3/4s. Customizable when calling 
+  // width and the height.  Defaults to 4/5. Customizable when calling 
   // this module
   //
   // This was initially intended for the scoop on the HiPro, since that's what
@@ -17,55 +17,18 @@ module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=3, de
 
   //This is the set of points to hull around for the scoop
   points=[
-    [height/den,width/den, -chord],
-    [num*height/den,width/den,-chord],
-    [height/den,num*width/den, -chord],
-    [num*height/den,num*width/den,-chord]
+    [height/den - height/2,width/den - width/2, -chord],
+    [num*height/den - height/2,width/den - width/2,-chord],
+    [height/den - height/2,num*width/den - width/2, -chord],
+    [num*height/den - height/2,num*width/den - width/2,-chord]
   ];
 
-  translate([-(width + r) / 2, -(height + r) / 2, 0 * direction])
-    resize([height+r,width+r,depth])
-      hull() {
-        cube([height,width,0.001],center=false);
-        for(i=[0:len(points)-1]) {
-          translate(points[i])
-            sphere(r=r,$fn=64);
-        }
-    }
+  resize([height,width,depth])
+    hull() {
+      cube([height,width,0.001],center=true);
+      for(i=[0:len(points)-1]) {
+        translate(points[i])
+          sphere(r=r,$fn=64);
+      }
+  }
 }
-
-/* ************************** *
- * ORIGINAL ATTEMPT           *
- * DO NOT USE                 *
- * KEPT FOR NOW IF I'M        *
- * MISSING SOMETHING          *
- * ************************** */
-
-// module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=3, den=4){
-//   // changable numerator/denoninator on where to place the square's corners
-//   // for example, num=2, den=3 means the dish will happen at 1/3 and 2/3 the
-//   // width and the height.  Defaults to 3/4s. Customizable when calling 
-//   // this module
-
-//   chord = pow(pow(height/2, 2) + pow(width/2, 2),0.5);
-//   direction = inverted ? -1 : 1;
-
-//   //This is the set of points to hull around for the scoop
-//   points=[
-//     [height/den,width/den, -chord],
-//     [num*height/den,width/den,-chord],
-//     [height/den,num*width/den, -chord],
-//     [num*height/den,num*width/den,-chord],
-//     [height/2, width/2, -chord - 1]
-//   ];
-
-//   translate([-width / 2, -height / 2, 0 * direction])
-//     resize([height,width,depth])
-//       hull() {
-//         cube([height,width,0.001],center=false);
-//         for(i=[0:len(points)-1]) {
-//           translate(points[i])
-//             sphere(r=r,$fn=64);
-//         }
-//     }
-// }
