@@ -1,6 +1,7 @@
 include <../layout.scad>
 
 60_percent_default_layout = [
+  [0], // Row 0 (Function keys); blank so other rows get correct height/angle
   [1,1,1,1,1,1,1,1,1,1,1,1,1,2],
   [1.5,1,1,1,1,1,1,1,1,1,1,1,1,1.5],
   [1.75,1,1,1,1,1,1,1,1,1,1,1,2.25],
@@ -9,6 +10,7 @@ include <../layout.scad>
 ];
 
 60_percent_legends = [
+  [""], // blank row 0 again
   ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "⌫"],
   ["tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
   ["caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "enter"],
