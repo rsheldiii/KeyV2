@@ -17,10 +17,10 @@ module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=4, de
 
   //This is the set of points to hull around for the scoop
   points=[
-    [height/den - height/2,width/den - width/2, -chord],
-    [num*height/den - height/2,width/den - width/2,-chord],
-    [height/den - height/2,num*width/den - width/2, -chord],
-    [num*height/den - height/2,num*width/den - width/2,-chord]
+    [height/den - height/2, width/den - width/2, -chord],
+    [num*height/den - height/2, width/den - width/2, -chord],
+    [height/den - height/2, num*width/den - width/2, -chord],
+    [num*height/den - height/2, num*width/den - width/2, -chord]
   ];
 
   resize([height,width,depth])
