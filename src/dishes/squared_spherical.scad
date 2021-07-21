@@ -16,7 +16,7 @@ module squared_spherical_dish(width, height, depth, inverted=false) {
           // (like -chord) if you want more of a defined circle
           // in the keywell
           translate([chord/2, chord/2, -depth]) 
-            sphere(r=r, $fn=64);
+            sphere(r=r, $fn=128);
         }
     }
 }
