@@ -2,7 +2,7 @@
 // I'm unsure if "MT3" is copyrighted or anything, but
 // Since my name is "Matt" and "Matty3" sounds like "MT3,"
 // that's what I'm going with for now
-module matty3_row(row=3, column=0) {
+module matty3_row(row=3, column=0, deep_dish=false) {
   $key_shape_type = "sculpted_square";
 
   $bottom_key_width = 18.35;
@@ -11,7 +11,7 @@ module matty3_row(row=3, column=0) {
   $width_difference = ($bottom_key_width - 13.0);
   $height_difference = ($bottom_key_height - 13.0);
   $dish_type = "squared spherical";
-  $dish_depth = 0.75;
+  $dish_depth = deep_dish ? 1.6 : 0.75;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 0;
