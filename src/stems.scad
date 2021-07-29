@@ -1,4 +1,5 @@
 include <stems/cherry.scad>
+include <stems/c64.scad>
 include <stems/rounded_cherry.scad>
 include <stems/box_cherry.scad>
 include <stems/alps.scad>
@@ -13,6 +14,8 @@ module stem(stem_type, depth, slop, throw){
       alps_stem(depth, slop, throw);
     } else if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
       cherry_stem(depth, slop, throw);
+    } else if (stem_type == "c64" ) {
+      c64_stem(depth, slop, throw);
     } else if (stem_type == "rounded_cherry") {
       rounded_cherry_stem(depth, slop, throw);
     } else if (stem_type == "box_cherry") {

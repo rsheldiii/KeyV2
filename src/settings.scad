@@ -4,7 +4,7 @@
 $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
 
 // What type of stem you want. Most people want Cherry.
-$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, c64, disable]
 
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 // if your keycaps stick in the switch raise this value
@@ -67,10 +67,11 @@ $top_skew_x = 0;
 /* [Stem] */
 
 // How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
-$stem_throw = 4;
+$stem_throw = 5;
 // Diameter of the outside of the rounded cherry stem
 $rounded_cherry_stem_d = 5.5;
 
+$c64_stem_d = 9;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles
@@ -114,11 +115,13 @@ $dish_overdraw_height = 0;
 /* [Misc] */
 // There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
 $cherry_bevel = true;
+$c64_bevel = true;
 
 // How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
 $stem_support_height = .8;
 // Font used for text
-$font="DejaVu Sans Mono:style=Book";
+//$font="DejaVu Sans Mono:style=Book";
+$font="Trade Gothic Bold Condensed";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
 // Should be faster, also required for concave shapes
