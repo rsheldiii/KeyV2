@@ -29,9 +29,10 @@ jobs:
         run: sudo apt-get install openscad
       - run: echo "rendering new fixtures..."
       - run: mkdir tests/output/
+      - run: touch tests/empty.scad
       - run: 'openscad -o "tests/output/test.stl" "tests/test.scad"'
       - run: echo "differencing new fixtures from old fixtures..."
-      - run: openscad /dev/null -D 'difference(){import("tests/test.stl");import("tests/otuput/test.stl");}' -o output.stl
+      - run: openscad tests/empty.scad -D 'difference(){import("test.stl");import("output/test.stl");}' -o output.stl
       - run: du -B=1 output.stl
       - run: |
           git config --global user.name 'KeyV2 GHA Bot'
