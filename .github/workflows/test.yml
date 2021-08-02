@@ -20,7 +20,8 @@ jobs:
       - name: Render and build OpenSCAD project
         uses: flat35hd99/eval-openscad@v0.2
         with: 
-          command: which openscad
+          command: 'openscad -o "tests/test.stl" "tests/test.scad"'
+
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
