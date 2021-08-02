@@ -17,21 +17,14 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
       - name: Render and build OpenSCAD project
         uses: flat35hd99/eval-openscad@v0.2
         with: 
           command: 'openscad -o "tests/test.stl" "tests/test.scad"'
-
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - run: |
+          git config --global user.name 'KeyV2 GHA Bot'
+          git config --global user.email 'keyv2-gha-bot@users.noreply.github.com'
+          git commit -am "Update test stls"
+          git push
