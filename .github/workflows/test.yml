@@ -25,13 +25,12 @@ jobs:
           # command: |
             # echo "where does this even go"
             # openscad -o "tests/test.stl" "tests/test.scad"
-      - name: Install openscad
-        run: sudo apt-get install openscad
-      - run: echo "rendering new fixtures..."
+        # x11 server needed for png output lol
+      - name: Install dependencies
+        run: sudo apt-get install openscad xorg openbox
       - run: mkdir tests/output/
       - run: touch tests/empty.scad
       - run: 'openscad -o "tests/output/test.stl" "tests/test.scad"'
-      - run: echo "differencing new fixtures from old fixtures..."
       - run: openscad tests/empty.scad -D 'color(0.5,0,0,0.5)import("test.stl");color(0,0.5,0,0.5)import("output/test.stl");' -o output.png
       # - run: du -B 1 output.stl
       - uses: actions/upload-artifact@v2
