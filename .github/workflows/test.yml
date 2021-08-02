@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Render and build OpenSCAD project
         uses: flat35hd99/eval-openscad@v0.2
+        with: 
+          command: which openscad
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
@@ -31,5 +34,3 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
-      - name: Check if openscad is installed
-        run: which openscad
