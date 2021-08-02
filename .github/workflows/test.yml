@@ -19,12 +19,16 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Render and build OpenSCAD project
-        uses: flat35hd99/eval-openscad@v0.2
-        with: 
-          command: |
-            echo "where does this even go"
-            openscad -o "tests/test.stl" "tests/test.scad"
+      # - name: Render and build OpenSCAD project
+        # uses: flat35hd99/eval-openscad@v0.2
+        # with: 
+          # command: |
+            # echo "where does this even go"
+            # openscad -o "tests/test.stl" "tests/test.scad"
+      - name: Install openscad
+        run: sudo apt-get install openscad
+      - run: which openscad
+      - run: 'openscad -o "tests/test.stl" "tests/test.scad"'
       - run: |
           git config --global user.name 'KeyV2 GHA Bot'
           git config --global user.email 'keyv2-gha-bot@users.noreply.github.com'
