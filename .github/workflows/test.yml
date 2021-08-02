@@ -3,7 +3,7 @@
 name: CI
 
 # Controls when the workflow will run
-on: 
+on:
   push:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,10 +13,12 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: openscad/mxe-x86_64-deps
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Render and build OpenSCAD project
+        uses: flat35hd99/eval-openscad@v0.2
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
@@ -29,5 +31,5 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
-     - name: Check if openscad is installed
-       run: which openscad
+      - name: Check if openscad is installed
+        run: which openscad
