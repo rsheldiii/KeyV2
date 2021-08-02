@@ -22,9 +22,12 @@ jobs:
       - name: Render and build OpenSCAD project
         uses: flat35hd99/eval-openscad@v0.2
         with: 
-          command: 'openscad -o "tests/test.stl" "tests/test.scad"'
+          command: |
+            echo "where does this even go"
+            openscad -o "tests/test.stl" "tests/test.scad"
       - run: |
           git config --global user.name 'KeyV2 GHA Bot'
           git config --global user.email 'keyv2-gha-bot@users.noreply.github.com'
-          git commit -am "Update test stls"
+          git add -A
+          git commit -m "Update test stls"
           git push
