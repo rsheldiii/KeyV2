@@ -27,8 +27,12 @@ jobs:
             # openscad -o "tests/test.stl" "tests/test.scad"
       - name: Install openscad
         run: sudo apt-get install openscad
-      - run: which openscad
-      - run: 'openscad -o "tests/test.stl" "tests/test.scad"'
+      - run: echo "rendering new fixtures..."
+      - run: mkdir tests/output/
+      - run: 'openscad -o "tests/output/test.stl" "tests/test.scad"'
+      - run: echo "differencing new fixtures from old fixtures..."
+      - run: openscad /dev/null -D 'difference(){import("tests/test.stl");import("tests/otuput/test.stl");}' -o output.stl
+      - run: du -B=1 output.stl
       - run: |
           git config --global user.name 'KeyV2 GHA Bot'
           git config --global user.email 'keyv2-gha-bot@users.noreply.github.com'
