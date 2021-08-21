@@ -6,6 +6,9 @@ $key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16
 // What type of stem you want. Most people want Cherry.
 $stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
 
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, printed_stabilizer, disable]
+
 // The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
 // if your keycaps stick in the switch raise this value
 $stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
@@ -167,9 +170,6 @@ $inset_legend_depth = 0.2;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
-
-// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
-$stabilizer_type = "printed_stabilizer"; // [costar_stabilizer, cherry_stabilizer, printed_stabilizer, disable]
 
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
