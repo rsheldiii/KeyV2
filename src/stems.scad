@@ -4,6 +4,7 @@ include <stems/box_cherry.scad>
 include <stems/alps.scad>
 include <stems/filled.scad>
 include <stems/cherry_stabilizer.scad>
+include <stems/printed_stabilizer.scad>
 include <stems/custom.scad>
 
 
@@ -21,6 +22,8 @@ module stem(stem_type, depth, slop, throw){
       filled_stem();
     } else if (stem_type == "cherry_stabilizer") {
       cherry_stabilizer_stem(depth, slop, throw);
+    } else if (stem_type == "printed_stabilizer") {
+      printed_stabilizer(depth, slop, throw);
     } else if (stem_type == "disable") {
       children();
     } else {
