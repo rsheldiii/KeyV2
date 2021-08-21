@@ -3,7 +3,9 @@ include <supports/flat.scad>
 include <supports/bars.scad>
 
 module supports(type, stem_type, loft, height) {
-  if (type == "flared") {
+  if (type == "flared" && stem_type == "printed_stabilizer") {
+    bars(stem_type, loft, height);
+  } else if (type == "flared") {
     flared(stem_type, loft, height);
   } else if (type == "flat") {
     flat(stem_type, loft, height);
