@@ -219,9 +219,9 @@ module _dish() {
 module envelope(depth_difference=0) {
   s = 1.5;
   hull(){
-    cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
+    cube([total_key_width() * s, total_key_height() * s, $zero], center = true);
     top_placement(SMALLEST_POSSIBLE + depth_difference){
-      cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
+      cube([top_total_key_width() * s, top_total_key_height() * s, $zero], center = true);
     }
   }
 }
@@ -307,12 +307,12 @@ module stems_for(positions, stem_type) {
 module cherry_keyswitch() {
   union() {
     hull() {
-      cube([15.6, 15.6, 0.01], center=true);
-      translate([0,1,5 - 0.01]) cube([10.5,9.5, 0.01], center=true);
+      cube([15.6, 15.6, $zero], center=true);
+      translate([0,1,5 - $zero]) cube([10.5,9.5, $zero], center=true);
     }
     hull() {
-      cube([15.6, 15.6, 0.01], center=true);
-      translate([0,0,-5.5]) cube([13.5,13.5,0.01], center=true);
+      cube([15.6, 15.6, $zero], center=true);
+      translate([0,0,-5.5]) cube([13.5,13.5,$zero], center=true);
     }
   }
 }
