@@ -148,10 +148,10 @@ $minkowski_radius = .33;
 $output_text_inset_only = false;
 
 //3D printers use the bottom left as the origin, inputting your buildplate width/2 will center 3mf files when slicing. 
-$offset_x = 50;
+$offset_x = 0;
 
 //3D printers use the bottom left as the origin, inputting your buildplate height/2 will center 3mf files when slicing.
-$offset_y = 50;
+$offset_y = 0;
 
 /* [Features] */
 
