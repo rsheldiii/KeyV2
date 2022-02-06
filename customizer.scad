@@ -144,6 +144,15 @@ $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
 $minkowski_radius = .33;
 
+//Outputs only inverse of inset text, used to print inset filled with different color on dual extruder printers
+$output_text_inset_only = false;
+
+//3D printers use the bottom left as the origin, inputting your buildplate width/2 will center 3mf files when slicing. 
+$offset_x = 50;
+
+//3D printers use the bottom left as the origin, inputting your buildplate height/2 will center 3mf files when slicing.
+$offset_y = 50;
+
 /* [Features] */
 
 //insert locating bump
@@ -4264,6 +4273,13 @@ module hollow_key() {
   }
 }
 
+module inset_text() {
+  translate([0, 0, .001]) color("black") intersection() {
+    if (inset && $children > 0) artisan($inset_legend_depth) children();
+    if(!$outset_legends) legends($inset_legend_depth);
+    hollow_key();
+  }
+}
 
 // The final, penultimate key generation function.
 // takes all the bits and glues them together. requires configuration with special variables.
@@ -4521,5 +4537,11 @@ if (!$using_customizer) {
 }
 
 key_profile(key_profile, row) legend(legend) {
-  key();
+  translate([$offset_x, $offset_y, 0])
+
+  if ($output_text_inset_only) {
+    inset_text();
+  } else {
+    key();
+  }
 }
