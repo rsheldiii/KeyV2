@@ -155,7 +155,11 @@ module front_of_key() {
 }
 
 module outer_shape() {
-  shape(0, 0);
+  if ($rounded_key == true) {
+    rounded_shape();
+  } else {
+    shape(0, 0);
+  }
 }
 
 module inner_shape(extra_wall_thickness = 0, extra_keytop_thickness = 0) {
