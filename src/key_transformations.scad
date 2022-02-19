@@ -91,26 +91,26 @@ module blank() {
   children();
 }
 
-module cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "cherry";
   children();
 }
 
-module alps(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module alps(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "alps";
   children();
 }
 
-module rounded_cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module rounded_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "rounded_cherry";
   children();
 }
 
-module box_cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module box_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "box_cherry";
   children();
 }
