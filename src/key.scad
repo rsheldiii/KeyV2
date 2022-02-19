@@ -162,7 +162,9 @@ module inner_shape(extra_wall_thickness = 0, extra_keytop_thickness = 0) {
   if ($inner_shape_type == "flat") {
     /* $key_shape_type="square"; */
     $height_slices = 1;
-    color($primary_color) shape_hull($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness, 0);
+    // if inner_shape is flat, keytop_thickness will be dish_depth less than it should be, since the dish digs in that far.
+    // so, we add dish_depth here
+    color($primary_color) shape_hull($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness + $dish_depth, 0);
   } else {
     shape($wall_thickness + extra_wall_thickness, $keytop_thickness + extra_keytop_thickness);
   }
@@ -191,22 +193,23 @@ module subtractive_features(inset) {
   /* if ($clearance_check) clearance_check(); */
 }
 
+// features inside the key itself (stem, supports, etc)
+module inside_features() {
+  // Stems and stabilizers are not "inside features" unless they are fully
+  // contained inside the cap. otherwise they'd be cut off when they are
+  // differenced with the outside shape. this only matters if $stem_inset
+  // is negative
+  if ($stem_inset >= 0) stems_and_stabilizers();
+  if ($support_type != "disable") translate([0, 0, $stem_inset]) support_for($stem_positions, $stem_type);
+  if ($stabilizer_type != "disable") translate([0, 0, $stem_inset]) support_for($stabilizers, $stabilizer_type);
+}
+
 // all stems and stabilizers
 module stems_and_stabilizers() {
   translate([0, 0, $stem_inset]) {
     if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
     if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
   }
-}
-
-// features inside the key itself (stem, supports, etc)
-module inside_features() {
-  // Stems and stabilizers are not "inside features" unless they are fully
-  // contained inside the cap. otherwise they'd be cut off when they are
-  // differenced with the outside shape
-  if ($stem_inset >= 0) stems_and_stabilizers();
-  if ($support_type != "disable") translate([0, 0, $stem_inset]) support_for($stem_positions, $stem_type);
-  if ($stabilizer_type != "disable") translate([0, 0, $stem_inset]) support_for($stabilizers, $stabilizer_type);
 }
 
 // helpers for doubleshot keycaps for now
