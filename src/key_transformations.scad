@@ -43,6 +43,12 @@ module rotated() {
   children();
 }
 
+module vertically_stabilized(mm=12, vertical=true, type=undef) {
+  stabilized(mm,vertical,type) {
+    children();
+  }
+}
+
 module stabilized(mm=12, vertical = false, type=undef) {
   if (vertical) {
     $stabilizer_type = (type ? type : ($stabilizer_type ? $stabilizer_type : "costar_stabilizer"));

@@ -17,7 +17,7 @@ If you are technically inclined at all, this is definitely the best way to run t
 
 First, you'll need OpenSCAD: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they generally support more features and are relatively stable. Development snapshots are listed in their own section on the downloads page.
 
-After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the directory should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set! It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
+After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/KeyV2.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/KeyV2/archive/master.zip) and extracting the directory should do it. Then all you need to do is open `keys.scad` with openSCAD and you are set! It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
 
 All examples below assume you are running the library on your computer with OpenSCAD.
 
@@ -169,7 +169,7 @@ Prints from this library are still challenging, despite all efforts to the contr
 
 1. If your stem isn't fitting in the switch, try upping the slop factor, accessed by giving your keystem function a numeric value (eg `cherry(0.5) key()`). This will lengthen the cross and decrease the overall size of the keystem. The default value is 0.3, and represents millimeters. Note that even if you have a resin printer, you should probably keep the default value; keys printed with 0 slop will barely fit on the stem.
 
-2. If your keystem breaks off the bed mid-print, you can enable a brim by adding the `brimmed()` modifier. This will give a solid base for the keystem to anchor into.
+2. If your keystem breaks off the bed mid-print, you can enable a brim by adding the `brimmed_stem_support()` modifier. This will give a solid base for the keystem to anchor into.
 
 3. If you are unsatisfied with the quality of the top surface, you can try printing the keycap on a different surface than the bottom, though it may impact the quality of the stem.
 

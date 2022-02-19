@@ -5,7 +5,8 @@ positions = [
   [-separation/2, 0],
 ];
 
-module choc_stem(depth, slop){
+// TODO throw not used
+module choc_stem(depth, slop, throw){ 
   for (position=positions) {
     translate([position.x,position.y, depth/2]) single_choc_stem(depth, slop);
   }

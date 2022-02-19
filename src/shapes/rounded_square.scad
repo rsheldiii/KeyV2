@@ -1,4 +1,5 @@
-include <../libraries/rounded_rectangle_profile.scad>
+include <square.scad>
+include <../libraries/round-anything/polyround.scad>
 
 module rounded_square_shape(size, delta, progress, center = true) {
   offset(r=$corner_radius, $fa=360/$shape_facets){
@@ -7,6 +8,5 @@ module rounded_square_shape(size, delta, progress, center = true) {
 }
 
 // for skin
-
 function skin_rounded_square(size, delta, progress, thickness_difference) =
-  rounded_rectangle_profile(size - (delta * progress) - [thickness_difference, thickness_difference], fn=$shape_facets, r=$corner_radius);
+  polyRound(add_rounding(rectangle_profile(size - (delta * progress)), $corner_radius), $shape_facets/4);

@@ -1,4 +1,5 @@
 // files
+include <constants.scad>
 include <functions.scad>
 include <shapes.scad>
 include <stems.scad>
@@ -15,12 +16,6 @@ use <libraries/scad-utils/transformations.scad>
 use <libraries/scad-utils/lists.scad>
 use <libraries/scad-utils/shapes.scad>
 use <libraries/skin.scad>
-
-/* [Hidden] */
-SMALLEST_POSSIBLE = 1/128;
-// basically disable $fs - though it might be useful for these CGAL problems
-$fs = .01;
-$unit = 19.05;
 
 // key shape including dish. used as the ouside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
@@ -72,16 +67,22 @@ module dished(depth_difference = 0, inverted = false) {
       union() {
         // envelope is needed to "fill in" the rest of the keycap
         envelope(depth_difference);
-        if (inverted) top_placement(depth_difference) _dish(inverted);
+        if (inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
       }
-      if (!inverted) top_placement(depth_difference) _dish(inverted);
+      if (!inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
+      /* %top_placement(depth_difference) _dish(); */
     }
   }
 }
 
 // just to DRY up the code
+// TODO is putting special vars in function signatures legal
 module _dish(inverted=$inverted_dish) {
-  color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
+  translate([$dish_offset_x,0,0]) color($secondary_color) 
+  dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
+}
+// just to DRY up the code
+module _dish() {
 }
 
 // puts its children at each keystem position provided
@@ -103,7 +104,7 @@ module support_for(positions, stem_type) {
 
 module stems_for(positions, stem_type) {
   keystem_positions(positions) {
-    color($tertiary_color) stem(stem_type, stem_height(), $stem_slop);
+    color($tertiary_color) stem(stem_type, stem_height(), $stem_slop, $stem_throw);
     if ($stem_support_type != "disable") {
       color($quaternary_color) stem_support($stem_support_type, stem_type, $stem_support_height, $stem_slop);
     }

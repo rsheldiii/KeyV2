@@ -59,10 +59,14 @@ function surface_function(x,y) = 1;
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
-// (statically) random!
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
 /* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
 // y=x revolved around the y axis
 /* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
+/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = unit * (length - 1) + 18.16;

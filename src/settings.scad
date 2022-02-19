@@ -103,7 +103,11 @@ $dish_depth = 1;
 $dish_skew_x = 0;
 // How skewed in the y direction (height) the dish is
 $dish_skew_y = 0;
-// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
 $dish_overdraw_width = 0;
 // Same as width but for height
 $dish_overdraw_height = 0;
@@ -194,7 +198,7 @@ $shape_facets =30;
 // unused for now
 $3d_surface_size = 100;
 // resolution in each axis. 10 = 10 divisions per x/y = 100 points total
-$3d_surface_step = 5;
+$3d_surface_step = 10;
 
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";

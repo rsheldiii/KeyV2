@@ -1,5 +1,3 @@
-include <../libraries/rounded_rectangle_profile.scad>
-
 // rounded square shape with additional sculpting functions to better approximate
 
 // When sculpting sides, how much in should the tops come
@@ -44,8 +42,35 @@ module sculpted_square_shape(size, delta, progress) {
   }
 }
 
-// fudging the hell out of this, I don't remember what the negative-offset-positive-offset was doing in the module above
-// also no 'bowed' square shape for now
+function new_side_rounded_square(size, r, cornerRadius=0) =
+  let(
+    width = (size.x - r)/2,
+    height = (size.y - r)/2,
+
+    // fudge numbers! the radius conflict resolution in polyround smooths out
+    // the entire shape based on the ratios between conflicting radii. bumping
+    // these up makes the whole shape more fluid
+    widthRadius = r ? width*8 : 0,
+    heightRadius = r ? height*8 : 0,
+
+    bow = r/2,
+
+    // close enough :/
+    facets = 360 / $shape_facets/2,
+
+    points = [
+       [-width,-height,cornerRadius],
+       [0,-height-bow,widthRadius],
+       [width,-height,cornerRadius],
+       [width + bow,0,heightRadius],
+       [width,height,cornerRadius],
+       [0,height + bow,widthRadius],
+       [-width,height,cornerRadius],
+       [-width-bow,0,heightRadius]
+    ]
+  ) polyRound(points,facets);
+
+
 function skin_sculpted_square_shape(size, delta, progress, thickness_difference) =
   let(
     width = size[0],
@@ -67,13 +92,7 @@ function skin_sculpted_square_shape(size, delta, progress, thickness_difference)
       width - extra_width_this_slice - thickness_difference,
       height - extra_height_this_slice - thickness_difference
     ]
-  ) double_rounded_rectangle_profile(square_size - [extra_corner_radius_this_slice, extra_corner_radius_this_slice]/4, fn=$shape_facets, r=extra_corner_radius_this_slice/1.5 + $more_side_sculpting_factor * progress);
-
-  /* offset(r = extra_corner_radius_this_slice) {
-    offset(r = -extra_corner_radius_this_slice) {
-      side_rounded_square(square_size, r = $more_side_sculpting_factor * progress);
-    }
-  } */
+  ) new_side_rounded_square(square_size, $more_side_sculpting_factor * progress, extra_corner_radius_this_slice);
 
 
 module side_rounded_square(size, r) {
