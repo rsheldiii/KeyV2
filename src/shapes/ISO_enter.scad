@@ -19,8 +19,6 @@ module ISO_enter_shape(size, delta, progress){
 
   delta = delta / 2;
 
-  delta = delta / 2;
-
   pointArray = [
       [                   0-delta.x,                     0-delta.y], // top right
       [                   0-delta.x,               -height+delta.y], // bottom right

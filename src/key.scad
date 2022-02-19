@@ -81,9 +81,6 @@ module _dish(inverted=$inverted_dish) {
   translate([$dish_offset_x,0,0]) color($secondary_color) 
   dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
 }
-// just to DRY up the code
-module _dish() {
-}
 
 // puts its children at each keystem position provided
 module keystem_positions(positions) {
