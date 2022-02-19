@@ -206,6 +206,7 @@ module inside_features() {
   // differenced with the outside shape
   if ($stem_inset >= 0) stems_and_stabilizers();
   if ($support_type != "disable") translate([0, 0, $stem_inset]) support_for($stem_positions, $stem_type);
+  if ($stabilizer_type != "disable") translate([0, 0, $stem_inset]) support_for($stabilizers, $stabilizer_type);
 }
 
 // helpers for doubleshot keycaps for now
