@@ -923,7 +923,7 @@ module iso_enter() {
   /* $top_tilt = 0; */
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
-  /* $hull_shape_type = "linear extrude"; */
+  $hull_shape_type = "skin";
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   /* $dish_overdraw_width = 2.38125; */
@@ -2077,12 +2077,12 @@ module ISO_enter_shape(size, delta, progress){
 }
 
 function iso_enter_vertices(size, delta, progress, thickness_difference) = [
-  [                       0-delta.x/2 * progress - thickness_difference/2,                      0 - delta.y / 2 * progress - thickness_difference/2], // top right
-  [                       0-delta.x/2 * progress - thickness_difference/2,               -size[1] + delta.y / 2 * progress + thickness_difference/2], // bottom right
-  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/2,               -size[1] + delta.y / 2 * progress + thickness_difference/2], // bottom left
-  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/2,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // inner middle point
-  [              -size[0] + delta.x/2 * progress + thickness_difference/2,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // outer middle point
-  [              -size[0] + delta.x/2 * progress + thickness_difference/2,                      0 - delta.y / 2 * progress - thickness_difference/2]  // top left
+  [                       0-delta.x/2 * progress - thickness_difference/8,                      0 - delta.y / 2 * progress - thickness_difference/8], // top right
+  [                       0-delta.x/2 * progress - thickness_difference/8,               -size[1] + delta.y / 2 * progress + thickness_difference/8], // bottom right
+  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/8,               -size[1] + delta.y / 2 * progress + thickness_difference/8], // bottom left
+  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/8,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // inner middle point
+  [              -size[0] + delta.x/2 * progress + thickness_difference/8,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // outer middle point
+  [              -size[0] + delta.x/2 * progress + thickness_difference/8,                      0 - delta.y / 2 * progress - thickness_difference/8]  // top left
 ] + [
   [(size[0] * width_ratio)/2, size[1]/2 ],
   [(size[0] * width_ratio)/2, size[1]/2 ],
