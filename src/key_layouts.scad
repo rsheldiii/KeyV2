@@ -21,3 +21,4 @@ include <layouts/plate.scad>
 
 include <layouts/tkl/default.scad>
 include <layouts/full_size/default.scad>
+include <layouts/full_size_dual/default.scad>
