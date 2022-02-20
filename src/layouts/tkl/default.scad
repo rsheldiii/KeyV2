@@ -26,6 +26,13 @@ tkl_legends = [
   ["ctl", "win", "alt", "", "mnu", "win", "alt", "ctl", "", "lt", "dn", "rt"],
 ];
 
-module tkl_default(profile) {
-  layout(tkl_default_layout, profile, tkl_legends, row_sculpting_offset=-1, legend_sizes=tkl_legend_size) children();
+module tkl_default(profile="dcs") {
+  simple_layout(tkl_default_layout) {
+    tkl_legend = tkl_legends[$row][$column];
+    legend_size = $font_size + tkl_legend_size[$row][$column];
+
+    legend(tkl_legend, size=legend_size) {
+      key_profile(profile, $row, $column) key();
+    }
+  }
 }

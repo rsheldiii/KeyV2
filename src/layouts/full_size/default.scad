@@ -21,7 +21,7 @@ full_size_vertical_size = [
 full_size_legend_size = [
   [-2, 0, -2, -2, -2, -2, 0, -2, -2, -2, -2, 0, -2, -2, -2, -2, 0, -3, -3, -2],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -3, -3, 0, -2, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -3, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -3, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -36,6 +36,27 @@ full_size_legends = [
   ["ctl", "win", "alt", "", "mnu", "win", "alt", "ctl", "", "lt", "dn", "rt", "", "0", "."],
 ];
 
-module full_size_default(profile) {
-  layout(full_size_default_layout, profile, full_size_legends, row_sculpting_offset=-1, legend_sizes=full_size_legend_size, vertical_sizes=full_size_vertical_size) children();
+
+module full_size_default(profile="dcs") {
+  simple_layout(full_size_default_layout) {
+    fs_legend = full_size_legends[$row][$column];
+    echo(fs_legend);
+    legend_size = $font_size + full_size_legend_size[$row][$column];
+    vertical_size = full_size_vertical_size[$row][$column];
+
+    legend(fs_legend, size=legend_size) {
+      key_profile(profile, $row, $column) {
+        if(vertical_size > 1){
+          v_offset = -(vertical_size - 1) / 2;
+          translate_u(0, v_offset){
+            uh(vertical_size) {
+              stabilized(vertical=true) key();
+            }
+          }
+        } else {
+          key();
+        }
+      }
+    }
+  }
 }

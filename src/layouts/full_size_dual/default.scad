@@ -22,6 +22,25 @@ full_size_dual_default_layout = [ for (row = full_size_dual) [ for (col = row) c
 full_size_dual_vertical_size = [ for (row = full_size_dual) [ for (col = row) col[2]]];
 full_size_dual_legend_size = [ for (row = full_size_dual) [ for (col = row) col[3]]];
 
-module full_size_dual_default(profile) {
-  layout(full_size_dual_default_layout, profile, full_size_dual_legends, legend_sizes=full_size_dual_legend_size, vertical_sizes=full_size_dual_vertical_size) children();
+module full_size_dual_default(profile="dcs") {
+  simple_layout(full_size_dual_default_layout) {
+    dual_legend = full_size_dual_legends[$row][$column];
+    legend_size = $font_size+full_size_dual_legend_size[$row][$column];
+    vertical_size = full_size_dual_vertical_size[$row][$column];
+
+    legend(dual_legend, size=legend_size) {
+      key_profile(profile, $row, $column) {
+        if(vertical_size > 1){
+          v_offset = -(vertical_size - 1) / 2;
+          translate_u(0, v_offset){
+            uh(vertical_size) {
+              stabilized(vertical=true) key();
+            }
+          }
+        } else {
+          key();
+        }
+      }
+    }
+  }
 }
