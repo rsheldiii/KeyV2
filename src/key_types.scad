@@ -55,8 +55,9 @@ module iso_enter() {
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   /* $dish_overdraw_width = 2.38125; */
 
-
-  stabilized(vertical=true) {
-    children();
+  render() {
+    stabilized(vertical=true) {
+      children();
+    }
   }
 }
