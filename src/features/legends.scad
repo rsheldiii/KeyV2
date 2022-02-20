@@ -3,7 +3,14 @@ module keytext(text, position, font_size, depth) {
   hoffset = (top_total_key_height()/3.5) * -position[1];
   translate([woffset, hoffset, -depth]){
     color($tertiary_color) linear_extrude(height=$dish_depth + depth){
-      text(text=text, font=$font, size=font_size, halign="center", valign="center");
+      // Allows for dual top keytext
+      if(is_list(text)&&len(text)==2){
+        translate([0, (top_total_key_height()/4.25), 0]) text(text=text[0], font=$font, size=font_size*.70, halign="center", valign="center");
+        translate([0, -(top_total_key_height()/4.25), 0]) text(text=text[1], font=$font, size=font_size*.70, halign="center", valign="center");
+      }
+      else {
+        text(text=text, font=$font, size=font_size, halign="center", valign="center");
+      }
     }
   }
 }
