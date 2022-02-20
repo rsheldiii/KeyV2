@@ -33,7 +33,7 @@ function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1
 
 function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
 // tan of 0 is 0, division by 0 is nan, so we have to guard
-function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - (unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
 
 // (I think) extra length of the side of the keycap due to the keytop being tilted.
 // necessary for calculating flat sided keycaps
