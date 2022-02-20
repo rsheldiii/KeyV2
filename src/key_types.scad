@@ -1,8 +1,8 @@
 include <functions.scad>
 
 module spacebar() {
-  $inverted_dish = true;
-  $dish_type = "sideways cylindrical";
+  $inverted_dish = $dish_type != "disable";
+  $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
   6_25u() stabilized(mm=50) children();
 }
 
