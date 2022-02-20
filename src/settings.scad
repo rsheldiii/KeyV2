@@ -136,6 +136,8 @@ $minkowski_radius = .33;
 
 //insert locating bump
 $key_bump = false;
+$layout_key_bump = false;
+$layout_bump_keys = ["F","f","J","j"];
 //height of the location bump from the top surface of the key
 $key_bump_depth = 0.5;
 //distance to move the bump from the front edge of the key
