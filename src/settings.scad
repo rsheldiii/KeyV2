@@ -74,6 +74,7 @@ $rounded_cherry_stem_d = 5.5;
 
 // How much higher the stem is than the bottom of the keycap.
 // Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
 $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
@@ -122,12 +123,10 @@ $font="DejaVu Sans Mono:style=Book";
 // Whether or not to render fake keyswitches to check clearances
 $clearance_check = false;
 // Should be faster, also required for concave shapes
-// Use linear_extrude instead of hull slices to make the shape of the key
-$linear_extrude_shape = false;
 
-// warns in trajectory.scad but it looks benign
-// brand new, more correct, hopefully faster, lots more work
-$skin_extrude_shape = false;
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
 // This doesn't work very well, but you can try
 $rounded_key = false;
 //minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
@@ -168,6 +167,9 @@ $inset_legend_depth = 0.2;
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
 
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
 // Enable stabilizer stems, to hold onto your cherry or costar stabilizers
 $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
 
@@ -197,3 +199,6 @@ $shape_facets =30;
 $3d_surface_size = 100;
 // resolution in each axis. 10 = 10 divisions per x/y = 100 points total
 $3d_surface_step = 10;
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";

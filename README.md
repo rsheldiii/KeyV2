@@ -9,6 +9,14 @@ Relevant links:
 * Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
 * Buy me a coffee: https://ko-fi.com/rsheldiii, but only if you want to!
 
+# V2.0.0 Cutover
+
+As of February 19th, 2022, the v2.0.0 branch has been merged into master.
+
+This branch completely rewrote key.scad to be much simpler and faster. If you're just starting out, please use master and report any bugs you find.
+
+If you branched off this repo previously, merging to master will probably break any additions you've made. If you need the prior version of the code for whatever reason, v1.1.0 is master just before the v2.0.0 merge. I will be backporting bugfixes to the v1 branch, so if you see v1.1.1 or higher, use that instead.
+
 ## How to run
 
 #### OpenSCAD Proper (recommended way)

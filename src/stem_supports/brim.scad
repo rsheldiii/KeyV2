@@ -43,5 +43,17 @@ module brim_support(stem_type, stem_support_height, slop) {
 
       inside_cherry_cross(slop);
     }
+  } else if(stem_type == "choc") {
+    translate([-5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
+    }
+
+    translate([5.7/2,0,0]) linear_extrude(height=stem_support_height) {
+      offset(r=1){
+        square($choc_stem + [3,3], center=true);
+      }
+    }
   }
 }
