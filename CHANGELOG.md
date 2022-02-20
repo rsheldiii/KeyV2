@@ -14,12 +14,3 @@ CHANGELOG:
     * added regular_polygon shape and octagonal and hexagonal key profiles
     * added beta kailh choc
     * Finally got ISO Enter working correctly!
-    * STILL TODO:
-      * add a magic scaling variable so you can scale the whole world up, see if that fixes degeneracy
-      * Make flat stem support default
-      * make flat inner shape default
-      * new_key_structure changes doesn't take into account support stems properly; fix
-      * support repositioning to print on the back surface of the keycap
-      * implement regular polygon for skin extrusions
-      * switch to skin-shaped extrusions by default
-      * kailh choc has a non-square key unit; should I get that working for layouts etc? 
