@@ -788,8 +788,8 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 function unit_length(length) = unit * (length - 1) + 18.16;
 
 module spacebar() {
-  $inverted_dish = true;
-  $dish_type = "sideways cylindrical";
+  $inverted_dish = $dish_type != "disable";
+  $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
   6_25u() stabilized(mm=50) children();
 }
 
