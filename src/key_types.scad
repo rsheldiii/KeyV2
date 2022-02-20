@@ -50,7 +50,7 @@ module iso_enter() {
   /* $top_tilt = 0; */
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
-  /* $hull_shape_type = "linear extrude"; */
+  $hull_shape_type = "skin";
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   /* $dish_overdraw_width = 2.38125; */
