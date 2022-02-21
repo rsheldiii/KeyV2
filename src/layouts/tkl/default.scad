@@ -32,7 +32,7 @@ module tkl_default(profile="dcs") {
     legend_size = $font_size + tkl_legend_size[$row][$column];
 
     legend(tkl_legend, size=legend_size) {
-      key_profile(profile, $row, $column) key();
+      key_profile(profile, $row, $column) children();
     }
   }
 }

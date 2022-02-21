@@ -49,7 +49,7 @@ module full_size_default(profile="dcs") {
           v_offset = -(vertical_size - 1) / 2;
           translate_u(0, v_offset){
             uh(vertical_size) {
-              stabilized(vertical=true) key();
+              stabilized(vertical=true) children();
             }
           }
         } else {
