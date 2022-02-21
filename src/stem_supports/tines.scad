@@ -47,7 +47,7 @@ module tines_support(stem_type, stem_support_height, slop) {
         }
       }
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "cherry_stabilizer") {
     difference () {
@@ -67,13 +67,13 @@ module tines_support(stem_type, stem_support_height, slop) {
     difference () {
       centered_tines(stem_support_height);
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "rounded_cherry") {
     difference () {
       centered_tines(stem_support_height);
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "alps"){
     centered_tines(stem_support_height);

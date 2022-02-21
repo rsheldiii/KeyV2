@@ -11,6 +11,6 @@ module box_cherry_stem(depth, slop, throw) {
     }
 
     // inside cross
-    inside_cherry_cross(slop);
+    inside_cherry_cross($stem_inner_slop);
   }
 }
