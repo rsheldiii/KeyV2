@@ -5991,26 +5991,21 @@ module key(inset = false) {
     if ($clearance_check) %clearance_check();
   }
 
-  // both stem and support are optional
-  if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
-    dished($keytop_thickness, $inverted_dish) {
-      translate([0, 0, $stem_inset]) {
-        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
-
-        if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
-      }
-    }
-  }
-
-  if ($support_type != "disable"){
-    inside() {
-      translate([0, 0, $stem_inset]) {
+  inside() {
+    translate([0, 0, $stem_inset]) {
+      if ($support_type != "disable"){
         if ($stabilizer_type != "disable") support_for($stabilizers, $stabilizer_type);
 
         // always render stem support even if there isn't a stem.
         // rendering flat support w/no stem is much more common than a hollow keycap
         // so if you want a hollow keycap you'll have to turn support off entirely
         support_for($stem_positions, $stem_type);
+      }
+
+      if ($stem_type != "disable" || ($stabilizers != [] && $stabilizer_type != "disable")) {
+        if ($stabilizer_type != "disable") stems_for($stabilizers, $stabilizer_type);
+
+        if ($stem_type != "disable") stems_for($stem_positions, $stem_type);
       }
     }
   }
