@@ -78,7 +78,7 @@ These modifier functions may not cover every use case; in that case, you may hav
 
 new to the library and still in a beta state, layouts allows you to generate an entire layout for a keyboard!
 
-It is recommended to use tined stem support and set `$extra_long_stem_support = true` if you plan on printing these keycaps.
+It is recommended to print layouts with a brim that extends to the next key.
 
 ```
 60_percent_default("dcs") key();
