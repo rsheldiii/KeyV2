@@ -17,5 +17,5 @@ include <../layout.scad>
 ];
 
 module 60_percent_default(profile) {
-  layout(60_percent_default_layout, profile, 60_percent_legends) children();
+  layout(60_percent_default_layout, profile, 60_percent_legends, row_sculpting_offset=1) children();
 }
