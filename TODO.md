@@ -1,6 +1,5 @@
 TODO:
   * Make flat stem support default
-  * make flat inner shape default
   * support repositioning to print on the back surface of the keycap
   * implement regular polygon for skin extrusions
   * switch to skin-shaped extrusions by default

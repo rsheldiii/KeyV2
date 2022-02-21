@@ -24,7 +24,6 @@ module shape(thickness_difference, depth_difference=0){
   }
 }
 
-// Not currently used due to CGAL errors. Rounds the shape via minkowski
 module rounded_shape() {
   color($primary_color) minkowski(){
     // half minkowski in the z direction
@@ -113,9 +112,9 @@ module top_placement(depth_difference=0) {
   top_tilt_by_height = -$top_tilt / $key_height;
   top_tilt_y_by_length = $double_sculpted ? (-$top_tilt_y / $key_length) : 0;
 
-  minkowski_height = $rounded_key ? $minkowski_radius : 0;
+  // minkowski_height = $rounded_key ? $minkowski_radius : 0;
 
-  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference + minkowski_height/2]){
+  translate([$top_skew_x + $dish_skew_x, $top_skew + $dish_skew_y, $total_depth - depth_difference]){
     rotate([top_tilt_by_height, top_tilt_y_by_length,0]){
       children();
     }
@@ -235,7 +234,9 @@ module outer_total_shape(inset=false) {
 // takes all the bits and glues them together. requires configuration with special variables.
 module key(inset=false) {
   difference(){
-    outer_total_shape(inset);
+    outer_total_shape(inset) {
+      children();
+    };
 
     if ($inner_shape_type != "disable") {
       translate([0,0,-SMALLEST_POSSIBLE]) {
