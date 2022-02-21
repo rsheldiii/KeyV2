@@ -1,8 +1,8 @@
 include <functions.scad>
 
 module spacebar() {
-  $inverted_dish = true;
-  $dish_type = "sideways cylindrical";
+  $inverted_dish = $dish_type != "disable";
+  $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
   6_25u() stabilized(mm=50) children();
 }
 
@@ -50,13 +50,14 @@ module iso_enter() {
   /* $top_tilt = 0; */
   $stem_support_type = "disable";
   $key_shape_type = "iso_enter";
-  /* $linear_extrude_shape = true; */
+  $hull_shape_type = "skin";
   $linear_extrude_height_adjustment = 19.05 * 0.5;
   // this equals (unit_length(1.5) - unit_length(1.25)) / 2
   /* $dish_overdraw_width = 2.38125; */
 
-
-  stabilized(vertical=true) {
-    children();
+  render() {
+    stabilized(vertical=true) {
+      children();
+    }
   }
 }

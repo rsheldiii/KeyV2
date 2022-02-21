@@ -11,7 +11,7 @@ module grid_row(row=3, column = 0) {
   $dish_skew_x = 0;
   $dish_skew_y = 0;
 
-  $linear_extrude_shape = true;
+  $hull_shape_type = "linear extrude";
 
 
   $dish_overdraw_width = -6.5;

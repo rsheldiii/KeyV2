@@ -1,17 +1,20 @@
 include <../functions.scad>
 include <../stems/cherry.scad>
 
+/* NOTE: every reference to total_key_width and total_key_height
+ * is multiplied by two in order to account for offset stems
+ */ 
 module centered_tines(stem_support_height) {
   if ($key_length < 2) {
     translate([0,0,$stem_support_height / 2]) {
-      cube([total_key_width(), 0.5, $stem_support_height], center = true);
+      cube([total_key_width()*2, 0.5, $stem_support_height], center = true);
     }
   }
 
   translate([0,0,$stem_support_height / 2]) {
     cube([
       1,
-      total_key_height(),
+      total_key_height()*2,
       $stem_support_height
     ],
     center = true);
@@ -19,16 +22,13 @@ module centered_tines(stem_support_height) {
 }
 
 module tines_support(stem_type, stem_support_height, slop) {
-  extra_height = $extra_long_stem_support ? ($unit - total_key_height()) + 0.1 : -$wall_thickness/4; // fudge
-  extra_width = $extra_long_stem_support ? ($unit - total_key_width()) + 0.1 : -$wall_thickness/4;
-
   if (stem_type == "cherry" || stem_type == "costar_stabilizer") {
     difference () {
       union() {
         if ($key_length < 2) {
           translate([0,0,$stem_support_height / 2]) {
             cube([
-              total_key_width() + extra_width*2,
+              total_key_width()*2,
               0.5,
               $stem_support_height
             ], center = true);
@@ -40,7 +40,7 @@ module tines_support(stem_type, stem_support_height, slop) {
           translate([x,0,$stem_support_height / 2]) {
             cube([
               0.5,
-              total_key_height() + extra_height*2, // this is to extend past
+              total_key_height()*2, // this is to extend past
               $stem_support_height
             ], center = true);
           }
@@ -55,7 +55,7 @@ module tines_support(stem_type, stem_support_height, slop) {
         translate([x,0,$stem_support_height / 2]) {
           cube([
             1,
-            total_key_height($wall_thickness),
+            total_key_height()*2,
             $stem_support_height
           ], center = true);
         }
@@ -77,5 +77,9 @@ module tines_support(stem_type, stem_support_height, slop) {
     }
   } else if (stem_type == "alps"){
     centered_tines(stem_support_height);
+  } else if (stem_type == "choc"){
+    if ($key_length < 2) translate([0,0,$stem_support_height / 2]) cube([total_key_width(), 0.42, $stem_support_height], center = true);
+    /* translate([-5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height(), $stem_support_height], center = true); */
+    /* translate([5.7/2,0,$stem_support_height / 2]) cube([0.5, total_key_height(), $stem_support_height], center = true); */
   }
 }

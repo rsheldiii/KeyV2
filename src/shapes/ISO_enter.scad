@@ -5,6 +5,7 @@ width_ratio = unit_length(1.25) / unit_length(1.5);
 height_ratio = unit_length(1) / unit_length(2);
 
 
+
 module ISO_enter_shape(size, delta, progress){
   width = size[0];
   height = size[1];
@@ -37,12 +38,12 @@ module ISO_enter_shape(size, delta, progress){
 }
 
 function iso_enter_vertices(size, delta, progress, thickness_difference) = [
-  [                       0-delta.x/2 * progress - thickness_difference/2,                      0 - delta.y / 2 * progress - thickness_difference/2], // top right
-  [                       0-delta.x/2 * progress - thickness_difference/2,               -size[1] + delta.y / 2 * progress + thickness_difference/2], // bottom right
-  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/2,               -size[1] + delta.y / 2 * progress + thickness_difference/2], // bottom left
-  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/2,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // inner middle point
-  [              -size[0] + delta.x/2 * progress + thickness_difference/2,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // outer middle point
-  [              -size[0] + delta.x/2 * progress + thickness_difference/2,                      0 - delta.y / 2 * progress - thickness_difference/2]  // top left
+  [                       0-delta.x/2 * progress - thickness_difference/8,                      0 - delta.y / 2 * progress - thickness_difference/8], // top right
+  [                       0-delta.x/2 * progress - thickness_difference/8,               -size[1] + delta.y / 2 * progress + thickness_difference/8], // bottom right
+  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/8,               -size[1] + delta.y / 2 * progress + thickness_difference/8], // bottom left
+  [-size[0] * width_ratio + delta.x/2 * progress + thickness_difference/8,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // inner middle point
+  [              -size[0] + delta.x/2 * progress + thickness_difference/8,-size[1] * height_ratio + delta.y / 2 * progress + thickness_difference/2], // outer middle point
+  [              -size[0] + delta.x/2 * progress + thickness_difference/8,                      0 - delta.y / 2 * progress - thickness_difference/8]  // top left
 ] + [
   [(size[0] * width_ratio)/2, size[1]/2 ],
   [(size[0] * width_ratio)/2, size[1]/2 ],
