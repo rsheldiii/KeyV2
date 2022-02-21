@@ -9,8 +9,11 @@ include <./includes.scad>
 
 
 // example key
-dcs_row(5) legend("⇪", size=9) key();
-
+$stem_inner_slop = 0;
+dcs_row(5) autolegend(["q", "w", "a", "z", "e", "r", "t", "", "hoobastank"]) {
+  $stem_positions = [[2,2]];
+  key();
+}
 // example row
 /* for (x = [0:1:4]) {
   translate_u(0,-x) dcs_row(x) key();

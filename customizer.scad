@@ -162,18 +162,23 @@ $double_sculpted = false;
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
+$autolegends = [];
 
 //list of front legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $front_legends = [];
+$front_autolegends = [];
 
 // print legends on the front of the key instead of the top
 $front_print_legends = false;
 
 // how recessed inset legends / artisans are from the top of the key
 $inset_legend_depth = 0.2;
+
+// legends are not allowed to print within this many mm of the edge of the key
+$legend_margin = 0.8;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
@@ -1102,6 +1107,18 @@ module legend(text, position=[0,0], size=undef) {
 module front_legend(text, position=[0,0], size=undef) {
     font_size = size == undef ? $font_size : size;
     $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
+module autolegend(texts) {
+    // $autolegends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    $autolegends = texts;
+    children();
+}
+
+module front_autolegend(texts) {
+    font_size = size == undef ? $font_size : size;
+    $front_autolegends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
     children();
 }
 
@@ -5034,6 +5051,45 @@ module legends(depth=0) {
     }
   }
 }
+module autolegends(depth=0) {
+  if (len($front_autolegends) > 0) {
+    front_of_key() {
+      for (i=[0:len($front_legends)-1]) {
+        rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
+  	  }
+    }
+  }
+  if (len($autolegends) > 0) {
+    // legends are printed in a square grid - 1, 4, 9 legends, etc
+    grid_size = len($autolegends)^0.5;
+    echo("grid_size", grid_size);
+    max_width = (top_total_key_width() - $legend_margin * (grid_size + 1)) / grid_size;
+    max_height = (top_total_key_height() - $legend_margin * (grid_size + 1)) / grid_size;
+
+    top_of_key() {
+      for (column=[0:grid_size-1]) {
+          for (row=[0:grid_size-1]) {
+            top_left_corner = [-top_total_key_width()/2, top_total_key_height()/2];
+            centering_offset = [max_width / 2, -max_height / 2];
+            position_offset = [(max_width + $legend_margin) * column, (-max_height-$legend_margin) * row];
+            margin_offset = [$legend_margin, -$legend_margin];
+
+            translate(top_left_corner + centering_offset + position_offset + margin_offset) {
+              translate([0,0,-depth]) {
+                color($tertiary_color) linear_extrude(height=$dish_depth + depth){
+                  // resize([0, max_height, 0]) {
+                    resize([max_width, 0], auto=true) {
+                      text(text=$autolegends[row * grid_size + column], font=$font, halign="center", valign="center");
+                    }
+                  // } 
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 // use skin() instead of successive hulls. much more correct, and looks faster
 // too, in most cases. successive hull relies on overlapping faces which are
 // not good. But, skin works on vertex sets instead of shapes, which makes it
@@ -6242,7 +6298,10 @@ module additive_features(inset) {
     if($key_bump) keybump($key_bump_depth, $key_bump_edge);
     if(!inset && $children > 0) color($secondary_color) children();
   }
-  if($outset_legends) legends(0);
+  if($outset_legends) {
+    legends(0);
+    autolegends(0);
+  }
   // render the clearance check if it's enabled, but don't have it intersect with anything
   if ($clearance_check) %clearance_check();
 }
@@ -6252,7 +6311,10 @@ module subtractive_features(inset) {
   top_of_key() {
     if (inset && $children > 0) color($secondary_color) children();
   }
-  if(!$outset_legends) legends($inset_legend_depth);
+  if(!$outset_legends) {
+    legends($inset_legend_depth);
+    autolegends($inset_legend_depth);
+  }
   // subtract the clearance check if it's enabled, letting the user see the
   // parts of the keycap that will hit the cherry switch
   // this is a little confusing as it eats the stem too
@@ -6468,18 +6530,23 @@ $double_sculpted = false;
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
+$autolegends = [];
 
 //list of front legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $front_legends = [];
+$front_autolegends = [];
 
 // print legends on the front of the key instead of the top
 $front_print_legends = false;
 
 // how recessed inset legends / artisans are from the top of the key
 $inset_legend_depth = 0.2;
+
+// legends are not allowed to print within this many mm of the edge of the key
+$legend_margin = 0.8;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];

@@ -180,7 +180,10 @@ module additive_features(inset) {
     if($key_bump) keybump($key_bump_depth, $key_bump_edge);
     if(!inset && $children > 0) color($secondary_color) children();
   }
-  if($outset_legends) legends(0);
+  if($outset_legends) {
+    legends(0);
+    autolegends(0);
+  }
   // render the clearance check if it's enabled, but don't have it intersect with anything
   if ($clearance_check) %clearance_check();
 }
@@ -190,7 +193,10 @@ module subtractive_features(inset) {
   top_of_key() {
     if (inset && $children > 0) color($secondary_color) children();
   }
-  if(!$outset_legends) legends($inset_legend_depth);
+  if(!$outset_legends) {
+    legends($inset_legend_depth);
+    autolegends($inset_legend_depth);
+  }
   // subtract the clearance check if it's enabled, letting the user see the
   // parts of the keycap that will hit the cherry switch
   // this is a little confusing as it eats the stem too

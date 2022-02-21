@@ -3,3 +3,4 @@
 include <features/key_bump.scad>
 include <features/clearance_check.scad>
 include <features/legends.scad>
+include <features/autolegends.scad>

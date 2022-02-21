@@ -170,6 +170,18 @@ module front_legend(text, position=[0,0], size=undef) {
     children();
 }
 
+module autolegend(texts) {
+    // $autolegends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    $autolegends = texts;
+    children();
+}
+
+module front_autolegend(texts) {
+    font_size = size == undef ? $font_size : size;
+    $front_autolegends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
 module bump(depth=undef) {
     $key_bump = true;
     $key_bump_depth = depth == undef ? $key_bump_depth : depth;

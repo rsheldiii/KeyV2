@@ -147,18 +147,23 @@ $double_sculpted = false;
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $legends = [];
+$autolegends = [];
 
 //list of front legends to place on a key format: [text, halign, valign, size]
 //halign = "left" or "center" or "right"
 //valign = "top" or "center" or "bottom"
 // Currently does not work with thingiverse customizer, and actually breaks it
 $front_legends = [];
+$front_autolegends = [];
 
 // print legends on the front of the key instead of the top
 $front_print_legends = false;
 
 // how recessed inset legends / artisans are from the top of the key
 $inset_legend_depth = 0.2;
+
+// legends are not allowed to print within this many mm of the edge of the key
+$legend_margin = 0.8;
 
 // Dimensions of alps stem
 $alps_stem = [4.45, 2.25];
