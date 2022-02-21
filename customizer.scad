@@ -1130,7 +1130,7 @@ module upside_down() {
 module sideways() {
   $key_shape_type = "flat_sided_square";
   $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
-  extra_y_rotation = atan2($width_difference/2,$total_depth);
+  extra_y_rotation = atan2($width_difference/2,$total_depth); // TODO assumes centered top
   translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
   rotate([0,90 + extra_y_rotation ,0]) children();
 }
@@ -1158,7 +1158,14 @@ module auto_place() {
     translate_u(x,-y) children(child_index);
   }
 }
-module arrows(profile, rows = [4,4,4,3]) {
+
+// suggested settings for resin prints
+module resin() {
+  $stem_slop = 0;
+  $stem_inner_slop = 0;
+  $stem_support_type = "disable";
+  children();
+}module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
   legends = ["←", "↓", "→", "↑"];
 
@@ -3308,7 +3315,7 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
@@ -3494,7 +3501,7 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
@@ -3690,7 +3697,7 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
@@ -4049,7 +4056,7 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
@@ -4292,7 +4299,7 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
@@ -4361,7 +4368,7 @@ module tines_support(stem_type, stem_support_height, slop) {
         }
 
         // 2 vertical tines holding either side of the cruciform
-        for (x = [1.15, -1.15]) {
+        for (x = [2, -2]) {
           translate([x,0,$stem_support_height / 2]) {
             cube([
               0.5,

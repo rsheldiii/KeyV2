@@ -195,7 +195,7 @@ module upside_down() {
 module sideways() {
   $key_shape_type = "flat_sided_square";
   $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
-  extra_y_rotation = atan2($width_difference/2,$total_depth);
+  extra_y_rotation = atan2($width_difference/2,$total_depth); // TODO assumes centered top
   translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
   rotate([0,90 + extra_y_rotation ,0]) children();
 }
@@ -222,4 +222,12 @@ module auto_place() {
     y = floor(child_index / row_size);
     translate_u(x,-y) children(child_index);
   }
+}
+
+// suggested settings for resin prints
+module resin() {
+  $stem_slop = 0;
+  $stem_inner_slop = 0;
+  $stem_support_type = "disable";
+  children();
 }

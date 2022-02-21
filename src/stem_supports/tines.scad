@@ -36,7 +36,7 @@ module tines_support(stem_type, stem_support_height, slop) {
         }
 
         // 2 vertical tines holding either side of the cruciform
-        for (x = [1.15, -1.15]) {
+        for (x = [2, -2]) {
           translate([x,0,$stem_support_height / 2]) {
             cube([
               0.5,
