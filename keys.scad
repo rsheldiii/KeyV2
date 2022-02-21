@@ -17,4 +17,13 @@ dcs_row(5) legend("⇪", size=9) key();
 } */
 
 // example layout
-/* preonic_default("dcs"); */
+// preonic_default("dcs") key();
+
+// example dual top Legend row
+// legend_test=[["{","["],["|","\\"],[":",";"],["?","/"],["_","-"]];
+// for (x = [0:1:4]) {
+//  translate_u(0,-x) dsa_row() legend(legend_test[x], [0,0,6]) key();
+// }
+
+// example dual top layout
+// full_size_dual_default("cherry") key();
