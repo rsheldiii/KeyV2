@@ -17,4 +17,4 @@ dcs_row(5) legend("⇪", size=9) key();
 } */
 
 // example layout
-/* preonic_default("dcs"); */
+/* preonic_default("dcs") key(); */
