@@ -1,7 +1,7 @@
 include <../functions.scad>
 include <cherry.scad>
 
-module box_cherry_stem(depth, slop) {
+module box_cherry_stem(depth, slop, throw) {
   difference(){
     // outside shape
     linear_extrude(height = depth) {

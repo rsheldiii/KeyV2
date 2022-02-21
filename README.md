@@ -9,6 +9,14 @@ Relevant links:
 * Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
 * Buy me a coffee: https://ko-fi.com/rsheldiii, but only if you want to!
 
+# V2.0.0 Cutover
+
+As of February 19th, 2022, the v2.0.0 branch has been merged into master.
+
+This branch completely rewrote key.scad to be much simpler and faster. If you're just starting out, please use master and report any bugs you find.
+
+If you branched off this repo previously, merging to master will probably break any additions you've made. If you need the prior version of the code for whatever reason, v1.1.0 is master just before the v2.0.0 merge. I will be backporting bugfixes to the v1 branch, so if you see v1.1.1 or higher, use that instead.
+
 ## How to run
 
 #### OpenSCAD Proper (recommended way)
@@ -19,9 +27,15 @@ First, you'll need OpenSCAD: http://www.openscad.org/downloads.html. I highly re
 
 After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the directory should do it. 
 
-To make your own key, all you need to do is open `keys.scad` with openSCAD and [modify this line](https://github.com/rsheldiii/KeyV2/blob/master/keys.scad#L12)! (Line 12)   
-Here is an example you can replace the line with to get started. This is for a ctrl key on an OEM keyboard:  
-`u(1.25) oem_row(3) legend("ctrl", size=4.5) key();`
+To make your own key, all you need to do is open `keys.scad` with openSCAD and modify this line:
+
+```
+dcs_row(5) legend("⇪", size=9) key();
+``` 
+
+To be whatever you want. For example, this is for a ctrl key on an OEM keyboard:  
+
+```u(1.25) oem_row(3) legend("ctrl", size=4.5) key();```
 
 It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
 
@@ -175,7 +189,7 @@ Prints from this library are still challenging, despite all efforts to the contr
 
 1. If your stem isn't fitting in the switch, try upping the slop factor, accessed by giving your keystem function a numeric value (eg `cherry(0.5) key()`). This will lengthen the cross and decrease the overall size of the keystem. The default value is 0.3, and represents millimeters. Note that even if you have a resin printer, you should probably keep the default value; keys printed with 0 slop will barely fit on the stem.
 
-2. If your keystem breaks off the bed mid-print, you can enable a brim by adding the `brimmed()` modifier. This will give a solid base for the keystem to anchor into.
+2. If your keystem breaks off the bed mid-print, you can enable a brim by adding the `brimmed_stem_support()` modifier. This will give a solid base for the keystem to anchor into.
 
 3. If you are unsatisfied with the quality of the top surface, you can try printing the keycap on a different surface than the bottom, though it may impact the quality of the stem.
 

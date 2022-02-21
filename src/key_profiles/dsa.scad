@@ -12,7 +12,7 @@ module dsa_row(row=3, column = 0) {
   $dish_skew_y = 0;
   $height_slices = 10;
   $enable_side_sculpting = true;
-  $corner_radius = 0.25;
+  $corner_radius = 1;
 
   $top_tilt_y = side_tilt(column);
   extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;

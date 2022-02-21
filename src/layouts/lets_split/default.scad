@@ -1,7 +1,7 @@
 include <../layout.scad>
 
 // negative numbers are used for spacing
-lets_split_mapping = [
+lets_split_layout = [
   [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
   [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
   [1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1, 1],
@@ -9,5 +9,5 @@ lets_split_mapping = [
 ];
 
 module lets_split_default(profile) {
-  layout(lets_split_mapping, profile, row_sculpting_offset=1) children();
+  layout(lets_split_layout, profile, row_sculpting_offset=1) children();
 }

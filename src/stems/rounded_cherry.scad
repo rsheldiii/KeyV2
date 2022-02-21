@@ -1,7 +1,7 @@
 include <../functions.scad>
 include <cherry.scad>
 
-module rounded_cherry_stem(depth, slop) {
+module rounded_cherry_stem(depth, slop, throw) {
   difference(){
     cylinder(d=$rounded_cherry_stem_d, h=depth);
 

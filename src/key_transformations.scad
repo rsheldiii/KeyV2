@@ -1,10 +1,9 @@
 // kind of a catch-all at this point for any directive that doesn't fit in the other files
 
-//TODO duplicate def to not make this a special var. maybe not worth it
-unit = 19.05;
+include <constants.scad>
 
 module translate_u(x=0, y=0, z=0){
-  translate([x * unit, y*unit, z*unit]) children();
+  translate([x * $unit, y*$unit, z*$unit]) children();
 }
 
 module no_stem_support() {
@@ -42,6 +41,12 @@ module inverted() {
 module rotated() {
   $stem_rotation = 90;
   children();
+}
+
+module vertically_stabilized(mm=12, vertical=true, type=undef) {
+  stabilized(mm,vertical,type) {
+    children();
+  }
 }
 
 module stabilized(mm=12, vertical = false, type=undef) {
@@ -86,27 +91,55 @@ module blank() {
   children();
 }
 
-module cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "cherry";
   children();
 }
 
-module alps(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module alps(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "alps";
   children();
 }
 
-module rounded_cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module rounded_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "rounded_cherry";
   children();
 }
 
-module box_cherry(slop) {
-  $stem_slop = slop ? slop : $stem_slop;
+module box_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
   $stem_type = "box_cherry";
+  children();
+}
+
+module choc(slop = 0.05) {
+  echo("WARN:\n\n * choc support is experimental.\n * $stem_slop is overridden.\n * it is also recommended to print them upside down if you can\n\n");
+  $stem_throw = 3;
+  $stem_slop = slop;
+
+  $bottom_key_width = 18;
+  $bottom_key_height = 17;
+
+  $stem_type = "choc";
+  children();
+}
+
+// a hacky way to make "low profile" keycaps
+module low_profile() {
+  $width_difference = $width_difference / 1.5;
+  $height_difference = $height_difference / 1.5;
+  // helps tilted keycaps not have holes if worst comes to worst
+  $inner_shape_type = "dished";
+
+  $top_tilt = $top_tilt / 1.25;
+
+  $total_depth = ($total_depth / 2) < 7 ? 7 : $total_depth / 2;
+
+  // just to make sure
+  $stem_throw = 3;
   children();
 }
 
@@ -176,4 +209,17 @@ module debug() {
   $quaternary_color = [0.5,0.5,0.5,0.2];
 
   %children();
+}
+
+// auto-place children in a grid.
+// For this to work all children have to be single keys, no for loops etc
+module auto_place() {
+  num_children = $children;
+  row_size = round(pow(num_children, 0.5));
+
+  for (child_index = [0:num_children-1]) {
+    x = child_index % row_size;
+    y = floor(child_index / row_size);
+    translate_u(x,-y) children(child_index);
+  }
 }

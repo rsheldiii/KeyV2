@@ -1,11 +1,10 @@
-$fs=.1;
-unit = 19.05;
-
+include <constants.scad>
 include <shapes/ISO_enter.scad>
 include <shapes/sculpted_square.scad>
 include <shapes/rounded_square.scad>
 include <shapes/square.scad>
 include <shapes/oblong.scad>
+include <shapes/regular_polygon.scad>
 
 // size: at progress 0, the shape is supposed to be this size
 // delta: at progress 1, the keycap is supposed to be size - delta
@@ -25,6 +24,10 @@ module key_shape(size, delta, progress = 0) {
     square_shape(size, delta, progress);
   } else if ($key_shape_type == "oblong") {
     oblong_shape(size, delta, progress);
+  } else if ($key_shape_type == "hexagon") {
+    regular_polygon_shape(size, delta, progress);
+  } else if ($key_shape_type == "octagon") {
+    regular_polygon_shape(size, delta, progress, sides=8);
   } else {
     echo("Warning: unsupported $key_shape_type");
   }
