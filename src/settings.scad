@@ -79,10 +79,6 @@ $stem_inset = 0;
 // How many degrees to rotate the stems. useful for sideways keycaps, maybe
 $stem_rotation = 0;
 
-// enable to have stem support extend past the keycap bottom, to (hopefully) the next
-// keycap. only works on tines right now
-$extra_long_stem_support = false;
-
 /* [Shape] */
 
 // Key shape type, determines the shape of the key. default is 'rounded square'
