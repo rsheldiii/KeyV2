@@ -16,12 +16,12 @@ module brim_support(stem_type, stem_support_height, slop) {
         }
       }
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "rounded_cherry") {
     difference() {
       cylinder(d=$rounded_cherry_stem_d * 2, h=stem_support_height);
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "box_cherry") {
     difference() {
@@ -31,7 +31,7 @@ module brim_support(stem_type, stem_support_height, slop) {
         }
       }
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if (stem_type == "cherry_stabilizer") {
     difference() {
@@ -41,7 +41,7 @@ module brim_support(stem_type, stem_support_height, slop) {
         }
       }
 
-      inside_cherry_cross(slop);
+      inside_cherry_cross($stem_inner_slop);
     }
   } else if(stem_type == "choc") {
     translate([-5.7/2,0,0]) linear_extrude(height=stem_support_height) {
