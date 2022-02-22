@@ -193,11 +193,66 @@ module upside_down() {
 }
 
 module sideways() {
+  $stem_support_type = "disable";
   $key_shape_type = "flat_sided_square";
   $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
   extra_y_rotation = atan2($width_difference/2,$total_depth); // TODO assumes centered top
   translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
   rotate([0,90 + extra_y_rotation ,0]) children();
+}
+
+/* this is hard to explain. we want the angle of the back of the keycap.
+ * first we draw a line at the back of the keycap perpendicular to the ground.
+ * then we extend the line created by the slope of the keytop to that line
+ * the angle of the latter line off the ground is $top_tilt, and
+ * you can create a right triangle with the adjacent edge being $bottom_key_height/2
+ * raised up $total_depth. this gets you x, the component of the extended 
+ * keytop slope line, and y, a component of the first perpendicular line.
+ * by a very similar triangle you get r and s, where x is the hypotenuse of that
+ * right triangle and the right angle is again against the first perpendicular line
+ * s is the opposite line in the right triangle required to find q, the angle
+ * of the back. if you subtract r from $total_depth plus y you can now use these
+ * two values in atan to find the angle of interest.
+ */
+module backside() {
+  $stem_support_type = "disable";
+
+  // $key_shape_type = "flat_sided_square";
+
+  a = $bottom_key_height;
+  b = $total_depth;
+  c = top_total_key_height();
+
+  x = (a / 2 - $top_skew) / cos(-$top_tilt) - c / 2;
+  y = sin(-$top_tilt) * (x + c/2);
+  r = sin(-$top_tilt) * x;
+  s = cos(-$top_tilt) * x;
+
+  q = atan2(s, (y + b - r));
+  
+  translate([0,0,cos(q) * total_key_height()/2])
+    rotate([-90 - q, 0,0]) children();
+}
+
+// this is just backside with a few signs switched
+module frontside() {
+  $stem_support_type = "disable";
+
+  // $key_shape_type = "flat_sided_square";
+
+  a = $bottom_key_height;
+  b = $total_depth;
+  c = top_total_key_height();
+
+  x = (a / 2 + $top_skew) / cos($top_tilt) - c / 2;
+  y = sin($top_tilt) * (x + c/2);
+  r = sin($top_tilt) * x;
+  s = cos($top_tilt) * x;
+
+  q = atan2(s, (y + b - r));
+
+  translate([0,0,cos(q) * total_key_height()/2])
+  rotate([90 + q, 0,0]) children();
 }
 
 // emulating the % modifier.
