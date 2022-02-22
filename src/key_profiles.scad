@@ -13,6 +13,7 @@ include <key_profiles/grid.scad>
 include <key_profiles/regular_polygon.scad>
 include <key_profiles/cherry.scad>
 include <key_profiles/dss.scad>
+include <key_profiles/asa.scad>
 
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
@@ -26,6 +27,8 @@ module key_profile(key_profile_type, row, column=0) {
     dss_row(row, column) children();
   } else if (key_profile_type == "sa") {
     sa_row(row, column) children();
+  } else if (key_profile_type == "asa") {
+    asa_row(row, column) children();
   } else if (key_profile_type == "g20") {
     g20_row(row, column) children();
   } else if (key_profile_type == "hipro") {
