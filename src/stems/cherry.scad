@@ -2,7 +2,7 @@ include <../functions.scad>
 
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
-extra_vertical = 0.6;
+extra_vertical = 100;
 
 module inside_cherry_cross(slop) {
   // inside cross
