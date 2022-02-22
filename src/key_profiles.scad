@@ -8,6 +8,7 @@ include <key_profiles/dsa.scad>
 include <key_profiles/sa.scad>
 include <key_profiles/g20.scad>
 include <key_profiles/hipro.scad>
+include <key_profiles/mt3.scad>
 include <key_profiles/grid.scad>
 include <key_profiles/regular_polygon.scad>
 include <key_profiles/cherry.scad>
@@ -37,6 +38,8 @@ module key_profile(key_profile_type, row, column=0) {
     octagonal_row(row, column) children();
   } else if (key_profile_type == "cherry") {
     cherry_row(row, column) children();
+  } else if (key_profile_type == "mt3") {
+    mt3_row(row, column) children();  
   } else if (key_profile_type == "disable") {
     children();
   } else {

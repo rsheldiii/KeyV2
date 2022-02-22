@@ -1,4 +1,3 @@
-// my own measurements
 module hipro_row(row=3, column=0) {
   $key_shape_type = "sculpted_square";
 
@@ -7,7 +6,7 @@ module hipro_row(row=3, column=0) {
 
   $width_difference = ($bottom_key_width - 12.3);
   $height_difference = ($bottom_key_height - 12.65);
-  $dish_type = "spherical";
+  $dish_type = "squared scoop";
   $dish_depth = 0.75;
   $dish_skew_x = 0;
   $dish_skew_y = 0;

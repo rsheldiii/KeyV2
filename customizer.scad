@@ -214,6 +214,12 @@ $3d_surface_step = 10;
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
 
+// When sculpting sides using sculpted_square, how much in should the tops come
+$side_sculpting_factor = 4.5;
+// When sculpting corners, how much extra radius should be added
+$corner_sculpting_factor = 1;
+// When doing more side sculpting corners, how much extra radius should be added
+$more_side_sculpting_factor = 0.4;
 // key width functions
 
 module u(u=1) {
@@ -509,7 +515,6 @@ module g20_row(row=3, column = 0) {
     children();
   }
 }
-// my own measurements
 module hipro_row(row=3, column=0) {
   $key_shape_type = "sculpted_square";
 
@@ -518,7 +523,7 @@ module hipro_row(row=3, column=0) {
 
   $width_difference = ($bottom_key_width - 12.3);
   $height_difference = ($bottom_key_height - 12.65);
-  $dish_type = "spherical";
+  $dish_type = "squared scoop";
   $dish_depth = 0.75;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
@@ -545,6 +550,57 @@ module hipro_row(row=3, column=0) {
   } else if (row == 4 || row == 5){
     $total_depth = 12.25 + extra_height;
     $top_tilt = 13;
+    children();
+  } else {
+    children();
+  }
+}
+// This is an imperfect attempt to clone the MT3 profile
+module mt3_row(row=3, column=0, deep_dish=false) {
+  $key_shape_type = "sculpted_square";
+
+  $bottom_key_width = 18.35;
+  $bottom_key_height = 18.6;
+
+  $width_difference = ($bottom_key_width - 13.0);
+  $height_difference = ($bottom_key_height - 13.0);
+  $dish_type = "squared spherical";
+  $dish_depth = deep_dish ? 1.6 : 1.2;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 0;
+  $height_slices = 10;
+  $corner_radius = 1;
+
+  $more_side_sculpting_factor = 0.75;
+
+  $top_tilt_y = side_tilt(column);
+  extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  if (row == 0){
+    // TODO I didn't change these yet
+    $total_depth = 14.7 + extra_height;
+    $top_tilt = -12.5;
+    children();
+  } else if (row == 1) {
+    $total_depth = 13.1 + extra_height;
+    $top_tilt = -6;
+    children();
+  }  else if (row == 2) {
+    $total_depth = 10.7 + extra_height;
+    $top_tilt = -6;
+    children();
+  } else if (row == 3) {
+    $total_depth = 10.7 + extra_height;
+    $top_tilt = 6;
+    children();
+  } else if (row == 4){
+    $total_depth = 11.6 + extra_height;
+    $top_tilt = 12;
+    children();
+  } else if (row >= 5) {
+    $total_depth = 11.6 + extra_height;
+    $top_tilt = 0;
     children();
   } else {
     children();
@@ -787,6 +843,8 @@ module key_profile(key_profile_type, row, column=0) {
     octagonal_row(row, column) children();
   } else if (key_profile_type == "cherry") {
     cherry_row(row, column) children();
+  } else if (key_profile_type == "mt3") {
+    mt3_row(row, column) children();  
   } else if (key_profile_type == "disable") {
     children();
   } else {
@@ -2104,19 +2162,11 @@ function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
   );
 // rounded square shape with additional sculpting functions to better approximate
 
-// When sculpting sides, how much in should the tops come
-side_sculpting_factor = 4.5;
-// When sculpting corners, how much extra radius should be added
-corner_sculpting_factor = 1;
-// When doing more side sculpting corners, how much extra radius should be added
-more_side_sculpting_factor = 0.4;
-
-
 // side sculpting functions
 // bows the sides out on stuff like SA and DSA keycaps
-function side_sculpting(progress) = (1 - progress) * side_sculpting_factor;
+function side_sculpting(progress) = (1 - progress) * $side_sculpting_factor;
 // makes the rounded corners of the keycap grow larger as they move upwards
-function corner_sculpting(progress) = pow(progress, 2) * corner_sculpting_factor;
+function corner_sculpting(progress) = pow(progress, 2) * $corner_sculpting_factor;
 
 module sculpted_square_shape(size, delta, progress) {
   width = size[0];
@@ -2141,7 +2191,7 @@ module sculpted_square_shape(size, delta, progress) {
 
   offset(r = extra_corner_radius_this_slice, $fa=360/$shape_facets) {
     offset(r = -extra_corner_radius_this_slice) {
-      side_rounded_square(square_size, r = more_side_sculpting_factor * progress);
+      side_rounded_square(square_size, r = $more_side_sculpting_factor * progress);
     }
   }
 }
@@ -2196,7 +2246,7 @@ function skin_sculpted_square_shape(size, delta, progress, thickness_difference)
       width - extra_width_this_slice - thickness_difference,
       height - extra_height_this_slice - thickness_difference
     ]
-  ) new_side_rounded_square(square_size, more_side_sculpting_factor * progress, extra_corner_radius_this_slice);
+  ) new_side_rounded_square(square_size, $more_side_sculpting_factor * progress, extra_corner_radius_this_slice);
 
 
 module side_rounded_square(size, r) {
@@ -4615,6 +4665,62 @@ module spherical_dish(width, height, depth, inverted){
     }
   }
 }
+module squared_spherical_dish(width, height, depth, inverted=false) {
+    chord = pow(pow(height / 2, 2) + pow(width / 2, 2),0.5);
+    direction = inverted ? -1 : 1;
+    r=max(height,width,chord) / 5;
+    // ^^^^^ Nothing special about this code to figure out r.
+    // I just modeled up 1u, 1.25u, 1.5u, 2u, 2.25u, and 2.75u
+    // keys and messed around until I came up with something that
+    // looked reasonable for all key sizes.  This just seems to work
+    // well for all sizes
+
+    translate([-width / 2, -height / 2, 0 * direction]) {
+      resize([width, height, depth])
+        hull() {
+          cube([chord,chord,0.001]);
+          // Use something larger in this translate than -depth 
+          // (like -chord) if you want more of a defined circle
+          // in the keywell
+          translate([chord/2, chord/2, -depth]) 
+            sphere(r=r, $fn=128);
+        }
+    }
+}
+module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=4, den=5){
+  // changable numerator/denoninator on where to place the square's corners
+  // for example, num=2, den=3 means the dish will happen at 1/3 and 2/3 the
+  // width and the height.  Defaults to 4/5. Customizable when calling 
+  // this module
+  //
+  // This was initially intended for the scoop on the HiPro, since that's what
+  // it uses.  Use "hipro_row()" if that's what you'd like.  However, I do NOT
+  // know how close the inner square is for the HiPro keycaps.  In fact, it could
+  // just be a sphere, in which the "squared spherical" scoop is more appropriate.
+  // If, however, it the "squared scoop" makes sense, you can adjust where the square
+  // lands with the num (numerator) and den (denominator) variables.  For instance,
+  // "3" and "4" mean 3/4 of the width/height is where the flat part starts.
+
+  chord = pow(pow(height/2, 2) + pow(width/2, 2),0.5);
+  direction = inverted ? -1 : 1;
+
+  //This is the set of points to hull around for the scoop
+  points=[
+    [height/den - height/2, width/den - width/2, -chord],
+    [num*height/den - height/2, width/den - width/2, -chord],
+    [height/den - height/2, num*width/den - width/2, -chord],
+    [num*height/den - height/2, num*width/den - width/2, -chord]
+  ];
+
+  resize([height,width,depth])
+    hull() {
+      shape_slice(1,0,0);
+      for(i=[0:len(points)-1]) {
+        translate(points[i])
+          sphere(r=r,$fn=64);
+      }
+  }
+}
 module flat_dish(width, height, depth, inverted){
   cube([width + 100,height + 100, depth], center=true);
 }
@@ -4792,11 +4898,9 @@ geodesic=false;
 module  dish(width, height, depth, inverted) {
     if($dish_type == "cylindrical"){
       cylindrical_dish(width, height, depth, inverted);
-    }
-    else if ($dish_type == "spherical") {
+    } else if ($dish_type == "spherical") {
       spherical_dish(width, height, depth, inverted);
-    }
-    else if ($dish_type == "sideways cylindrical"){
+    } else if ($dish_type == "sideways cylindrical"){
       sideways_cylindrical_dish(width, height, depth, inverted);
     } else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
@@ -4806,6 +4910,10 @@ module  dish(width, height, depth, inverted) {
       flat_dish(width, height, depth, inverted);
     } else if ($dish_type == "disable") {
       // else no dish
+    } else if ($dish_type == "squared spherical") {
+      squared_spherical_dish(width, height, depth, inverted=inverted);
+    } else if ($dish_type == "squared scoop") {
+      squared_scoop_dish(width, height, depth, inverted=inverted);
     } else {
       echo("WARN: $dish_type unsupported");
     }
@@ -5089,13 +5197,13 @@ module linear_extrude_shape_hull(thickness_difference, depth_difference, extra_s
 module hull_shape_hull(thickness_difference, depth_difference, extra_slices = 0) {
   for (index = [0:$height_slices - 1 + extra_slices]) {
     hull() {
-      shape_slice(index / $height_slices, thickness_difference, depth_difference);
-      shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
+      placed_shape_slice(index / $height_slices, thickness_difference, depth_difference);
+      placed_shape_slice((index + 1) / $height_slices, thickness_difference, depth_difference);
     }
   }
 }
 
-module shape_slice(progress, thickness_difference, depth_difference) {
+module placed_shape_slice(progress, thickness_difference, depth_difference) {
   skew_this_slice = $top_skew * progress;
   x_skew_this_slice = $top_skew_x * progress;
 
@@ -5106,17 +5214,21 @@ module shape_slice(progress, thickness_difference, depth_difference) {
 
   translate([x_skew_this_slice, skew_this_slice, depth_this_slice]) {
     rotate([tilt_this_slice,y_tilt_this_slice,0]){
-      linear_extrude(height = SMALLEST_POSSIBLE, scale = 1){
-        key_shape(
-          [
-            total_key_width(thickness_difference),
-            total_key_height(thickness_difference)
-          ],
-          [$width_difference, $height_difference],
-          progress
-        );
-      }
+      shape_slice(progress, thickness_difference, depth_difference);
     }
+  }
+}
+
+module shape_slice(progress, thickness_difference, depth_difference) {
+  linear_extrude(height = SMALLEST_POSSIBLE, scale = 1){
+    key_shape(
+      [
+        total_key_width(thickness_difference),
+        total_key_height(thickness_difference)
+      ],
+      [$width_difference, $height_difference],
+      progress
+    );
   }
 }
 
@@ -6520,7 +6632,13 @@ $3d_surface_step = 10;
 
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
-  key();
+
+// When sculpting sides using sculpted_square, how much in should the tops come
+$side_sculpting_factor = 4.5;
+// When sculpting corners, how much extra radius should be added
+$corner_sculpting_factor = 1;
+// When doing more side sculpting corners, how much extra radius should be added
+$more_side_sculpting_factor = 0.4;  key();
 }
 
 if (!$using_customizer) {

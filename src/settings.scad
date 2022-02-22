@@ -198,3 +198,10 @@ $3d_surface_step = 10;
 
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
+
+// When sculpting sides using sculpted_square, how much in should the tops come
+$side_sculpting_factor = 4.5;
+// When sculpting corners, how much extra radius should be added
+$corner_sculpting_factor = 1;
+// When doing more side sculpting corners, how much extra radius should be added
+$more_side_sculpting_factor = 0.4;
