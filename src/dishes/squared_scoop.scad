@@ -5,7 +5,7 @@ module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=4, de
   // this module
   //
   // This was initially intended for the scoop on the HiPro, since that's what
-  // it uses.  Use "hipro2_row()" if that's what you'd like.  However, I do NOT
+  // it uses.  Use "hipro_row()" if that's what you'd like.  However, I do NOT
   // know how close the inner square is for the HiPro keycaps.  In fact, it could
   // just be a sphere, in which the "squared spherical" scoop is more appropriate.
   // If, however, it the "squared scoop" makes sense, you can adjust where the square
@@ -25,7 +25,7 @@ module squared_scoop_dish(height, width, depth, r=0.5, inverted=false, num=4, de
 
   resize([height,width,depth])
     hull() {
-      cube([height,width,0.001],center=true);
+      shape_slice(1,0,0);
       for(i=[0:len(points)-1]) {
         translate(points[i])
           sphere(r=r,$fn=64);
