@@ -570,6 +570,7 @@ module mt3_row(row=3, column=0, deep_dish=false) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
+
   $corner_sculpting_factor = 2;
   $corner_radius = 0.0125;
 
@@ -819,7 +820,49 @@ module dss_row(n=3, column=0) {
     $top_tilt = 8;
     children();
   }
+}module asa_row(row=3, column = 0) {
+  $key_shape_type = "sculpted_square";
+  $bottom_key_height = 18.06;
+  $bottom_key_width = 18.05;      // Default (R3)
+  $total_depth = 10.35;           // Default (R3)
+  $top_tilt = 1.5;                // Default (R3)
+  $width_difference = 5.05;
+  $height_difference = 5.56;
+  $dish_type = "spherical";
+  $dish_depth = 1.2;
+  $dish_skew_x = 0;
+  $dish_skew_y = 0;
+  $top_skew = 1.75;
+  $stem_inset = 1.2;
+  $height_slices = 10;
+  $corner_radius = 1;
+
+  // this is _incredibly_ intensive
+  //$rounded_key = true;
+
+  if (row == 1){
+    $bottom_key_width = 17.95;
+    $width_difference = 4.95;
+    $total_depth = 10.65;
+    $top_tilt = 7;
+    children();
+  } else if (row == 2) {
+    $bottom_key_width = 18.17;
+    $width_difference = 5.17;
+    $total_depth = 9.65;
+    $top_tilt = 3.25;
+    children();
+  } else if (row == 4){
+    $bottom_key_width = 18.02;
+    $width_difference = 5.02;
+    $total_depth = 11.9;
+    $top_tilt = 0.43;
+    children();
+  } else {
+    children();
+  }
 }
+
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
   if (key_profile_type == "dcs") {
@@ -832,6 +875,8 @@ module key_profile(key_profile_type, row, column=0) {
     dss_row(row, column) children();
   } else if (key_profile_type == "sa") {
     sa_row(row, column) children();
+  } else if (key_profile_type == "asa") {
+    asa_row(row, column) children();
   } else if (key_profile_type == "g20") {
     g20_row(row, column) children();
   } else if (key_profile_type == "hipro") {
@@ -915,10 +960,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -1381,10 +1423,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -1463,10 +1502,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -2401,10 +2437,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3228,10 +3261,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3421,10 +3451,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3535,10 +3562,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3613,10 +3637,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3737,10 +3758,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3815,10 +3833,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -3957,10 +3972,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4105,10 +4117,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4183,10 +4192,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4354,10 +4360,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4432,10 +4435,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4897,10 +4897,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana
@@ -4997,9 +4994,7 @@ module 3d_surface_dish(width, height, depth, inverted) {
   // skew and tilt of the top. it's a pain to calculate though
   scale_factor = 1.1;
   // the edges on this behave differently than with the previous dish implementations
-  scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth])
-    rotate([inverted ? 0:180,0,180])
-      polar_3d_surface(bottom=-10);
+  scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth]) rotate([inverted ? 0:180,0,180]) polar_3d_surface(bottom=-10);
   /* %scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth]) rotate([180,0,0]) polar_3d_surface(bottom=-10); */
 
 }
@@ -5017,7 +5012,7 @@ module  dish(width, height, depth, inverted) {
       sideways_cylindrical_dish(width, height, depth, inverted);
     } else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
-    } else if ($dish_type == "3d surface") {
+    } else if ($dish_type == "3d_surface") {
       3d_surface_dish(width, height, depth, inverted);
     } else if ($dish_type == "flat") {
       flat_dish(width, height, depth, inverted);
@@ -5094,10 +5089,7 @@ function surface_function(x,y) = 1;
 // cylindrical
 function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
 // spherical
-function surface_function(x,y) = sin(acos(x/$3d_surface_size)) * sin(acos(y/$3d_surface_size)) * $dish_depth;
-// spherical without cos / sin
-// function surface_function(x,y) = (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
-
+function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
 // ripples
 /* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
 // Rosenbrock's banana

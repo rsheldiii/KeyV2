@@ -13,7 +13,9 @@ module mt3_row(row=3, column=0, deep_dish=false) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
-  $corner_radius = 1;
+
+  $corner_sculpting_factor = 2;
+  $corner_radius = 0.0125;
 
   $more_side_sculpting_factor = 0.75;
 
