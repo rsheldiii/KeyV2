@@ -190,11 +190,7 @@ $warning_color = [1,0,0, 0.15];
 $minkowski_facets = 30;
 $shape_facets =30;
 
-// 3d surface settings
-// unused for now
-$3d_surface_size = 100;
-// resolution in each axis. 10 = 10 divisions per x/y = 100 points total
-$3d_surface_step = 10;
+
 
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
@@ -205,3 +201,45 @@ $side_sculpting_factor = 4.5;
 $corner_sculpting_factor = 1;
 // When doing more side sculpting corners, how much extra radius should be added
 $more_side_sculpting_factor = 0.4;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 20;
+// resolution in each axis. 10 = 10 divisions per x/y = 100 points total. 
+// 5 = 20 divisions per x/y
+$3d_surface_step = 1;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) sin(dim) * size;
+
+$surface_distribution_function = linear_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
