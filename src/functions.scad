@@ -43,29 +43,6 @@ function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_ke
 // I derived this through a bunch of trig reductions I don't really understand.
 function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
 
-// 3d surface functions (still in beta)
-
-// monotonically increasing function that distributes the points of the surface mesh
-// only for polar_3d_surface right now
-// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
-function surface_distribution_function(dim, size) = sin(dim) * size;
-
-// the function that actually determines what the surface is.
-// feel free to override, the last one wins
-
-// debug
-function surface_function(x,y) = 1;
-// cylindrical
-function surface_function(x,y) = (sin(acos(x/$3d_surface_size)));
-// spherical
-function surface_function(x,y) = (sin(acos(x/$3d_surface_size))) * sin(acos(y/$3d_surface_size));
-// ripples
-/* function surface_function(x,y) = cos(pow(pow(x,2)+pow(y,2),0.5)*10)/4+0.75; */
-// Rosenbrock's banana
-/* function surface_function(x,y) = (pow(1-(x/100), 2) + 100 * pow((y/100)-pow((x/100),2),2))/200 + 0.1; */
-// y=x revolved around the y axis
-/* function surface_function(x,y) = 1/(pow(pow(x,2)+pow(y,2),0.5)/100 + .01); */
-/* function surface_function(x,y) = sin(rands(0,90,1,x+y)[0]); */
 // adds uniform rounding radius for round-anything polyRound
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length

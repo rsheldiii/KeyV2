@@ -22,7 +22,7 @@ module  dish(width, height, depth, inverted) {
       sideways_cylindrical_dish(width, height, depth, inverted);
     } else if ($dish_type == "old spherical") {
       old_spherical_dish(width, height, depth, inverted);
-    } else if ($dish_type == "3d_surface") {
+    } else if ($dish_type == "3d surface") {
       3d_surface_dish(width, height, depth, inverted);
     } else if ($dish_type == "flat") {
       flat_dish(width, height, depth, inverted);
