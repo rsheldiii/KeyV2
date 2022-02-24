@@ -198,9 +198,7 @@ Prints from this library are still challenging, despite all efforts to the contr
 That's it, if you have any questions feel free to open an issue or leave a comment on thingiverse!
 
 ## TODO:
- * replace linear_extrude_shape_hull with skin_extrude_shape_hull or something, to enable concave extrusions
- * replace current ISO enter shape with one that works for `skin()`
- * generate dishes via math?
+moved to [TODO doc](./TODO.md)
 
 ## Contributions welcome
 
