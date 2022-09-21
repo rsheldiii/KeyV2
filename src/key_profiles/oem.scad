@@ -1,4 +1,5 @@
 use <../functions.scad>
+include <../settings.scad>
 
 module oem_row(row=3, column = 0) {
   $bottom_key_width = 18.05;
