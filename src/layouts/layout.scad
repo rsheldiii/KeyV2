@@ -1,5 +1,6 @@
 use <../key_transformations.scad>
 use <../key_profiles.scad>
+use <../key_sizes.scad>
 
 // sums all values, unless a value is negative, in which case it makes it positive
 // dirty hack to allow for large gaps in keysets
