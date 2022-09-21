@@ -1,3 +1,5 @@
+use <../functions.scad>
+
 module grid_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;

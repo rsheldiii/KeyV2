@@ -1,3 +1,5 @@
+use <../functions.scad>
+
 // based off GMK keycap set
 
 module cherry_row(row=3, column=0) {

@@ -1,3 +1,5 @@
+use <../functions.scad>
+
 module hipro_row(row=3, column=0) {
   $key_shape_type = "sculpted_square";
 
