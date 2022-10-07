@@ -13,7 +13,12 @@ module asa_row(row=3, column = 0) {
   $top_skew = 1.75;
   $stem_inset = 1.2;
   $height_slices = 10;
+
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   // this is _incredibly_ intensive
   //$rounded_key = true;

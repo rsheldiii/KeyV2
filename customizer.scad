@@ -91,8 +91,10 @@ $rounded_cherry_stem_d = 5.5;
 // Inset stem requires support but is more accurate in some profiles
 // can be negative to make outset stems!
 $stem_inset = 0;
-// How many degrees to rotate the stems. useful for sideways keycaps, maybe
+// How many degrees to rotate the stems. useful for sideways keycaps
 $stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
 
 /* [Shape] */
 
@@ -210,29 +212,29 @@ $shape_facets =30;
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
 
-// When sculpting sides using sculpted_square, how much in should the tops come
-$side_sculpting_factor = 4.5;
-// When sculpting corners, how much extra radius should be added
-$corner_sculpting_factor = 1;
-// When doing more side sculpting corners, how much extra radius should be added
-$more_side_sculpting_factor = 0.4;
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
 
 // 3d surface functions (still in beta)
 
 // 3d surface settings
 // unused for now
-$3d_surface_size = 20;
-// resolution in each axis. 10 = 10 divisions per x/y = 100 points total. 
-// 5 = 20 divisions per x/y
-$3d_surface_step = 1;
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
 
 // monotonically increasing function that distributes the points of the surface mesh
 // only for polar_3d_surface right now
 // if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
 sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
-linear_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
 
-$surface_distribution_function = linear_surface_distribution;
+$surface_distribution_function = sinusoidal_surface_distribution;
 
 // the function that actually determines what the surface is.
 // feel free to override, the last one wins
@@ -250,6 +252,10 @@ random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
 bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
 
 $surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
 
 // ripples
 /* 
@@ -438,8 +444,15 @@ module dsa_row(row=3, column = 0) {
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $height_slices = 10;
-  $enable_side_sculpting = true;
+
+  $dish_type = "3d surface";
+  $surface_function = spherical_surface;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
+  
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
 
   $top_tilt_y = side_tilt(column);
   extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
@@ -476,7 +489,12 @@ module sa_row(n=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
+
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   // this is _incredibly_ intensive
   /* $rounded_key = true; */
@@ -567,7 +585,12 @@ module hipro_row(row=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
+
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   $top_tilt_y = side_tilt(column);
   extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
@@ -609,10 +632,12 @@ module mt3_row(row=3, column=0, deep_dish=false) {
   $top_skew = 0;
   $height_slices = 10;
 
-  $corner_sculpting_factor = 2;
   $corner_radius = 0.0125;
-
   $more_side_sculpting_factor = 0.75;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2) * 2;
+
 
   $top_tilt_y = side_tilt(column);
   extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;
@@ -822,10 +847,13 @@ module dss_row(n=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
-  $enable_side_sculpting = true;
   // might wanna change this if you don't minkowski
   // do you even minkowski bro
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   // this is _incredibly_ intensive
   /* $rounded_key = true; */
@@ -873,7 +901,12 @@ module dss_row(n=3, column=0) {
   $top_skew = 1.75;
   $stem_inset = 1.2;
   $height_slices = 10;
+
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   // this is _incredibly_ intensive
   //$rounded_key = true;
@@ -918,7 +951,7 @@ module typewriter_row(n=3, column=0) {
   $inverted_dish = true;
   $stem_inset = -4.5;
   $stem_throw = 5;
-  $dish_depth = 1;
+  $dish_depth = 4;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 0;
@@ -933,6 +966,70 @@ module typewriter_row(n=3, column=0) {
   extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
 
   base_depth = 3.5;
+  if (n <= 1){
+    $total_depth = base_depth + 2.5 + extra_height;
+    $top_tilt = -13;
+
+    children();
+  } else if (n == 2) {
+    $total_depth = base_depth + 0.5 + extra_height;
+    $top_tilt = -7;
+
+    children();
+  } else if (n == 3) {
+    $total_depth = base_depth + extra_height;
+    $top_tilt = 0;
+
+    children();
+  } else if (n == 4){
+    $total_depth = base_depth + 0.5 + extra_height;
+    $top_tilt = 7;
+
+    children();
+  } else {
+    $total_depth = base_depth + extra_height;
+    $top_tilt = 0;
+
+    children();
+  }
+}// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+// Regular polygon shapes CIRCUMSCRIBE the sphere of diameter $bottom_key_width
+// This is to make tiling them easier, like in the case of hexagonal keycaps etc
+
+// this function doesn't set the key shape, so you can't use it directly without some fiddling
+module hex_row(n=3, column=0) {
+  $bottom_key_width = $unit - 0.5;
+  $bottom_key_height = $unit - 0.5;
+  
+  $width_difference = 0;
+  $height_difference = 0;
+  
+  $dish_type = "spherical";
+  $key_shape_type = "hexagon";
+
+  $stem_inset = -2.5;
+  $stem_throw = 3;
+
+  // $dish_depth = 1;
+
+  $top_skew = 0;
+  $height_slices = 1;
+  $stem_support_type = "disable";
+  
+  $dish_overdraw_width = -8.25;
+  $dish_overdraw_height = -8.25;
+//   $corner_radius = 1;
+
+  // this is _incredibly_ intensive
+  /* $rounded_key = true; */
+
+  $top_tilt_y = side_tilt(column);
+  extra_height = $double_sculpted ? extra_side_tilt_height(column) : 0;
+
+  base_depth = 4;
   if (n <= 1){
     $total_depth = base_depth + 2.5 + extra_height;
     $top_tilt = -13;
@@ -982,6 +1079,8 @@ module key_profile(key_profile_type, row, column=0) {
     grid_row(row, column) children();
   } else if (key_profile_type == "typewriter") {
     typewriter_row(row, column) children();
+  } else if (key_profile_type == "hex") { // reddit.com/r/MechanicalKeyboards/comments/kza7ji
+    hex_row(row, column) children();
   } else if (key_profile_type == "hexagon") {
     hexagonal_row(row, column) children();
   } else if (key_profile_type == "octagon") {
@@ -1005,7 +1104,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1023,6 +1122,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -1049,6 +1152,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 module spacebar() {
   $inverted_dish = $dish_type != "disable";
   $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
@@ -1445,7 +1551,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1463,6 +1569,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -1488,7 +1598,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -1501,7 +1614,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -1519,6 +1632,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -1544,7 +1661,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// Library: round-anything
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// Library: round-anything
 // Version: 1.0
 // Author: IrevDev
 // Contributors: TLC123
@@ -2313,9 +2433,9 @@ module sculpted_square_shape(size, delta, progress) {
   width_difference = delta[0];
   height_difference = delta[1];
   // makes the sides bow
-  extra_side_size =  side_sculpting(progress);
+  extra_side_size =  $side_sculpting(progress);
   // makes the rounded corners of the keycap grow larger as they move upwards
-  extra_corner_size = corner_sculpting(progress);
+  extra_corner_size = $corner_sculpting(progress);
 
   // computed values for this slice
   extra_width_this_slice = (width_difference - extra_side_size) * progress;
@@ -2371,9 +2491,9 @@ function skin_sculpted_square_shape(size, delta, progress, thickness_difference)
     width_difference = delta[0],
     height_difference = delta[1],
     // makes the sides bow
-    extra_side_size =  side_sculpting(progress),
+    extra_side_size =  $side_sculpting(progress),
     // makes the rounded corners of the keycap grow larger as they move upwards
-    extra_corner_size = corner_sculpting(progress),
+    extra_corner_size = $corner_sculpting(progress),
 
     // computed values for this slice
     extra_width_this_slice = (width_difference - extra_side_size) * progress,
@@ -2413,7 +2533,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -2431,6 +2551,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -2457,6 +2581,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // we do this weird key_shape_type check here because rounded_square uses
 // square_shape, and we want flat sides to work for that too.
 // could be refactored, idk
@@ -3214,7 +3341,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3232,6 +3359,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3258,6 +3389,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // we do this weird key_shape_type check here because rounded_square uses
 // square_shape, and we want flat sides to work for that too.
 // could be refactored, idk
@@ -3383,7 +3517,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3401,6 +3535,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3427,6 +3565,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 100;
@@ -3471,7 +3612,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3489,6 +3630,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3514,7 +3659,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -3523,7 +3671,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3541,6 +3689,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3567,6 +3719,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 100;
@@ -3621,7 +3776,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3639,6 +3794,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3664,7 +3823,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -3673,7 +3835,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3691,6 +3853,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3717,6 +3883,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 100;
@@ -3789,7 +3958,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3807,6 +3976,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3833,6 +4006,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 0.6;
@@ -3911,7 +4087,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3929,6 +4105,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3954,7 +4134,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -3963,7 +4146,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -3981,6 +4164,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4007,6 +4194,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 100;
@@ -4108,7 +4298,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -4126,6 +4316,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4151,7 +4345,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -4160,7 +4357,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -4178,6 +4375,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4204,6 +4405,9 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 // extra length to the vertical tine of the inside cherry cross
 // splits the stem into halves - allows easier fitment
 extra_vertical = 100;
@@ -4504,6 +4708,10 @@ module sideways_cylindrical_dish(width, height, depth, inverted){
   }
 }
 module spherical_dish(width, height, depth, inverted){
+  // these variables take into account corner_radius and corner_sculpting, resulting in a more correct dish
+  // they don't fix the core issue though (dishes adding / subtracting height on the edges of the keycap), so I've disabled them
+  // new_width = $key_shape_type == "sculpted_square" ? width - distance_between_circumscribed_and_inscribed($corner_radius + $corner_sculpting(1)) : width;
+  // new_height = $key_shape_type == "sculpted_square" ? height - distance_between_circumscribed_and_inscribed($corner_radius + $corner_sculpting(1)) : height;
 
   //same thing as the cylindrical dish here, but we need the corners to just touch - so we have to find the hypotenuse of the top
   chord = pow((pow(width,2) + pow(height, 2)),0.5); //getting diagonal of the top
@@ -4599,7 +4807,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -4617,6 +4825,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4643,8 +4855,11 @@ function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
 
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
 module 3d_surface(size=$3d_surface_size, step=$3d_surface_step, bottom=-SMALLEST_POSSIBLE){
-  function p(x, y) = [ x, y, max(0,$surface_function(x, y)) ];
+  function p(x, y) = [ x, y, max(0,$surface_function(x, y) * $corner_smoothing_surface_function(x,y)) ];
   function p0(x, y) = [ x, y, bottom ];
   function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
   function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
@@ -4682,7 +4897,7 @@ module polar_3d_surface(size, step, bottom=-SMALLEST_POSSIBLE){
   function p(x, y) = [
     $surface_distribution_function(to_polar(x, size), size),
     $surface_distribution_function(to_polar(y, size), size),
-    max(0,$surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)))
+    max(0,$surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)) * $corner_smoothing_surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)))
   ];
   function p0(x, y) = [ x, y, bottom ];
   function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
@@ -4725,7 +4940,7 @@ module 3d_surface_dish(width, height, depth, inverted) {
   // it doesn't have to be dead reckoning for anything but sculpted sides
   // we know the angle of the sides from the width difference, height difference,
   // skew and tilt of the top. it's a pain to calculate though
-  scale_factor = 1.11;
+  scale_factor = 1.05;
   // the edges on this behave differently than with the previous dish implementations
   scale([width*scale_factor/$3d_surface_size/2,height*scale_factor/$3d_surface_size/2,depth])
     rotate([inverted ? 0:180,0,180])
@@ -4770,7 +4985,7 @@ $unit=19.05;
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -4788,6 +5003,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4813,7 +5032,10 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
-// TODO this define doesn't do anything besides tell me I used flat() in this file
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// TODO this define doesn't do anything besides tell me I used flat() in this file
 // is it better than not having it at all?
 module flat(stem_type, loft, height) {
   translate([0,0,loft + 500]){
@@ -6011,7 +6233,7 @@ function profile_segment_length(profile,i) = norm(profile[(i+1)%len(profile)] - 
 // Generates an array with n copies of value (default 0)
 function dup(value=0,n) = [for (i = [1:n]) value];
 
-// key shape including dish. used as the ouside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
+// key shape including dish. used as the outside and inside shape in hollow_key(). allows for itself to be shrunk in depth and width / height
 module shape(thickness_difference, depth_difference=0){
   dished(depth_difference, $inverted_dish) {
     color($primary_color) shape_hull(thickness_difference, depth_difference, $inverted_dish ? 200 : 0);
@@ -6040,12 +6262,13 @@ module minkowski_object() {
   }
 }
 
-module envelope(depth_difference=0) {
-  s = 1.5;
+module envelope(depth_difference=0, extra_floor_depth=0) {
+  size = 1.5;
+  
   hull(){
-    cube([total_key_width() * s, total_key_height() * s, 0.01], center = true);
+    translate([0,0,extra_floor_depth]) cube([key_width_at_progress(extra_floor_depth / $total_depth) * size, key_height_at_progress(extra_floor_depth / $total_depth) * size, 0.01], center = true);
     top_placement(SMALLEST_POSSIBLE + depth_difference){
-      cube([top_total_key_width() * s, top_total_key_height() * s, 0.01], center = true);
+      cube([top_total_key_width() * size, top_total_key_height() * size, 0.01], center = true);
     }
   }
 }
@@ -6058,12 +6281,12 @@ module dished(depth_difference = 0, inverted = false) {
     children();
     difference(){
       union() {
-        // envelope is needed to "fill in" the rest of the keycap
-        envelope(depth_difference);
+        // envelope is needed to "fill in" the rest of the keycap. intersections with small objects are much faster than differences with large objects
+        envelope(depth_difference, $stem_inset);
         if (inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
       }
       if (!inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
-      /* %top_placement(depth_difference) _dish(); */
+      // %top_placement(depth_difference) _dish();
     }
   }
 }
@@ -6073,6 +6296,7 @@ module dished(depth_difference = 0, inverted = false) {
 module _dish(inverted=$inverted_dish) {
   translate([$dish_offset_x,0,0]) color($secondary_color) 
   dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
+  // %dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
 }
 
 // puts its children at each keystem position provided
@@ -6233,7 +6457,7 @@ module key(inset=false) {
     };
 
     if ($inner_shape_type != "disable") {
-      translate([0,0,-SMALLEST_POSSIBLE]) {
+      translate([0,0,-SMALLEST_POSSIBLE]) { // avoids moire
         inner_total_shape();
       }
     }
@@ -6243,10 +6467,12 @@ module key(inset=false) {
     };
   }
 
-  // if $stem_inset is less than zero, we add the
+  // semi-hack to make sure negative inset stems don't poke through the top of the keycap
   if ($stem_inset < 0) {
-    stems_and_stabilizers();
-  }
+    dished(0, $inverted_dish) {
+      stems_and_stabilizers();
+    }
+  } 
 }
 
 // actual full key with space carved out and keystem/stabilizer connectors
@@ -6330,8 +6556,10 @@ $rounded_cherry_stem_d = 5.5;
 // Inset stem requires support but is more accurate in some profiles
 // can be negative to make outset stems!
 $stem_inset = 0;
-// How many degrees to rotate the stems. useful for sideways keycaps, maybe
+// How many degrees to rotate the stems. useful for sideways keycaps
 $stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
 
 /* [Shape] */
 
@@ -6449,29 +6677,29 @@ $shape_facets =30;
 // "flat" / "dished" / "disable"
 $inner_shape_type = "flat";
 
-// When sculpting sides using sculpted_square, how much in should the tops come
-$side_sculpting_factor = 4.5;
-// When sculpting corners, how much extra radius should be added
-$corner_sculpting_factor = 1;
-// When doing more side sculpting corners, how much extra radius should be added
-$more_side_sculpting_factor = 0.4;
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
 
 // 3d surface functions (still in beta)
 
 // 3d surface settings
 // unused for now
-$3d_surface_size = 20;
-// resolution in each axis. 10 = 10 divisions per x/y = 100 points total. 
-// 5 = 20 divisions per x/y
-$3d_surface_step = 1;
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
 
 // monotonically increasing function that distributes the points of the surface mesh
 // only for polar_3d_surface right now
 // if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
 sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
-linear_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
 
-$surface_distribution_function = linear_surface_distribution;
+$surface_distribution_function = sinusoidal_surface_distribution;
 
 // the function that actually determines what the surface is.
 // feel free to override, the last one wins
@@ -6489,6 +6717,10 @@ random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
 bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
 
 $surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
 
 // ripples
 /* 
