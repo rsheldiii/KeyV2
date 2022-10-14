@@ -1,3 +1,5 @@
+use <../functions.scad>
+include <../settings.scad>
 include <../constants.scad>
 // Regular polygon shapes CIRCUMSCRIBE the sphere of diameter $bottom_key_width
 // This is to make tiling them easier, like in the case of hexagonal keycaps etc

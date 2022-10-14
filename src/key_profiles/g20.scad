@@ -1,3 +1,6 @@
+use <../functions.scad>
+include <../settings.scad>
+
 module g20_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;

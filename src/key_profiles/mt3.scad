@@ -1,3 +1,6 @@
+use <../functions.scad>
+include <../settings.scad>
+
 // This is an imperfect attempt to clone the MT3 profile
 module mt3_row(row=3, column=0, deep_dish=false) {
   $key_shape_type = "sculpted_square";

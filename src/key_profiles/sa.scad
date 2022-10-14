@@ -1,3 +1,6 @@
+use <../functions.scad>
+include <../settings.scad>
+
 module sa_row(n=3, column=0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.4;
