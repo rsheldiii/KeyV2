@@ -15,6 +15,7 @@ include <key_profiles/cherry.scad>
 include <key_profiles/dss.scad>
 include <key_profiles/asa.scad>
 include <key_profiles/typewriter.scad>
+include <key_profiles/hex.scad>
 
 // man, wouldn't it be so cool if functions were first order
 module key_profile(key_profile_type, row, column=0) {
@@ -38,6 +39,8 @@ module key_profile(key_profile_type, row, column=0) {
     grid_row(row, column) children();
   } else if (key_profile_type == "typewriter") {
     typewriter_row(row, column) children();
+  } else if (key_profile_type == "hex") { // reddit.com/r/MechanicalKeyboards/comments/kza7ji
+    hex_row(row, column) children();
   } else if (key_profile_type == "hexagon") {
     hexagonal_row(row, column) children();
   } else if (key_profile_type == "octagon") {

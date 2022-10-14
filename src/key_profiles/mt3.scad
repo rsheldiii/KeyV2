@@ -14,10 +14,12 @@ module mt3_row(row=3, column=0, deep_dish=false) {
   $top_skew = 0;
   $height_slices = 10;
 
-  $corner_sculpting_factor = 2;
   $corner_radius = 0.0125;
-
   $more_side_sculpting_factor = 0.75;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2) * 2;
+
 
   $top_tilt_y = side_tilt(column);
   extra_height =  $double_sculpted ? extra_side_tilt_height(column) : 0;

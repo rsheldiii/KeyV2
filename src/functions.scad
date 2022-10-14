@@ -4,7 +4,7 @@ include <constants.scad>
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
 
-function stem_height() = $total_depth - $dish_depth - $stem_inset;
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
 
 // cherry stem dimensions
 function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
@@ -22,6 +22,10 @@ function cherry_cross(slop, extra_vertical = 0) = [
   // vertical tine
   [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
 ];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -47,3 +51,7 @@ function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_in
 function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
 // computes millimeter length from unit length
 function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;

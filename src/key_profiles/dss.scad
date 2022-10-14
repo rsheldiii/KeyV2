@@ -10,10 +10,13 @@ module dss_row(n=3, column=0) {
   $dish_skew_y = 0;
   $top_skew = 0;
   $height_slices = 10;
-  $enable_side_sculpting = true;
   // might wanna change this if you don't minkowski
   // do you even minkowski bro
   $corner_radius = 1;
+  $more_side_sculpting_factor = 0.4;
+
+  $side_sculpting = function(progress) (1 - progress) * 4.5;
+  $corner_sculpting = function(progress) pow(progress, 2);
 
   // this is _incredibly_ intensive
   /* $rounded_key = true; */

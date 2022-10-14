@@ -3,7 +3,7 @@
 include <../functions.scad>
 
 module 3d_surface(size=$3d_surface_size, step=$3d_surface_step, bottom=-SMALLEST_POSSIBLE){
-  function p(x, y) = [ x, y, max(0,$surface_function(x, y)) ];
+  function p(x, y) = [ x, y, max(0,$surface_function(x, y) * $corner_smoothing_surface_function(x,y)) ];
   function p0(x, y) = [ x, y, bottom ];
   function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];
   function face(x, y) = [ p(x, y + step), p(x + step, y + step), p(x + step, y), p(x + step, y), p(x, y), p(x, y + step) ];
@@ -41,7 +41,7 @@ module polar_3d_surface(size, step, bottom=-SMALLEST_POSSIBLE){
   function p(x, y) = [
     $surface_distribution_function(to_polar(x, size), size),
     $surface_distribution_function(to_polar(y, size), size),
-    max(0,$surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)))
+    max(0,$surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)) * $corner_smoothing_surface_function($surface_distribution_function(to_polar(x, size), size), $surface_distribution_function(to_polar(y, size), size)))
   ];
   function p0(x, y) = [ x, y, bottom ];
   function rev(b, v) = b ? v : [ v[3], v[2], v[1], v[0] ];

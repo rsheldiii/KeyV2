@@ -13,9 +13,9 @@ module sculpted_square_shape(size, delta, progress) {
   width_difference = delta[0];
   height_difference = delta[1];
   // makes the sides bow
-  extra_side_size =  side_sculpting(progress);
+  extra_side_size =  $side_sculpting(progress);
   // makes the rounded corners of the keycap grow larger as they move upwards
-  extra_corner_size = corner_sculpting(progress);
+  extra_corner_size = $corner_sculpting(progress);
 
   // computed values for this slice
   extra_width_this_slice = (width_difference - extra_side_size) * progress;
@@ -71,9 +71,9 @@ function skin_sculpted_square_shape(size, delta, progress, thickness_difference)
     width_difference = delta[0],
     height_difference = delta[1],
     // makes the sides bow
-    extra_side_size =  side_sculpting(progress),
+    extra_side_size =  $side_sculpting(progress),
     // makes the rounded corners of the keycap grow larger as they move upwards
-    extra_corner_size = corner_sculpting(progress),
+    extra_corner_size = $corner_sculpting(progress),
 
     // computed values for this slice
     extra_width_this_slice = (width_difference - extra_side_size) * progress,
