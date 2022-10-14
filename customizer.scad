@@ -445,9 +445,6 @@ module dsa_row(row=3, column = 0) {
   $dish_skew_y = 0;
   $height_slices = 10;
 
-  $dish_type = "3d surface";
-  $surface_function = spherical_surface;
-
   $side_sculpting = function(progress) (1 - progress) * 4.5;
   $corner_sculpting = function(progress) pow(progress, 2);
   
