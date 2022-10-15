@@ -345,6 +345,566 @@ module 6_25uh() {
 
 // unlike the other files with their own dedicated folders, this one doesn't
 // need a selector. I wrote one anyways for customizer support though
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module dcs_row(row=3, column=0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
@@ -392,6 +952,566 @@ module dcs_row(row=3, column=0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module oem_row(row=3, column = 0) {
   $bottom_key_width = 18.05;
   $bottom_key_height = 18.05;
@@ -431,6 +1551,566 @@ module oem_row(row=3, column = 0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module dsa_row(row=3, column = 0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.24; // 18.4;
@@ -474,6 +2154,566 @@ module dsa_row(row=3, column = 0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module sa_row(n=3, column=0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.4;
@@ -525,6 +2765,566 @@ module sa_row(n=3, column=0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module g20_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
@@ -568,6 +3368,566 @@ module g20_row(row=3, column = 0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module hipro_row(row=3, column=0) {
   $key_shape_type = "sculpted_square";
 
@@ -613,6 +3973,566 @@ module hipro_row(row=3, column=0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // This is an imperfect attempt to clone the MT3 profile
 module mt3_row(row=3, column=0, deep_dish=false) {
   $key_shape_type = "sculpted_square";
@@ -668,6 +4588,566 @@ module mt3_row(row=3, column=0, deep_dish=false) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module grid_row(row=3, column = 0) {
   $bottom_key_width = 18.16;
   $bottom_key_height = 18.16;
@@ -716,6 +5196,565 @@ module grid_row(row=3, column = 0) {
   }
 }
 // a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -784,6 +5823,566 @@ module octagonal_row(n=3, column=0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // based off GMK keycap set
 
 module cherry_row(row=3, column=0) {
@@ -832,6 +6431,566 @@ module cherry_row(row=3, column=0) {
     children();
   }
 }
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 module dss_row(n=3, column=0) {
   $key_shape_type = "sculpted_square";
   $bottom_key_width = 18.24;
@@ -883,16 +7042,576 @@ module dss_row(n=3, column=0) {
     $top_tilt = 8;
     children();
   }
-}module asa_row(row=3, column = 0) {
-  $key_shape_type = "sculpted_square";
-  $bottom_key_height = 18.06;
-  $bottom_key_width = 18.05;      // Default (R3)
-  $total_depth = 10.35;           // Default (R3)
+}// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+module asa_row(row=3, column = 0) {
+$key_shape_type = "sculpted_square";
+  $bottom_key_height = 18.15;
+  $bottom_key_width = 18.10;      // Default (R3)
+  $total_depth = 10.75;           // Default (R3)
   $top_tilt = 1.5;                // Default (R3)
-  $width_difference = 5.05;
-  $height_difference = 5.56;
+  $width_difference = 6.20;
+  $height_difference = 6.55;
   $dish_type = "spherical";
-  $dish_depth = 1.2;
+  $dish_depth = 1.3;
   $dish_skew_x = 0;
   $dish_skew_y = 0;
   $top_skew = 1.75;
@@ -909,28 +7628,581 @@ module dss_row(n=3, column=0) {
   //$rounded_key = true;
 
   if (row == 1){
-    $bottom_key_width = 17.95;
-    $width_difference = 4.95;
-    $total_depth = 10.65;
-    $top_tilt = 7;
+    $total_depth = 10.5;
+    $top_tilt = 9.33;
     children();
   } else if (row == 2) {
-    $bottom_key_width = 18.17;
-    $width_difference = 5.17;
-    $total_depth = 9.65;
-    $top_tilt = 3.25;
+    $total_depth = 9.95;
+    $top_tilt = 4;
     children();
   } else if (row == 4){
-    $bottom_key_width = 18.02;
-    $width_difference = 5.02;
-    $total_depth = 11.9;
+    $total_depth = 12.55;
     $top_tilt = 0.43;
     children();
-  } else {
+  }else{
     children();
-  }
+  }  		
 }
 // a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
+// I use functions when I need to compute special variables off of other special variables
+// functions need to be explicitly included, unlike special variables, which
+// just need to have been set before they are used. hence this file
+
+function stem_height() = $total_depth - ($dish_depth * ($inverted_dish ? -1 : 1))  - $stem_inset;
+
+// cherry stem dimensions
+function outer_cherry_stem(slop) = [7.2 - slop * 2, 5.5 - slop * 2];
+
+// cherry stabilizer stem dimensions
+function outer_cherry_stabilizer_stem(slop) = [4.85 - slop * 2, 6.05 - slop * 2];
+
+// box (kailh) switches have a bit less to work with
+function outer_box_cherry_stem(slop) = [6 - slop, 6 - slop];
+
+// .005 purely for aesthetics, to get rid of that ugly crosshatch
+function cherry_cross(slop, extra_vertical = 0) = [
+  // horizontal tine
+  [4.03 + slop, 1.25 + slop / 3],
+  // vertical tine
+  [1.15 + slop / 3, 4.23 + extra_vertical + slop / 3 + SMALLEST_POSSIBLE],
+];
+
+// TODO add side_sculpting
+function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+
+// actual mm key width and height
+function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
+function total_key_height(delta = 0) = $bottom_key_height + $unit * ($key_height - 1) - delta;
+
+// actual mm key width and height at the top
+function top_total_key_width() = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
+function top_total_key_height() = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference;
+
+function side_tilt(column) = asin($unit * column / $double_sculpt_radius);
+// tan of 0 is 0, division by 0 is nan, so we have to guard
+function extra_side_tilt_height(column) = side_tilt(column) ? ($double_sculpt_radius - ($unit * abs(column)) / tan(abs(side_tilt(column)))) : 0;
+
+// (I think) extra length of the side of the keycap due to the keytop being tilted.
+// necessary for calculating flat sided keycaps
+function vertical_inclination_due_to_top_tilt() = sin($top_tilt) * (top_total_key_height() - $corner_radius * 2) * 0.5;
+// how much you have to expand the front or back of the keytop to make the side
+// of the keycap a flat plane. 1 = front, -1 = back
+// I derived this through a bunch of trig reductions I don't really understand.
+function extra_keytop_length_for_flat_sides() = ($width_difference * vertical_inclination_due_to_top_tilt()) / ($total_depth);
+
+// adds uniform rounding radius for round-anything polyRound
+function add_rounding(p, radius)=[for(i=[0:len(p)-1])[p[i].x,p[i].y, radius]];
+// computes millimeter length from unit length
+function unit_length(length) = $unit * (length - 1) + 18.16;
+
+// if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
+// and vice versa. used to find the edge of a rounded_square
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;/* [Basic-Settings] */
+
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */// a safe theoretical distance between two vertices such that they don't collapse. hard to use
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
@@ -1096,7 +8368,257 @@ module key_profile(key_profile_type, row, column=0) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1151,7 +8673,374 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
 
 // if you have a radius of an inscribed circle, this function gives you the extra length for the radius of the circumscribed circle
 // and vice versa. used to find the edge of a rounded_square
-function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;
+function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1) * radius;// key width functions
+
+module u(u=1) {
+  $key_length = u;
+  children();
+}
+
+module 1u() {
+  u(1) children();
+}
+
+module 1_25u() {
+  u(1.25) children();
+}
+
+module 1_5u() {
+  u(1.5) children();
+}
+
+module 1_75u(){
+  u(1.75) children();
+}
+
+module 2u() {
+  u(2) children();
+}
+
+module 2_25u() {
+  u(2.25) children();
+}
+
+module 2_50u() {
+  u(2.5) children();
+}
+
+module 2_75u() {
+  u(2.75) children();
+}
+
+module 6_25u() {
+  u(6.25) children();
+}
+
+// key height functions
+
+module uh(u=1) {
+  $key_height = u;
+  children();
+}
+
+module 1uh() {
+  uh(1) children();
+}
+
+module 2uh() {
+  uh(2) children();
+}
+
+module 1_25uh() {
+  uh(1.25) children();
+}
+
+module 1_5uh() {
+  uh(1.5) children();
+}
+
+module 2_25uh() {
+  uh(2.25) children();
+}
+
+module 2_75uh() {
+  uh(2.75) children();
+}
+
+module 6_25uh() {
+  uh(6.25) children();
+}
+// kind of a catch-all at this point for any directive that doesn't fit in the other files
+
+// a safe theoretical distance between two vertices such that they don't collapse. hard to use
+SMALLEST_POSSIBLE = 1/128;
+$fs=0.1;
+$unit=19.05;
+
+module translate_u(x=0, y=0, z=0){
+  translate([x * $unit, y*$unit, z*$unit]) children();
+}
+
+module no_stem_support() {
+  $stem_support_type = "disable";
+  children();
+}
+
+module brimmed_stem_support(height = 0.4) {
+  $stem_support_type = "brim";
+  $stem_support_height = height;
+  children();
+}
+
+module tined_stem_support(height = 0.4) {
+  $stem_support_type = "tines";
+  $stem_support_height = height;
+  children();
+}
+
+module unsupported_stem() {
+  $stem_support_type = "disable";
+  children();
+}
+
+module rounded() {
+  $rounded_key = true;
+  children();
+}
+
+module inverted() {
+  $inverted_dish = true;
+  children();
+}
+
+module rotated() {
+  $stem_rotation = 90;
+  children();
+}
+
+module vertically_stabilized(mm=12, vertical=true, type=undef) {
+  stabilized(mm,vertical,type) {
+    children();
+  }
+}
+
+module stabilized(mm=12, vertical = false, type=undef) {
+  if (vertical) {
+    $stabilizer_type = (type ? type : ($stabilizer_type ? $stabilizer_type : "costar_stabilizer"));
+    $stabilizers = [
+    [0,  mm],
+    [0, -mm]
+    ];
+
+    children();
+  } else {
+    $stabilizer_type = (type ? type : ($stabilizer_type ? $stabilizer_type : "costar_stabilizer"));
+
+
+    $stabilizers = [
+      [mm,  0],
+      [-mm, 0]
+    ];
+
+    children();
+  }
+}
+
+module dishless() {
+  $dish_type = "disable";
+  children();
+}
+
+module inset(val=1) {
+  $stem_inset = val;
+  children();
+}
+
+module filled() {
+  $stem_type = "filled";
+  children();
+}
+
+module blank() {
+  $stem_type = "disable";
+  children();
+}
+
+module cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
+  $stem_type = "cherry";
+  children();
+}
+
+module alps(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
+  $stem_type = "alps";
+  children();
+}
+
+module rounded_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
+  $stem_type = "rounded_cherry";
+  children();
+}
+
+module box_cherry(slop = undef) {
+  $stem_slop = slop != undef ? slop : $stem_slop;
+  $stem_type = "box_cherry";
+  children();
+}
+
+module choc(slop = 0.05) {
+  echo("WARN:\n\n * choc support is experimental.\n * $stem_slop is overridden.\n * it is also recommended to print them upside down if you can\n\n");
+  $stem_throw = 3;
+  $stem_slop = slop;
+
+  $bottom_key_width = 18;
+  $bottom_key_height = 17;
+
+  $stem_type = "choc";
+  children();
+}
+
+// a hacky way to make "low profile" keycaps
+module low_profile() {
+  $width_difference = $width_difference / 1.5;
+  $height_difference = $height_difference / 1.5;
+  // helps tilted keycaps not have holes if worst comes to worst
+  $inner_shape_type = "dished";
+
+  $top_tilt = $top_tilt / 1.25;
+
+  $total_depth = ($total_depth / 2) < 7 ? 7 : $total_depth / 2;
+
+  // just to make sure
+  $stem_throw = 3;
+  children();
+}
+
+module flared_support() {
+  $support_type = "flared";
+  children();
+}
+
+module bar_support() {
+  $support_type = "bars";
+  children();
+}
+
+module flat_support() {
+  $support_type = "flat";
+  children();
+}
+
+module legend(text, position=[0,0], size=undef) {
+    font_size = size == undef ? $font_size : size;
+    $legends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
+module front_legend(text, position=[0,0], size=undef) {
+    font_size = size == undef ? $font_size : size;
+    $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    children();
+}
+
+module bump(depth=undef) {
+    $key_bump = true;
+    $key_bump_depth = depth == undef ? $key_bump_depth : depth;
+    children();
+}
+
+// kinda dirty, but it works
+// might not work great with fully sculpted profiles yet
+// NOTE: this needs to come after row declarations or it won't work
+module upside_down() {
+  if ($stem_inner_slop != 0) {
+    echo("it is recommended you set inner stem slop to 0 when you use upside_down()");
+  }
+
+  $stem_support_type = "disable";
+  // $top_tilt*2 because top_placement rotates by top_tilt for us
+  // first rotate 180 to get the keycaps to face the same direction
+  rotate([0,0,180]) top_placement() rotate([180+$top_tilt*2,0,0]) {
+    children();
+  }
+}
+
+module sideways() {
+  $stem_support_type = "disable";
+  $key_shape_type = "flat_sided_square";
+  $dish_overdraw_width = abs(extra_keytop_length_for_flat_sides());
+  extra_y_rotation = atan2($width_difference/2,$total_depth); // TODO assumes centered top
+  translate([0,0,cos(extra_y_rotation) * total_key_width()/2])
+  rotate([0,90 + extra_y_rotation ,0]) children();
+}
+
+/* this is hard to explain. we want the angle of the back of the keycap.
+ * first we draw a line at the back of the keycap perpendicular to the ground.
+ * then we extend the line created by the slope of the keytop to that line
+ * the angle of the latter line off the ground is $top_tilt, and
+ * you can create a right triangle with the adjacent edge being $bottom_key_height/2
+ * raised up $total_depth. this gets you x, the component of the extended 
+ * keytop slope line, and y, a component of the first perpendicular line.
+ * by a very similar triangle you get r and s, where x is the hypotenuse of that
+ * right triangle and the right angle is again against the first perpendicular line
+ * s is the opposite line in the right triangle required to find q, the angle
+ * of the back. if you subtract r from $total_depth plus y you can now use these
+ * two values in atan to find the angle of interest.
+ */
+module backside() {
+  $stem_support_type = "disable";
+
+  // $key_shape_type = "flat_sided_square";
+
+  a = $bottom_key_height;
+  b = $total_depth;
+  c = top_total_key_height();
+
+  x = (a / 2 - $top_skew) / cos(-$top_tilt) - c / 2;
+  y = sin(-$top_tilt) * (x + c/2);
+  r = sin(-$top_tilt) * x;
+  s = cos(-$top_tilt) * x;
+
+  q = atan2(s, (y + b - r));
+  
+  translate([0,0,cos(q) * total_key_height()/2])
+    rotate([-90 - q, 0,0]) children();
+}
+
+// this is just backside with a few signs switched
+module frontside() {
+  $stem_support_type = "disable";
+
+  // $key_shape_type = "flat_sided_square";
+
+  a = $bottom_key_height;
+  b = $total_depth;
+  c = top_total_key_height();
+
+  x = (a / 2 + $top_skew) / cos($top_tilt) - c / 2;
+  y = sin($top_tilt) * (x + c/2);
+  r = sin($top_tilt) * x;
+  s = cos($top_tilt) * x;
+
+  q = atan2(s, (y + b - r));
+
+  translate([0,0,cos(q) * total_key_height()/2])
+  rotate([90 + q, 0,0]) children();
+}
+
+// emulating the % modifier.
+// since we use custom colors, just using the % modifier doesn't work
+module debug() {
+  $primary_color = [0.5,0.5,0.5,0.2];
+  $secondary_color = [0.5,0.5,0.5,0.2];
+  $tertiary_color = [0.5,0.5,0.5,0.2];
+  $quaternary_color = [0.5,0.5,0.5,0.2];
+
+  %children();
+}
+
+// auto-place children in a grid.
+// For this to work all children have to be single keys, no for loops etc
+module auto_place() {
+  num_children = $children;
+  row_size = round(pow(num_children, 0.5));
+
+  for (child_index = [0:num_children-1]) {
+    x = child_index % row_size;
+    y = floor(child_index / row_size);
+    translate_u(x,-y) children(child_index);
+  }
+}
+
+// suggested settings for resin prints
+module resin() {
+  $stem_slop = 0;
+  $stem_inner_slop = 0;
+  $stem_support_type = "disable";
+  children();
+}
 module spacebar() {
   $inverted_dish = $dish_type != "disable";
   $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
@@ -1543,7 +9432,257 @@ $unit=19.05;
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -1606,7 +9745,257 @@ $unit=19.05;
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -2407,11 +10796,11 @@ function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
     add_rounding(
       iso_enter_vertices(
         size,
-        delta,
+        [delta.x - $side_sculpting(progress), delta.y - $side_sculpting(progress)],
         progress,
         thickness_difference
       ),
-      $corner_radius
+      $corner_radius + $corner_sculpting(progress)
     ),
     $shape_facets
   );
@@ -2525,7 +10914,257 @@ module side_rounded_square(size, r) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3333,7 +11972,257 @@ function skin_rounded_square(size, delta, progress, thickness_difference) =
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3509,7 +12398,257 @@ function skin_key_shape(size, delta, progress = 0, thickness_difference) =
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3604,7 +12743,257 @@ module cherry_stem(depth, slop, throw) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3663,7 +13052,257 @@ function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3768,7 +13407,257 @@ module rounded_cherry_stem(depth, slop, throw) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3827,7 +13716,257 @@ function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -3950,7 +14089,257 @@ module filled_stem(_depth, _slop, _throw) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4079,7 +14468,257 @@ module stem(stem_type, depth, slop, throw){
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4138,7 +14777,257 @@ function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4290,7 +15179,257 @@ module brim_support(stem_type, stem_support_height, slop) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4349,7 +15488,257 @@ function distance_between_circumscribed_and_inscribed(radius) = (pow(2, 0.5) - 1
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4799,7 +16188,257 @@ module flat_dish(width, height, depth, inverted){
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -4977,7 +16616,257 @@ module  dish(width, height, depth, inverted) {
 SMALLEST_POSSIBLE = 1/128;
 $fs=0.1;
 $unit=19.05;
+/* [Basic-Settings] */
 
+// Length in units of key. A regular key is 1 unit; spacebar is usually 6.25
+$key_length = 1.0; // Range not working in thingiverse customizer atm [1:0.25:16]
+
+// What type of stem you want. Most people want Cherry.
+$stem_type = "cherry";  // [cherry, alps, rounded_cherry, box_cherry, filled, disable]
+
+// The stem is the hardest part to print, so this variable controls how much 'slop' there is in the stem
+// if your keycaps stick in the switch raise this value
+$stem_slop = 0.35; // Not working in thingiverse customizer atm [0:0.01:1]
+// broke this out. if your keycaps are falling off lower this value. only works for cherry stems rn
+$stem_inner_slop = 0.2;
+
+// Font size used for text
+$font_size = 6;
+
+// Set this to true if you're making a spacebar!
+$inverted_dish = false;
+
+// change aggressiveness of double sculpting
+// this is the radius of the cylinder the keytops are placed on
+$double_sculpt_radius = 200;
+
+
+// Support type. default is "flared" for easy FDM printing; bars are more realistic, and flat could be for artisans
+$support_type = "flared"; // [flared, bars, flat, disable]
+
+// Supports for the stem, as it often comes off during printing. Reccommended for most machines
+$stem_support_type = "tines"; // [tines, brim, disabled]
+
+// make legends outset instead of inset.
+// broken off from artisan support since who wants outset legends?
+$outset_legends = false;
+
+/* [Key] */
+// Height in units of key. should remain 1 for most uses
+$key_height = 1.0;
+// Keytop thickness, aka how many millimeters between the inside and outside of the top surface of the key
+$keytop_thickness = 1;
+// Wall thickness, aka the thickness of the sides of the keycap. note this is the total thickness, aka 3 = 1.5mm walls
+$wall_thickness = 3;
+// Radius of corners of keycap
+$corner_radius = 1;
+// Width of the very bottom of the key
+$bottom_key_width = 18.16;
+// Height (from the front) of the very bottom of the key
+$bottom_key_height = 18.16;
+// How much less width there is on the top. eg top_key_width = bottom_key_width - width_difference
+$width_difference = 6;
+// How much less height there is on the top
+$height_difference = 4;
+// How deep the key is, before adding a dish
+$total_depth = 11.5;
+// The tilt of the dish in degrees. divided by key height
+$top_tilt = -6;
+// the y tilt of the dish in degrees. divided by key width.
+// for double axis sculpted keycaps and probably not much else
+$top_tilt_y = 0;
+// How skewed towards the back the top is (0 for center)
+$top_skew = 1.7;
+
+// how skewed towards the right the top is. unused, but implemented.
+// for double axis sculpted keycaps and probably not much else
+$top_skew_x = 0;
+
+/* [Stem] */
+
+// How far the throw distance of the switch is. determines how far the 'cross' in the cherry switch digs into the stem, and how long the keystem needs to be before supports can start. luckily, alps and cherries have a pretty similar throw. can modify to have stouter keycaps for low profile switches, etc
+$stem_throw = 4;
+// Diameter of the outside of the rounded cherry stem
+$rounded_cherry_stem_d = 5.5;
+
+
+// How much higher the stem is than the bottom of the keycap.
+// Inset stem requires support but is more accurate in some profiles
+// can be negative to make outset stems!
+$stem_inset = 0;
+// How many degrees to rotate the stems. useful for sideways keycaps
+$stem_rotation = 0;
+// How many degrees to rotate the keycap, but _not_ inside features (the stem). 
+$keycap_rotation = 0;
+
+/* [Shape] */
+
+// Key shape type, determines the shape of the key. default is 'rounded square'
+$key_shape_type = "rounded_square";
+// ISO enter needs to be linear extruded NOT from the center when not using skin. this tells the program how far up 'not from the center' is
+$linear_extrude_height_adjustment = 0;
+// How many slices will be made, to approximate curves on corners. Leave at 1 if you are not curving corners
+// If you're doing fancy bowed keycap sides, this controls how many slices you take
+$height_slices = 1;
+
+/* [Dish] */
+
+// What type of dish the key has. note that unlike stems and supports a dish ALWAYS gets rendered.
+$dish_type = "cylindrical"; // [cylindrical, spherical, sideways cylindrical, old spherical, disable]
+// How deep the dish 'digs' into the top of the keycap. this is max depth, so you can't find the height from total_depth - dish_depth. besides the top is skewed anyways
+$dish_depth = 1;
+// How skewed in the x direction the dish is
+$dish_skew_x = 0;
+// How skewed in the y direction (height) the dish is
+$dish_skew_y = 0;
+
+
+$dish_offset_x = 0;
+
+// If you need the dish to extend further, you can 'overdraw' the rectangle it will hit. this was mostly for iso enter and should be deprecated
+$dish_overdraw_width = 0;
+// Same as width but for height
+$dish_overdraw_height = 0;
+
+/* [Misc] */
+// There's a bevel on the cherry stems to aid insertion / guard against first layer squishing making a hard-to-fit stem.
+$cherry_bevel = true;
+
+// How tall in mm the stem support is, if there is any. stem support sits around the keystem and helps to secure it while printing.
+$stem_support_height = .8;
+// Font used for text
+$font="DejaVu Sans Mono:style=Book";
+// Whether or not to render fake keyswitches to check clearances
+$clearance_check = false;
+// Should be faster, also required for concave shapes
+
+// what kind of extrusion we use to create the keycap. "hull" is standard, "linear extrude" is legacy, "skin" is new and not well supported.
+$hull_shape_type = "hull"; // ["hull", "linear extrude", "skin"]
+
+// This doesn't work very well, but you can try
+$rounded_key = false;
+//minkowski radius. radius of sphere used in minkowski sum for minkowski_key function. 1.75 for G20
+$minkowski_radius = .33;
+
+/* [Features] */
+
+//insert locating bump
+$key_bump = false;
+//height of the location bump from the top surface of the key
+$key_bump_depth = 0.5;
+//distance to move the bump from the front edge of the key
+$key_bump_edge = 0.4;
+
+/* [Hidden] */
+
+// set this to true if you are making double sculpted keycaps
+$double_sculpted = false;
+
+//list of legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$legends = [];
+
+//list of front legends to place on a key format: [text, halign, valign, size]
+//halign = "left" or "center" or "right"
+//valign = "top" or "center" or "bottom"
+// Currently does not work with thingiverse customizer, and actually breaks it
+$front_legends = [];
+
+// print legends on the front of the key instead of the top
+$front_print_legends = false;
+
+// how recessed inset legends / artisans are from the top of the key
+$inset_legend_depth = 0.2;
+
+// Dimensions of alps stem
+$alps_stem = [4.45, 2.25];
+
+// Dimensions of choc stem
+$choc_stem = [1.2, 3];
+
+// Enable stabilizer stems, to hold onto your cherry or costar stabilizers
+$stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer, disable]
+
+// Ternaries are ONLY for customizer. they will NOT work if you're using this in
+// OpenSCAD. you should use stabilized(), openSCAD customizer,
+// or set $stabilizers directly
+// Array of positions of stabilizers
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+
+// Where the stems are in relation to the center of the keycap, in units. default is one in the center
+// Shouldn't work in thingiverse customizer, though it has been...
+$stem_positions = [[0,0]];
+
+// colors
+$primary_color = [.2667,.5882,1];
+$secondary_color = [.4412, .7, .3784];
+$tertiary_color = [1, .6941, .2];
+$quaternary_color = [.4078, .3569, .749];
+$warning_color = [1,0,0, 0.15];
+
+// how many facets circles will have when used in these features
+$minkowski_facets = 30;
+$shape_facets =30;
+
+
+
+// "flat" / "dished" / "disable"
+$inner_shape_type = "flat";
+
+// default side_sculpting function, linear
+$side_sculpting = function(progress) 0;
+$corner_sculpting = function(progress) 0;
+
+// you probably shouldn't touch this, it's internal to sculpted_square
+// modify side sculpting with the $side_sculpting function in the key profile files
+$more_side_sculpting_factor = 0;
+
+// 3d surface functions (still in beta)
+
+// 3d surface settings
+// unused for now
+$3d_surface_size = 1;
+// 3d surface point resolution. $3d_surface_size / $3d_surface_step = steps per x / y
+$3d_surface_step = 1/20;
+
+// monotonically increasing function that distributes the points of the surface mesh
+// only for polar_3d_surface right now
+// if it's linear it's a grid. sin(dim) * size concentrates detail around the edges
+sinusoidal_surface_distribution = function(dim,size) sin(dim) * size;
+linear_surface_distribution = function(dim,size) dim;
+
+$surface_distribution_function = sinusoidal_surface_distribution;
+
+// the function that actually determines what the surface is.
+// feel free to override, the last one wins
+
+// debug
+// $surface_function = function(x,y) 1;
+cylindrical_surface = function(x,y) (sin(acos(x/$3d_surface_size)));
+spherical_surface = function(x,y) (1 - (x/$3d_surface_size)^2)^0.5 * (1 - (y/$3d_surface_size)^2)^0.5;
+// looks a lot like mt3
+quartic_surface = function(x,y) (1 - (x/$3d_surface_size)^4)^0.5 * (1 - (y/$3d_surface_size)^4)^0.5;
+ripple_surface = function(x,y) cos((x^2+y^2)^0.5 * 50)/4 + 0.75; 
+rosenbrocks_banana_surface = function(x,y) (pow(1-(x/$3d_surface_size))^2 + 100 * pow((y/$3d_surface_size)-(x/$3d_surface_size)^2)^2)/200 + 0.1;
+spike_surface = function(x,y) 1/(((x/$3d_surface_size)^2+(y/$3d_surface_size)^2)^0.5) + .01;
+random_surface = function(x,y) sin(rands(0,90,1,x+y)[0]);
+bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
+
+$surface_function = bumps_surface; // bumps_surface;
+
+// can be used to smooth the corners of the 3d surface function, to make the dishes add / subtract less height. can really do anything it's just multiplying, but that's what I use it for
+$corner_smoothing_surface_function = function(x,y) 1;
+// $corner_smoothing_surface_function = function(x,y) (1 - pow(abs(x), 5)/$3d_surface_size) * (1 - pow(abs(y),5)/$3d_surface_size);
+
+// ripples
+/* 
+// Rosenbrock's banana
+/* $
+// y=x revolved around the y axis
+/* $surface_function =  */
+/* $surface_function =  */
 // I use functions when I need to compute special variables off of other special variables
 // functions need to be explicitly included, unlike special variables, which
 // just need to have been set before they are used. hence this file
@@ -5103,9 +16992,11 @@ module flat(stem_type, loft, height) {
   }
 }
 module bars(stem_type, loft, height) {
-  translate([0,0,loft + height / 2]){
-    cube([2, 100, height], center = true);
-    cube([100, 2, height], center = true);
+  rotate([0,0,45]) {
+    translate([0,0,loft + height / 2]){
+      cube([2, 100, height], center = true);
+      cube([100, 2, height], center = true);
+    }
   }
 }
 
