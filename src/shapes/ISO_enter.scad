@@ -59,11 +59,11 @@ function skin_iso_enter_shape(size, delta, progress, thickness_difference) =
     add_rounding(
       iso_enter_vertices(
         size,
-        delta,
+        [delta.x - $side_sculpting(progress), delta.y - $side_sculpting(progress)],
         progress,
         thickness_difference
       ),
-      $corner_radius
+      $corner_radius + $corner_sculpting(progress)
     ),
     $shape_facets
   );
