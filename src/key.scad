@@ -178,6 +178,14 @@ module inner_shape(extra_wall_thickness = 0, extra_keytop_thickness = 0) {
 // additive objects at the top of the key
 module additive_features(inset) {
   top_of_key() {
+    // Allow for key bump in layout
+    if ($layout_key_bump) {
+      for (layout_bump_key = $layout_bump_keys){
+        if (str($legends[0][0]) == layout_bump_key){
+          keybump($key_bump_depth, $key_bump_edge);
+        }
+      }
+    }
     if($key_bump) keybump($key_bump_depth, $key_bump_edge);
     if(!inset && $children > 0) color($secondary_color) children();
   }
