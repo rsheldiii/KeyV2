@@ -26,7 +26,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;

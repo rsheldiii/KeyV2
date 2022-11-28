@@ -625,7 +625,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -1232,7 +1232,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -1831,7 +1831,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -2434,7 +2434,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3045,7 +3045,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -3648,7 +3648,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4253,7 +4253,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -4868,7 +4868,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -5475,7 +5475,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -6103,7 +6103,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -6711,7 +6711,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -7322,7 +7322,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -7923,7 +7923,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -8644,7 +8644,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -8913,15 +8913,17 @@ module flat_support() {
   children();
 }
 
-module legend(text, position=[0,0], size=undef) {
+module legend(text, position=[0,0], size=undef, font=undef) {
     font_size = size == undef ? $font_size : size;
-    $legends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    font_face = font == undef ? $font : font;
+    $legends = [for(L=[$legends, [[text, position, font_size, font_face]]], a=L) a];
     children();
 }
 
-module front_legend(text, position=[0,0], size=undef) {
+module front_legend(text, position=[0,0], size=undef, font=undef) {
     font_size = size == undef ? $font_size : size;
-    $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    font_face = font == undef ? $font : font;
+    $front_legends = [for(L=[$front_legends, [[text, position, font_size, font_face]]], a=L) a];
     children();
 }
 
@@ -8961,7 +8963,7 @@ module sideways() {
  * then we extend the line created by the slope of the keytop to that line
  * the angle of the latter line off the ground is $top_tilt, and
  * you can create a right triangle with the adjacent edge being $bottom_key_height/2
- * raised up $total_depth. this gets you x, the component of the extended 
+ * raised up $total_depth. this gets you x, the component of the extended
  * keytop slope line, and y, a component of the first perpendicular line.
  * by a very similar triangle you get r and s, where x is the hypotenuse of that
  * right triangle and the right angle is again against the first perpendicular line
@@ -8984,7 +8986,7 @@ module backside() {
   s = cos(-$top_tilt) * x;
 
   q = atan2(s, (y + b - r));
-  
+
   translate([0,0,cos(q) * total_key_height()/2])
     rotate([-90 - q, 0,0]) children();
 }
@@ -9041,9 +9043,11 @@ module resin() {
   $stem_support_type = "disable";
   children();
 }
+
 module spacebar() {
   $inverted_dish = $dish_type != "disable";
   $dish_type = $dish_type != "disable" ? "sideways cylindrical" : "disable";
+  // $dish_type = "cylindrical";
   6_25u() stabilized(mm=50) children();
 }
 
@@ -9265,15 +9269,17 @@ module flat_support() {
   children();
 }
 
-module legend(text, position=[0,0], size=undef) {
+module legend(text, position=[0,0], size=undef, font=undef) {
     font_size = size == undef ? $font_size : size;
-    $legends = [for(L=[$legends, [[text, position, font_size]]], a=L) a];
+    font_face = font == undef ? $font : font;
+    $legends = [for(L=[$legends, [[text, position, font_size, font_face]]], a=L) a];
     children();
 }
 
-module front_legend(text, position=[0,0], size=undef) {
+module front_legend(text, position=[0,0], size=undef, font=undef) {
     font_size = size == undef ? $font_size : size;
-    $front_legends = [for(L=[$front_legends, [[text, position, font_size]]], a=L) a];
+    font_face = font == undef ? $font : font;
+    $front_legends = [for(L=[$front_legends, [[text, position, font_size, font_face]]], a=L) a];
     children();
 }
 
@@ -9313,7 +9319,7 @@ module sideways() {
  * then we extend the line created by the slope of the keytop to that line
  * the angle of the latter line off the ground is $top_tilt, and
  * you can create a right triangle with the adjacent edge being $bottom_key_height/2
- * raised up $total_depth. this gets you x, the component of the extended 
+ * raised up $total_depth. this gets you x, the component of the extended
  * keytop slope line, and y, a component of the first perpendicular line.
  * by a very similar triangle you get r and s, where x is the hypotenuse of that
  * right triangle and the right angle is again against the first perpendicular line
@@ -9336,7 +9342,7 @@ module backside() {
   s = cos(-$top_tilt) * x;
 
   q = atan2(s, (y + b - r));
-  
+
   translate([0,0,cos(q) * total_key_height()/2])
     rotate([-90 - q, 0,0]) children();
 }
@@ -9392,7 +9398,8 @@ module resin() {
   $stem_inner_slop = 0;
   $stem_support_type = "disable";
   children();
-}module arrows(profile, rows = [4,4,4,3]) {
+}
+module arrows(profile, rows = [4,4,4,3]) {
   positions = [[0, 0], [1, 0], [2, 0], [1, 1]];
   legends = ["←", "↓", "→", "↑"];
 
@@ -9708,7 +9715,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -10021,7 +10028,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -11190,7 +11197,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -12248,7 +12255,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -12674,7 +12681,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -13019,7 +13026,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -13328,7 +13335,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -13683,7 +13690,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -13992,7 +13999,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -14365,7 +14372,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -14744,7 +14751,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -15053,7 +15060,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -15455,7 +15462,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -15764,7 +15771,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -16091,6 +16098,7 @@ module sideways_cylindrical_dish(width, height, depth, inverted){
   translate([0,0, chord_length * direction]){
     // cylinder is rendered facing up, so we rotate it on the y axis first
     rotate([0,90,0]) cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
+    // %rotate([0,90,0]) cylinder(h = width + 20,r=rad, center=true); // +20 for fudge factor
   }
 }
 module spherical_dish(width, height, depth, inverted){
@@ -16464,7 +16472,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -16892,7 +16900,7 @@ function cherry_cross(slop, extra_vertical = 0) = [
 
 // TODO add side_sculpting
 function key_width_at_progress(progress = 0) = $bottom_key_width + ($unit * ($key_length - 1)) - $width_difference;
-function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_length - 1)) - $height_difference + $side_sculpting(progress);
+function key_height_at_progress(progress = 0) = $bottom_key_height + ($unit * ($key_height - 1)) - $height_difference + $side_sculpting(progress);
 
 // actual mm key width and height
 function total_key_width(delta = 0) = $bottom_key_width + $unit * ($key_length - 1) - delta;
@@ -16992,11 +17000,9 @@ module flat(stem_type, loft, height) {
   }
 }
 module bars(stem_type, loft, height) {
-  rotate([0,0,45]) {
-    translate([0,0,loft + height / 2]){
-      cube([2, 100, height], center = true);
-      cube([100, 2, height], center = true);
-    }
+  translate([0,0,loft + height / 2]){
+    cube([2, 100, height], center = true);
+    cube([100, 2, height], center = true);
   }
 }
 
@@ -17046,12 +17052,12 @@ module clearance_check() {
     }
   }
 }
-module keytext(text, position, font_size, depth) {
+module keytext(text, position, font_size, font_face, depth) {
   woffset = (top_total_key_width()/3.5) * position[0];
   hoffset = (top_total_key_height()/3.5) * -position[1];
   translate([woffset, hoffset, -depth]){
     color($tertiary_color) linear_extrude(height=$dish_depth + depth){
-      text(text=text, font=$font, size=font_size, halign="center", valign="center");
+      text(text=text, font=font_face, size=font_size, halign="center", valign="center");
     }
   }
 }
@@ -17060,14 +17066,14 @@ module legends(depth=0) {
   if (len($front_legends) > 0) {
     front_of_key() {
       for (i=[0:len($front_legends)-1]) {
-        rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], depth);
+        rotate([90,0,0]) keytext($front_legends[i][0], $front_legends[i][1], $front_legends[i][2], $front_legends[i][3], depth);
   	  }
     }
   }
   if (len($legends) > 0) {
     top_of_key() {
       for (i=[0:len($legends)-1]) {
-        keytext($legends[i][0], $legends[i][1], $legends[i][2], depth);
+        keytext($legends[i][0], $legends[i][1], $legends[i][2], $legends[i][3], depth);
       }
     }
   }
@@ -18155,8 +18161,10 @@ module envelope(depth_difference=0, extra_floor_depth=0) {
   
   hull(){
     translate([0,0,extra_floor_depth]) cube([key_width_at_progress(extra_floor_depth / $total_depth) * size, key_height_at_progress(extra_floor_depth / $total_depth) * size, 0.01], center = true);
+    %translate([0,0,extra_floor_depth]) cube([key_width_at_progress(extra_floor_depth / $total_depth) * size, key_height_at_progress(extra_floor_depth / $total_depth) * size, 0.01], center = true);
     top_placement(SMALLEST_POSSIBLE + depth_difference){
       cube([top_total_key_width() * size, top_total_key_height() * size, 0.01], center = true);
+      %cube([top_total_key_width() * size, top_total_key_height() * size, 0.01], center = true);
     }
   }
 }
@@ -18171,6 +18179,7 @@ module dished(depth_difference = 0, inverted = false) {
       union() {
         // envelope is needed to "fill in" the rest of the keycap. intersections with small objects are much faster than differences with large objects
         envelope(depth_difference, $stem_inset);
+        // %envelope(depth_difference, $stem_inset);
         if (inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
       }
       if (!inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
@@ -18181,10 +18190,8 @@ module dished(depth_difference = 0, inverted = false) {
 
 // just to DRY up the code
 // TODO is putting special vars in function signatures legal
-module _dish(inverted=$inverted_dish) {
-  translate([$dish_offset_x,0,0]) color($secondary_color) 
-  dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
-  // %dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
+module _dish(inverted) {
+  translate([$dish_offset_x,0,0]) color($secondary_color) dish(top_total_key_width() + $dish_overdraw_width, top_total_key_height() + $dish_overdraw_height, $dish_depth, inverted);
 }
 
 // puts its children at each keystem position provided
