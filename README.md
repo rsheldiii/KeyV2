@@ -5,9 +5,10 @@
 This library is a keycap and keyset construction library for mechanical keyboards, written in openSCAD.
 
 Relevant links:
-* Thingiverse: https://www.thingiverse.com/thing:2783650
-* Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
-* Buy me a coffee: https://ko-fi.com/rsheldiii, but only if you want to!
+
+- Thingiverse: https://www.thingiverse.com/thing:2783650
+- Shapeways: https://www.shapeways.com/designer/rsheldiii/creations
+- Buy me a coffee: https://ko-fi.com/rsheldiii, but only if you want to!
 
 # V2.0.0 Cutover
 
@@ -25,17 +26,22 @@ If you are technically inclined at all, this is definitely the best way to run t
 
 First, you'll need OpenSCAD: http://www.openscad.org/downloads.html. I highly recommend installing the development snapshot, as they generally support more features and are relatively stable. Development snapshots are listed in their own section on the downloads page.
 
-After you have openSCAD installed, you need to download the code and run it. running `git clone https://github.com/rsheldiii/openSCAD-projects.git` if you have git, or downloading [this zip](https://github.com/rsheldiii/openSCAD-projects/archive/master.zip) and extracting the directory should do it. 
+After you have openSCAD installed, you need to download the code and run it.
+
+- If you have git, run: `git clone https://github.com/rsheldiii/KeyV2`
+- If not you can download [this zip](https://github.com/rsheldiii/KeyV2/archive/refs/heads/master.zip) and extracting the directory should do it.
 
 To make your own key, all you need to do is open `keys.scad` with openSCAD and modify this line:
 
 ```
 dcs_row(5) legend("⇪", size=9) key();
-``` 
+```
 
-To be whatever you want. For example, this is for a ctrl key on an OEM keyboard:  
+To be whatever you want. For example, this is for a ctrl key on an OEM keyboard:
 
-```u(1.25) oem_row(3) legend("ctrl", size=4.5) key();```
+```
+u(1.25) oem_row(3) legend("ctrl", size=4.5) key();
+```
 
 It is possible to edit this project with an external editor by checking off Design => 'Automatic Reload and Preview' in OpenSCAD.
 
@@ -62,8 +68,8 @@ Every key starts with default settings (provided in `settings.scad`) that are ov
 ```
 key();
 ```
-![a bog-standard cherry key](assets/example1.JPG)
 
+![a bog-standard cherry key](assets/example1.JPG)
 
 which is a bog-standard DCS row 5 (number / function row) keycap. To change how the key is generated, you can modify the settings directly or add predefined modifier functions like so:
 
@@ -198,8 +204,9 @@ Prints from this library are still challenging, despite all efforts to the contr
 That's it, if you have any questions feel free to open an issue or leave a comment on thingiverse!
 
 ## TODO:
+
 moved to [TODO doc](./TODO.md)
 
 ## Contributions welcome
 
- My lists of key profiles and layouts are not exhaustive at all, if you want to contribute feel free to make a PR with your changes and we can work together on getting it merged!
+My lists of key profiles and layouts are not exhaustive at all, if you want to contribute feel free to make a PR with your changes and we can work together on getting it merged!
