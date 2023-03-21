@@ -132,3 +132,30 @@ module simple_layout(list) {
     }
   }
 }
+
+// layout function for use with advanced legends (multiple fonts and font sizes)
+// see numpad layouts for an example
+module layout_children(list, items) {
+    for (n=[0:1:$children-1]){
+        row = layout_children_row(list,n);
+        column = layout_children_col(list,n);
+        key_length = list[row][column];
+        column_distance = abs_sum([for (x = [0 : column]) list[row][x]]);
+        translate_u(column_distance - (key_length/2), -row)
+        children(n);
+    }
+}
+
+function layout_children_row(list, n, count=0, row=0, col=0) =
+  count == n ?
+    row :
+        col >= len(list[row]) - 1 ?
+            layout_children_row(list, n, count+1, row+1, 0) :
+                layout_children_row(list, n, count+1, row, col+1);
+
+function layout_children_col(list, n, count=0, row=0, col=0) =
+  count == n ?
+    col :
+        col >= len(list[row]) - 1 ?
+            layout_children_col(list, n, count+1, row+1, 0) :
+                layout_children_col(list, n, count+1, row, col+1);
