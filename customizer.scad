@@ -189,8 +189,8 @@ $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer
 // Ternaries are ONLY for customizer. they will NOT work if you're using this in
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
 // or set $stabilizers directly
-// Array of positions of stabilizers
-$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+// Array of positions of ilizers
+$ilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
 
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
@@ -526,7 +526,7 @@ $stabilizer_type = "costar_stabilizer"; // [costar_stabilizer, cherry_stabilizer
 // OpenSCAD. you should use stabilized(), openSCAD customizer,
 // or set $stabilizers directly
 // Array of positions of stabilizers
-$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
+$stabilizers = $key_length >= 6 ? [[-50, 0], [50, 0]] : $key_length >= 3 ? [[-19.5, 0], [19.5, 0]] : $key_length >= 2 ? [[-12,0],[12,0]] : [];
 
 // Where the stems are in relation to the center of the keycap, in units. default is one in the center
 // Shouldn't work in thingiverse customizer, though it has been...
