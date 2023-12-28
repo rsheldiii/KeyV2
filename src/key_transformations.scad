@@ -284,5 +284,7 @@ module resin() {
   $stem_slop = 0;
   $stem_inner_slop = 0;
   $stem_support_type = "disable";
+  $resin_suction_holes = true;
+  $resin_drain_holes = true;
   children();
 }

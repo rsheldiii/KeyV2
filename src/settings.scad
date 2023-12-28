@@ -236,6 +236,10 @@ bumps_surface = function(x,y) sin(20*x)*cos(20*y)/3+1;
 
 $surface_function = bumps_surface; // bumps_surface;
 
+// Resin subtractive features
+$resin_suction_holes = false;
+$resin_drain_holes = false;
+
 // ripples
 /* 
 // Rosenbrock's banana

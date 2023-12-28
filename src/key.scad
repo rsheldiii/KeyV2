@@ -194,6 +194,15 @@ module subtractive_features(inset) {
   // parts of the keycap that will hit the cherry switch
   // this is a little confusing as it eats the stem too
   /* if ($clearance_check) clearance_check(); */
+
+  // resin-specific subtractive features
+  if($resin_suction_holes) {
+    resin_suction_holes();
+  }
+
+  if($resin_drain_holes) {
+    resin_drain_holes();
+  }
 }
 
 // features inside the key itself (stem, supports, etc)
