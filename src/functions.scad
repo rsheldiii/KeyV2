@@ -54,7 +54,10 @@ function unit_length(length) = $unit * (length - 1) + 18.16;
  * where the chord of the spherical cross section of the dish is
  * the width of the keycap.
  */
+// the distance you have to move the dish so it digs in depth millimeters
+function cylindrical_dish_chord_length(width, depth) = 
+    (pow(width, 2) - 4 * pow(depth, 2)) / (8 * depth);
+
+//the radius of the dish
 function cylindrical_dish_radius(width, depth) =
-    // the distance you have to move the dish so it digs in depth millimeters
-    let(chord_length = (pow(width, 2) - 4 * pow(depth, 2)) / (8 * depth))
-        (pow(width, 2) + 4 * pow(depth, 2)) / (8 * depth); //the radius of the dish
+        (pow(width, 2) + 4 * pow(depth, 2)) / (8 * depth);

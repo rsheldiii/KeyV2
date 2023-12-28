@@ -8,9 +8,9 @@ module cylindrical_dish(width, height, depth, inverted){
    * the width of the keycap.
    */
   // the distance you have to move the dish so it digs in depth millimeters
-  chord_length = (pow(width, 2) - 4 * pow(depth, 2)) / (8 * depth);
+  chord_length = cylindrical_dish_chord_length(width=width, depth=depth);
   //the radius of the dish
-  rad = (pow(width, 2) + 4 * pow(depth, 2)) / (8 * depth);
+  rad = cylindrical_dish_radius(width=width, depth=depth);
   direction = inverted ? -1 : 1;
 
   translate([0,0, chord_length * direction]){
