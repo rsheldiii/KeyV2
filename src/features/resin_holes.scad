@@ -36,9 +36,11 @@ module resin_drain_holes() {
   // XXX these calculations are specific to the flared support type
   loft = $stem_throw;
   height = $total_depth-$stem_throw;
-  dy = $key_height*$unit/2;
-  translate([0,dy,loft+height/4])
-  rotate([105,0,0])
-  cylinder(center=true, d=2, h=8);
+  dx = $key_length*$unit/2;
+  for(r=[90, 270])
+  rotate(r)
+  translate([0,dx,loft+height/4-1])
+  rotate([87,0,0])
+  cylinder(center=true, d=3, h=11);
 }
 
