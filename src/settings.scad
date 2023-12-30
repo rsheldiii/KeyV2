@@ -27,7 +27,7 @@ $double_sculpt_radius = 200;
 $support_type = "flared"; // [flared, bars, flat, disable]
 
 // Supports for the stem, as it often comes off during printing. Reccommended for most machines
-$stem_support_type = "tines"; // [tines, brim, disabled]
+$stem_support_type = "tines"; // [tines, brim, disable]
 
 // make legends outset instead of inset.
 // broken off from artisan support since who wants outset legends?
