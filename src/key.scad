@@ -66,7 +66,8 @@ module dished(depth_difference = 0, inverted = false) {
     difference(){
       union() {
         // envelope is needed to "fill in" the rest of the keycap. intersections with small objects are much faster than differences with large objects
-        envelope(depth_difference, $stem_inset);
+        // note: enlarge envelope only for negative stems which stick out
+        envelope(depth_difference, $stem_inset < 0 ? $stem_inset : 0);
         if (inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
       }
       if (!inverted) top_placement(depth_difference) color($secondary_color) _dish(inverted);
